@@ -5,6 +5,7 @@ import asyncio, time
 from discord.ext import commands
 import json
 import datetime
+import inspect
 
 intents = discord.Intents.default()
 intents.members = True
@@ -31,6 +32,71 @@ bank_tier = {
     3:'I'
 }
 
+getestates_thumb = {
+    1:'https://media.discordapp.net/attachments/837564505952747520/837681898700537866/1.png',
+    2:'https://media.discordapp.net/attachments/837564505952747520/837682702450032660/2.png',
+    3:'https://media.discordapp.net/attachments/837564505952747520/837697702326042674/3.png',
+    4:'https://cdn.discordapp.com/attachments/837564505952747520/837565525143453716/unknown.png',
+    5:'https://cdn.discordapp.com/attachments/837564505952747520/837566247439695882/unknown.png',
+    6:'https://cdn.discordapp.com/attachments/837564505952747520/837566247439695882/unknown.png',
+    7:'https://cdn.discordapp.com/attachments/837564505952747520/837566473920577556/unknown.png',
+    8:'https://cdn.discordapp.com/attachments/837564505952747520/837567047754973234/unknown.png',
+    9:'https://cdn.discordapp.com/attachments/837564505952747520/837567047754973234/unknown.png',
+    10:'https://cdn.discordapp.com/attachments/837564505952747520/837567877103484938/unknown.png',
+    11:'https://cdn.discordapp.com/attachments/837564505952747520/837567877103484938/unknown.png',
+    12:'https://cdn.discordapp.com/attachments/837564505952747520/837568882892996628/unknown.png',
+    13:'https://cdn.discordapp.com/attachments/837564505952747520/837568882892996628/unknown.png',
+    14:'https://cdn.discordapp.com/attachments/837564505952747520/837569387220434974/unknown.png',
+    15:'https://cdn.discordapp.com/attachments/837564505952747520/837570918993100820/unknown.png',
+    16:'https://cdn.discordapp.com/attachments/837564505952747520/837570918993100820/unknown.png',
+    17:'https://cdn.discordapp.com/attachments/837564505952747520/837572907713691688/unknown.png',
+    18:'https://cdn.discordapp.com/attachments/837564505952747520/837574437389729802/unknown.png',
+    19:'https://cdn.discordapp.com/attachments/837564505952747520/837576416039403530/unknown.png',
+    20:'https://cdn.discordapp.com/attachments/837564505952747520/837577291898945546/unknown.png',
+    21:'https://cdn.discordapp.com/attachments/837564505952747520/837577291898945546/unknown.png',
+    22:'https://cdn.discordapp.com/attachments/837564505952747520/837577637349687306/unknown.png',
+    23:'https://cdn.discordapp.com/attachments/837564505952747520/837578058500276244/unknown.png',
+    24:'https://cdn.discordapp.com/attachments/837564505952747520/837578847456722995/unknown.png',
+    25:'https://cdn.discordapp.com/attachments/837564505952747520/837579030374776832/unknown.png',
+    26:'https://cdn.discordapp.com/attachments/837564505952747520/837579385330466827/unknown.png',
+    27:'https://cdn.discordapp.com/attachments/837564505952747520/837579988949008404/unknown.png',
+    28:'https://cdn.discordapp.com/attachments/837564505952747520/837580290977300530/unknown.png',
+    29:'https://cdn.discordapp.com/attachments/837564505952747520/837580694505914398/unknown.png',
+    30:'https://cdn.discordapp.com/attachments/837564505952747520/837581436407644190/unknown.png'
+}
+
+estates_tasks = {
+    1:'Add a room',
+    2:'Improve Restaurant',
+    3:'Add a room',
+    4:'Build a store',
+    5:'Add more items in store',
+    6:'Add a room',
+    7:'Add a Helper Desk',
+    8:'Improve Helper Desk',
+    9:'Add a Presidential Suite',
+    10:'Upgrade Rooms and Suite',
+    11:'Add Laundary Service',
+    12:'Expand Laundary',
+    13:'Add Elevator',
+    14:'Improve Rooms',
+    15:'Improve Meals Variety and Quality',
+    16:'Expand Kitchen',
+    17:'Add two Master Chef',
+    18:'Build second floor and add Cafè',
+    19:'Build a Gym',
+    20:'Improve Service Speed and Cleanliness',
+    21:'Build a Casino',
+    22:'Build a Swimming Pool',
+    23:'Build a Night Bar',
+    24:'Add Valet Parking',
+    25:'Add a Movie Theatre',
+    26:'Add a Voilenist to entertain Guests',
+    27:'Add a Pianoist to Welcome VIPs',
+    28:'Add a Pet Store',
+    29:'Add Decorations like Paintings and Plants',
+}
+
 e_wallet = '<:wallet:836814969290358845>'
 e_bank = '🏦'
 
@@ -42,9 +108,17 @@ async def get_avg():
     with open('average.json', 'r') as avg:
         return json.loads(avg.read())
 
+async def get_estates():
+    with open('estates.json', 'r') as f:
+        return json.loads(f.read())
+
 async def update_avg(avg):
     with open('average.json', 'w') as avgbal:
         avgbal.write(json.dumps(avg))
+
+async def update_est(data):
+    with open('estates.json', 'w') as f:
+        f.write(json.dumps(data))
 
 async def average_bal():
     while True:
@@ -104,6 +178,13 @@ async def open_account(ctx):
         data[ctx.author.id] = {'bank_type':1, 'wallet':0, 'bank':1000}
         await update_data(data)
 
+async def open_estates(ctx):
+    data = await get_estates()
+    if data.get(str(ctx.author.id)) is None:
+        data[f'{ctx.author.id}'] = {'level':1, 'name':f'{ctx.author.name}'}
+
+    await update_est(data)
+
 async def checktimeout(userid, event):
     with open('timeouts.json', 'r') as t:
         timeouts = json.loads(t.read())
@@ -133,6 +214,31 @@ async def add_timeout(userid, event):
     with open('timeouts.json', 'w') as f:
         f.write(json.dumps(data))
 
+async def get_revenue(level:int):
+    return int((level*200 - 50)*0.97)
+
+async def get_maint(level:int):
+    return int((level*200 - 50)*0.9)
+
+async def get_cost(level:int):
+    return int((300*level)**(1.75))
+
+async def commait(val):
+    val = str(val)
+    val = [x for x in val]
+    val.reverse()
+
+    count = 0
+    string = ''
+    for i in val:
+        if count == 3:
+            string += ','
+            count = 0
+        string += i
+        count += 1
+
+    return string[::-1]
+
 @bot.event
 async def on_message(message):
     await bot.process_commands(message)
@@ -145,13 +251,15 @@ async def logs(ctx):
         logs_data = log.readlines()
     await ctx.send(f'Logs:\n```{"".join(logs_data)}```') #
 
-@bot.command(aliases=['eval']) #DEV ONLY
+@bot.command(aliases=['eval'])  # DEV ONLY
 async def evaluate(ctx, *, expression):
     if ctx.author.id not in devs:
         return
     try:
-        result = eval(expression)
-        await ctx.reply(result)
+        if inspect.isawaitable(expression):
+            await ctx.reply(await eval(expression))
+        else:
+            await ctx.reply(eval(expression))
     except Exception as e:
         await ctx.reply(f'```\n{e}```')
 
@@ -160,7 +268,7 @@ async def execute(ctx, *, expression):
     if ctx.author.id not in devs:
         return
     try:
-        eval(expression)
+        await eval(expression)
     except Exception as e:
         await ctx.reply(f'```\n{e}```')
 
@@ -186,10 +294,10 @@ async def add(ctx, person:discord.Member, bal:int, *args):
     await update_data(data)
 
     if logsignore is None:
-        await update_logs(f'{ctx.author} used "add" command [{person.id}, {bal}]')
-        await ctx.send(f'{ctx.author.mention} added `{bal}` coins to {person.mention}.')
+        await update_logs(f'{ctx.author} used "add" command [{person.id}, {await commait(bal)}]')
+        await ctx.send(f'{ctx.author.mention} added `{await commait(bal)}` coins to {person.mention}.')
     else:
-        await ctx.send(f'{ctx.author.mention} added `{bal}` coins to {person.mention}.\n**This actions isnt added in logs!**')
+        await ctx.send(f'{ctx.author.mention} added `{await commait(bal)}` coins to {person.mention}.\n**This actions isnt added in logs!**')
 
 @bot.command(aliases=['bal'])
 async def balance(ctx, member:discord.Member = None):
@@ -205,7 +313,7 @@ async def balance(ctx, member:discord.Member = None):
     bank = person['bank']
 
     embed = discord.Embed(title=f'__{bank_names[bank_type]}__', colour=embedcolor,
-                          description=f'**{e_wallet} Wallet:** {wallet}\n**{e_bank} Bank:** {bank}')
+                          description=f'**{e_wallet} Wallet:** {await commait(wallet)}\n**{e_bank} Bank:** {await commait(bank)}')
 
     fetched = bot.get_user(userid)
     embed.timestamp = datetime.datetime.utcnow()
@@ -237,7 +345,7 @@ async def deposit(ctx, amount:str = None):
     data[f'{ctx.author.id}'] = person
 
     await update_data(data)
-    await ctx.send(f'{ctx.author.mention} Successfully deposited `{amount}` coins.')
+    await ctx.send(f'{ctx.author.mention} Successfully deposited `{await commait(amount)}` coins.')
 
 @bot.command(aliases=['with'])
 async def withdraw(ctx, amount: str = None):
@@ -262,7 +370,7 @@ async def withdraw(ctx, amount: str = None):
     data[f'{ctx.author.id}'] = person
 
     await update_data(data)
-    await ctx.send(f'{ctx.author.mention} Successfully withdrew `{amount}` coins.')
+    await ctx.send(f'{ctx.author.mention} Successfully withdrew `{await commait(amount)}` coins.')
 
 @bot.command()
 async def bank(ctx, member:discord.Member = None):
@@ -342,7 +450,7 @@ async def daily(ctx):
     await update_data(data)
     await add_timeout(ctx.author.id, 'weekly')
 
-    await ctx.send(f'Daily interest payout of `{int(avgbal * multiplier)}` coins credited successfully!')
+    await ctx.send(f'Daily interest payout of `{await commait(int(avgbal * multiplier))}` coins credited successfully!')
 
 @bot.command()
 async def give(ctx, member:discord.Member, amount:int):
@@ -375,7 +483,7 @@ async def give(ctx, member:discord.Member, amount:int):
     await update_data(data)
 
     embed = discord.Embed(title='Act of Generosity', color=embedcolor,
-                          description=f'{ctx.author.mention} gave `{amount}` coins to {member.mention}')
+                          description=f'{ctx.author.mention} gave `{await commait(amount)}` coins to {member.mention}')
     fetched = bot.get_user(ctx.author.id)
     embed.timestamp = datetime.datetime.utcnow()
     embed.set_footer(text='Economy Bot', icon_url=bot_pfp)
@@ -383,12 +491,104 @@ async def give(ctx, member:discord.Member, amount:int):
 
     await ctx.send(embed=embed)
 
+@bot.command(aliases=['property'])
+async def estates(ctx):
+    await open_estates(ctx)
+    est = await get_estates()
+    person = est[f'{ctx.author.id}']
+    level = person['level']
+    name = person['name']
+    revenue = await get_revenue(level)
+    maint = await get_maint(level)
+
+    embed = discord.Embed(description='\u200b', colour=embedcolor)
+    embed.add_field(name='Current Level', value=f'{level}')
+    embed.add_field(name='Revenue Earned', value=f'`{revenue}` coins')
+    embed.add_field(name='Maintainance Cost', value=f'`{maint}` coins')
+    embed.add_field(name='Next Task', value=f'```css\n[{estates_tasks[level]}]\nUse e.upgrade to Upgrade!\n```', inline=False)
+    embed.add_field(inline=False, name='Note:', value='```diff\nThe revenue is earned in per hour\n+ Use e.revenue to claim revenue\n- Use e.maintain to do maintainance\n```')
+
+    fetched = bot.get_user(ctx.author.id)
+    embed.timestamp = datetime.datetime.utcnow()
+    embed.set_footer(text='Economy Bot', icon_url=bot_pfp)
+    embed.set_author(name=f'{fetched.name} | {name} Hotel', icon_url=fetched.avatar_url)
+    embed.set_image(url=getestates_thumb[level])
+
+    await ctx.send(embed=embed)
+
+@bot.command()
+async def upgrade(ctx):
+    await open_estates(ctx)
+    est = await get_estates()
+    eperson = est[f'{ctx.author.id}']
+    level = eperson['level']
+    name = eperson['name']
+    rev_now = await get_revenue(level)
+    rev_after = await get_revenue(level+1)
+    main_now = await get_maint(level)
+    main_after = await get_maint(level+1)
+
+    cost = await get_cost(level)
+
+    embed = discord.Embed(title='Upgrade Hotel', colour=embedcolor)
+    embed.add_field(name='Level Change', value=f'`{level} => {level+1}`')
+    embed.add_field(name='Revenue Boost', value=f'`{await commait(rev_now)} + {await commait(rev_after-rev_now)}` coins')
+    embed.add_field(name='Maintainance Increase', value=f'`{await commait(main_now)} + {await commait(main_after-main_now)}` coins')
+    embed.add_field(name='Upgrade Cost', value=f'`{await commait(cost)}` coins')
+    embed.add_field(name='Confirm?', value='Click ✅ to confirm or ❌ to cancel', inline=False)
+    embed.add_field(name='\u200b', value='Here is the look after upgrade:', inline=False)
+    embed.set_image(url=getestates_thumb[level+1])
+    fetched = bot.get_user(ctx.author.id)
+    embed.timestamp = datetime.datetime.utcnow()
+    embed.set_footer(text='Economy Bot', icon_url=bot_pfp)
+    embed.set_author(name=f'{fetched.name} | {name} Hotel', icon_url=fetched.avatar_url)
+
+    msg = await ctx.send(embed=embed)
+    await msg.add_reaction('✅')
+    await msg.add_reaction('❌')
+
+    def check(reaction, user):
+        if user == ctx.author and str(reaction.emoji) in ['✅', '❌']:
+            return True
+    try:
+        reaction, user = await bot.wait_for('reaction_add', timeout=60.0, check=check)
+        await msg.clear_reaction('✅')
+        await msg.clear_reaction('❌')
+        if str(reaction) == '✅':
+            data = await get_data()
+            person = data[f'{ctx.author.id}']
+            wallet = person['wallet']
+            bank = person['bank']
+
+            if cost > wallet:
+                left = cost-wallet
+                new_wallet = 0
+                if left > bank:
+                    return await ctx.send(f'{ctx.author.mention} Oopsie! Looks like there aren\'t enough coins in your pockets.')
+                new_bank = bank - left
+            else:
+                new_wallet = wallet - cost
+                new_bank = bank
+
+            person['wallet'] = new_wallet
+            person['bank'] = new_bank
+            eperson['level'] = level + 1
+
+            est[f'{ctx.author.id}'] = eperson
+            data[f'{ctx.author.id}'] = person
+
+            await update_data(data)
+            await update_est(est)
+            await ctx.send(f'{ctx.author.mention} Wohoo! Your upgrade was successful! Use `e.estates` to see newly upgraded property!')
+        else:
+            await ctx.send(f'{ctx.author.mention} Cancelled!')
+    except asyncio.TimeoutError:
+        pass
+
 @bot.event
 async def on_ready():
     await create_stuff()
-    chl = bot.get_channel(836849401904234521)
     asyncio.create_task(average_bal())
 
 print("Running...")
-
 bot.run("ODMyMDgzNzE3NDE3MDc0Njg5.YHeoWQ._O5uoMS_I7abKdI_YzVb9BuEHzs")
