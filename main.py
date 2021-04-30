@@ -145,11 +145,61 @@ async def logs(ctx):
         logs_data = log.readlines()
     await ctx.send(f'Logs:\n```{"".join(logs_data)}```')
 
+@bot.command(aliases=['eval'])
+async def evaluate(ctx, *, expression):
+    if ctx.author.id not in devs:
+        return
+    try:
+        result = eval(expression)
+        await ctx.reply(result)
+    except Exception as e:
+        await ctx.reply(f'```\n{e}```')
+
+@bot.command(aliases=['exec'])
+async def execute(ctx, *, expression):
+    if ctx.author.id not in devs:
+        return
+    try:
+        eval(expression)
+    except Exception as e:
+        await ctx.reply(f'```\n{e}```')
+
+@bot.command()
+async def add(ctx, person:discord.Member, bal:int, *args):
+    if ctx.author.id not in devs:
+        return
+    if '-i' in args:
+        logsignore = 1
+    else:
+        logsignore = None
+
+    data = await get_data()
+    toadd = data.get(f'{person.id}')
+
+    if '-b' in args:
+        new_bal = toadd['bank'] + bal
+        toadd['bank'] = new_bal
+    else:
+        new_bal = toadd['wallet'] + bal
+        toadd['wallet'] = new_bal
+    data[f'{person.id}'] = toadd
+    await update_data(data)
+
+    if logsignore is None:
+        await update_logs(f'{ctx.author} used "add" command [{person.id}, {bal}]')
+        await ctx.send(f'{ctx.author.mention} added `{bal}` coins to {person.mention}.')
+    else:
+        await ctx.send(f'{ctx.author.mention} added `{bal}` coins to {person.mention}.\n**This actions isnt added in logs!**')
+
 @bot.command(aliases=['bal'])
-async def balance(ctx):
+async def balance(ctx, member:discord.Member = None):
     await open_account(ctx)
     data = await get_data()
-    person = data.get(str(ctx.author.id))
+    if member is None:
+        userid = ctx.author.id
+    else:
+        userid = member.id
+    person = data.get(str(userid))
     bank_type = person['bank_type']
     wallet = person['wallet']
     bank = person['bank']
@@ -157,28 +207,12 @@ async def balance(ctx):
     embed = discord.Embed(title=f'__{bank_names[bank_type]}__', colour=embedcolor,
                           description=f'**{e_wallet} Wallet:** {wallet}\n**{e_bank} Bank:** {bank}')
 
-    fetched = bot.get_user(ctx.author.id)
+    fetched = bot.get_user(userid)
     embed.timestamp = datetime.datetime.utcnow()
     embed.set_footer(text='Economy Bot', icon_url=bot_pfp)
     embed.set_author(name=fetched.name, icon_url=fetched.avatar_url)
 
     await ctx.send(embed=embed)
-
-@bot.command()
-async def add(ctx, person:discord.Member, bal:int, logsignore=None):
-    if ctx.author.id not in devs:
-        return
-    data = await get_data()
-    toadd = data.get(f'{person.id}')
-    new_bal = toadd['wallet'] + bal
-    toadd['wallet'] = new_bal
-    data[f'{person.id}'] = toadd
-    await update_data(data)
-    if logsignore is None:
-        await update_logs(f'{ctx.author} used "add" command [{person.id}, {bal}]')
-        await ctx.send(f'{ctx.author.mention} added `{bal}` coins to {person.mention}.')
-    else:
-        await ctx.send(f'{ctx.author.mention} added `{bal}` coins to {person.mention}.\n**This actions isnt added in logs!**')
 
 @bot.command(aliases=['dep'])
 async def deposit(ctx, amount:str = None):
@@ -231,12 +265,16 @@ async def withdraw(ctx, amount: str = None):
     await ctx.send(f'{ctx.author.mention} Successfully withdrew `{amount}` coins.')
 
 @bot.command()
-async def bank(ctx):
+async def bank(ctx, member:discord.Member = None):
     await avg_update()
     data = await get_data()
     avgbal = await get_avg()
-    person = data.get(f'{ctx.author.id}')
-    person2 = avgbal.get(f'{ctx.author.id}')
+    if member is None:
+        userid = ctx.author.id
+    else:
+        userid = member.id
+    person = data.get(f'{userid}')
+    person2 = avgbal.get(f'{userid}')
     btype = person['bank_type']
 
     embed = discord.Embed(description='Here are your bank details:\n\u200b', color=embedcolor)
@@ -249,7 +287,7 @@ async def bank(ctx):
     embed.add_field(name='Note:', value='To claim interest, use `e.daily`.\n'
                                         'Your average balance in last 24 hours will be taken in account for that.')
 
-    fetched = bot.get_user(ctx.author.id)
+    fetched = bot.get_user(userid)
     embed.timestamp = datetime.datetime.utcnow()
     embed.set_footer(text='Economy Bot', icon_url=bot_pfp)
     embed.set_author(name=f'{fetched.name} | {e_bank} Know Your Bank!', icon_url=fetched.avatar_url)
@@ -306,35 +344,50 @@ async def daily(ctx):
 
     await ctx.send(f'Weekly interest payout of `{int(avgbal * multiplier)}` coins credited successfully!')
 
-@bot.command(aliases=['eval'])
-async def evaluate(ctx, *, expression):
-    if ctx.author.id not in devs:
-        return
-    try:
-        result = eval(expression)
-        await ctx.reply(result)
-    except Exception as e:
-        await ctx.reply(f'```\n{e}```')
+@bot.command()
+async def give(ctx, member:discord.Member, amount:int):
+    if amount == 0:
+        return await ctx.send(f'{ctx.author.mention} Sending 0 coins... Hmm nice idea but we dont do that here.')
+    if amount < 0:
+        return await ctx.send(f'{ctx.author.mention} Dont try to be oversmart kiddo.')
+    if member == ctx.author:
+        return await ctx.send(f'{ctx.author.mention} Did you just try to send **yourself** some coins?')
+    amount = int(amount)
 
-@bot.command(aliases=['exec'])
-async def execute(ctx, *, expression):
-    if ctx.author.id not in devs:
-        return
-    try:
-        eval(expression)
-    except Exception as e:
-        await ctx.reply(f'```\n{e}```')
+    data = await get_data()
+    author = data.get(f'{ctx.author.id}')
+    person = data.get(f'{member.id}')
+
+    a_wallet = author['wallet']
+    a_bank = author['bank']
+
+    if amount > a_wallet:
+        return await ctx.send(f'{ctx.author.mention} You dont have enough coins. Go beg or withdraw.')
+
+    author['wallet'] = new_a_wallet
+    author['bank'] = new_a_bank
+    data[f'{ctx.author.id}'] = author
+
+    p_wallet = person['wallet']
+    person['wallet'] = p_wallet + amount
+    data[f'{member.id}'] = person
+
+    await update_data(data)
+
+    embed = discord.Embed(title='Act of Generosity', color=embedcolor,
+                          description=f'{ctx.author.mention} gave `{amount}` coins to {member.mention}')
+    fetched = bot.get_user(ctx.author.id)
+    embed.timestamp = datetime.datetime.utcnow()
+    embed.set_footer(text='Economy Bot', icon_url=bot_pfp)
+    embed.set_author(name=fetched.name, icon_url=fetched.avatar_url)
+
+    await ctx.send(embed=embed)
 
 @bot.event
 async def on_ready():
     await create_stuff()
     chl = bot.get_channel(836849401904234521)
     asyncio.create_task(average_bal())
-    embed = discord.Embed(description='<a:checkmark:836850860180373514> I am updated and ready to use!')
-    embed.timestamp = datetime.datetime.utcnow()
-    embed.set_footer(text='Economy Bot', icon_url=bot_pfp)
-
-    await chl.send(embed=embed)
 
 print("Running...")
 
