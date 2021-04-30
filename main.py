@@ -137,15 +137,15 @@ async def add_timeout(userid, event):
 async def on_message(message):
     await bot.process_commands(message)
 
-@bot.command()
+@bot.command() #DEV ONLY
 async def logs(ctx):
     if ctx.author.id not in devs:
         return
     with open('logs.txt', 'r') as log:
         logs_data = log.readlines()
-    await ctx.send(f'Logs:\n```{"".join(logs_data)}```')
+    await ctx.send(f'Logs:\n```{"".join(logs_data)}```') #
 
-@bot.command(aliases=['eval'])
+@bot.command(aliases=['eval']) #DEV ONLY
 async def evaluate(ctx, *, expression):
     if ctx.author.id not in devs:
         return
@@ -155,7 +155,7 @@ async def evaluate(ctx, *, expression):
     except Exception as e:
         await ctx.reply(f'```\n{e}```')
 
-@bot.command(aliases=['exec'])
+@bot.command(aliases=['exec']) #DEV ONLY
 async def execute(ctx, *, expression):
     if ctx.author.id not in devs:
         return
@@ -164,7 +164,7 @@ async def execute(ctx, *, expression):
     except Exception as e:
         await ctx.reply(f'```\n{e}```')
 
-@bot.command()
+@bot.command() #DEV ONLY
 async def add(ctx, person:discord.Member, bal:int, *args):
     if ctx.author.id not in devs:
         return
@@ -317,7 +317,7 @@ async def daily(ctx):
             if i < 288:
                 left = datetime.timedelta(seconds=(86400 - check))
                 final = datetime.datetime.strptime(str(left), '%H:%M:%S.%f').replace(microsecond=0)
-                return await ctx.reply(f'You have to wait for `{str(final).split(" ")[1]}` (HH:MM:SS) time more before you can claim weekly interest.')
+                return await ctx.reply(f'You have to wait for `{str(final).split(" ")[1]}` (HH:MM:SS) time more before you can claim daily interest.')
     elif i < 288:
         return await ctx.send(f'{ctx.author.mention} Looks like you dont own a bank account over 24 hours! Try Later.')
 
@@ -342,7 +342,7 @@ async def daily(ctx):
     await update_data(data)
     await add_timeout(ctx.author.id, 'weekly')
 
-    await ctx.send(f'Weekly interest payout of `{int(avgbal * multiplier)}` coins credited successfully!')
+    await ctx.send(f'Daily interest payout of `{int(avgbal * multiplier)}` coins credited successfully!')
 
 @bot.command()
 async def give(ctx, member:discord.Member, amount:int):
