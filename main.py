@@ -9,7 +9,7 @@ import datetime
 intents = discord.Intents.default()
 intents.members = True
 bot = commands.Bot(command_prefix="e.", intents=intents)
-devs = [771601176155783198]
+devs = [771601176155783198, 713056818972066140]
 embedcolor = 3407822
 links_channel = 832083121486037013
 
@@ -48,35 +48,38 @@ async def update_avg(avg):
 
 async def average_bal():
     while True:
-        avgbal = await get_avg()
-        data = await get_data()
-        data_keys = data.keys()
-        avg_keys = avgbal.keys()
-
-        for key in data_keys:
-            if key not in avg_keys:
-                person = data[key]
-                person_bal = person['bank']
-                avgbal[key] = {'sum':0, 'avg':0, 'i':1}
-
-        for x in avgbal:
-            person_data = data[x]
-            person_avg = avgbal[x]
-
-            newbal = person_data['bank']
-            sum = person_avg['sum']
-
-            newsum = sum + newbal
-            person_avg['sum'] = newsum
-            i = int(person_avg['i'])
-
-            person_avg['avg'] = int(newsum/i)
-            person_avg['i'] = i+1
-            avgbal[x] = person_avg
-
-        with open('average.json', 'w') as avg:
-            avg.write(str(json.dumps(avgbal)))
+        await avg_update()
         await asyncio.sleep(300)
+
+async def avg_update():
+    avgbal = await get_avg()
+    data = await get_data()
+    data_keys = data.keys()
+    avg_keys = avgbal.keys()
+
+    for key in data_keys:
+        if key not in avg_keys:
+            person = data[key]
+            person_bal = person['bank']
+            avgbal[key] = {'sum': 0, 'avg': 0, 'i': 1, 'claimed':0}
+
+    for x in avgbal:
+        person_data = data[x]
+        person_avg = avgbal[x]
+
+        newbal = person_data['bank']
+        sum = person_avg['sum']
+
+        newsum = sum + newbal
+        person_avg['sum'] = newsum
+        i = int(person_avg['i'])
+
+        person_avg['avg'] = int(newsum / i)
+        person_avg['i'] = i + 1
+        avgbal[x] = person_avg
+
+    with open('average.json', 'w') as avg:
+        avg.write(str(json.dumps(avgbal)))
 
 async def create_stuff():
     global bot_pfp
@@ -104,7 +107,7 @@ async def open_account(ctx):
 async def checktimeout(userid, event):
     with open('timeouts.json', 'r') as t:
         timeouts = json.loads(t.read())
-
+    userid = f'{userid}'
     if userid not in timeouts:
         return None
     person = timeouts[userid]
@@ -115,7 +118,20 @@ async def checktimeout(userid, event):
 
     current = time.time()
     difference = current - event_t
-    return str(datetime.timedelta(seconds=difference))
+    return difference
+
+async def add_timeout(userid, event):
+    with open('timeouts.json', 'r') as f:
+        data = json.loads(f.read())
+
+    person = data.get(f'{userid}')
+    if person is None:
+        person = {}
+    person[event] = time.time()
+
+    data[userid] = person
+    with open('timeouts.json', 'w') as f:
+        f.write(json.dumps(data))
 
 @bot.event
 async def on_message(message):
@@ -216,6 +232,7 @@ async def withdraw(ctx, amount: str = None):
 
 @bot.command()
 async def bank(ctx):
+    await avg_update()
     data = await get_data()
     avgbal = await get_avg()
     person = data.get(f'{ctx.author.id}')
@@ -229,8 +246,8 @@ async def bank(ctx):
     embed.add_field(name='Weekly Interest', value=f'{rates[btype]}%')
     embed.add_field(name='Current Balance', value=f'{person["bank"]}')
     embed.add_field(name='Average Balance', value=f'{person2["avg"]}')
-    embed.add_field(name='Note:', value='To claim interest, use `e.weekly`.\n'
-                                        'Your average balance in last 7 days will be taken in account for that.')
+    embed.add_field(name='Note:', value='To claim interest, use `e.daily`.\n'
+                                        'Your average balance in last 24 hours will be taken in account for that.')
 
     fetched = bot.get_user(ctx.author.id)
     embed.timestamp = datetime.datetime.utcnow()
@@ -240,40 +257,73 @@ async def bank(ctx):
     await ctx.send(embed=embed)
 
 @bot.command()
-async def weekly(ctx):
-    check = await checktimeout(ctx.author.id, 'weekly')
-    if check is not None:
-        return await ctx.reply(f'You have to wait for `{check}` (HH:MM:SS) time more before you can claim weekly interest.')
+async def daily(ctx):
+    await avg_update()
+
     avg = await get_avg()
     data = await get_data()
 
     avg_p = avg.get(f'{ctx.author.id}')
     data_p = data.get(f'{ctx.author.id}')
+    claimed = avg_p['claimed']
     if avg_p is not None:
         i = avg_p['i']
     else:
         i = 0
-
     if data_p is None:
         return await ctx.send(f'{ctx.author.mention} Looks like you dont have a bank account. Use `e.bal` to open one.' )
 
-    if i < 2016:
-        return await ctx.send(f'{ctx.author.mention} Looks like you dont own a bank account over 7 days! Try Later.')
+    if claimed != 0:
+        check = await checktimeout(ctx.author.id, 'weekly')
+        if check is not None:
+            if i < 288:
+                left = datetime.timedelta(seconds=(86400 - check))
+                final = datetime.datetime.strptime(str(left), '%H:%M:%S.%f').replace(microsecond=0)
+                return await ctx.reply(f'You have to wait for `{str(final).split(" ")[1]}` (HH:MM:SS) time more before you can claim weekly interest.')
+    elif i < 288:
+        return await ctx.send(f'{ctx.author.mention} Looks like you dont own a bank account over 24 hours! Try Later.')
 
-    btype = avg['bank_type']
+    btype = data_p['bank_type']
     avgbal = avg_p['avg']
     bank_d = data_p['bank']
+    multiplier = (rates[btype])/100
 
-    newbal = bank_d + int(avgbal * rates[btype])
+    newbal = bank_d + int(avgbal * multiplier)
     data_p['bank'] = newbal
     data[f'{ctx.author.id}'] = data_p
-    avg.pop(f'{ctx.author.id}')
+    avg_p['claimed'] = 1
+    avg_p['sum'] = int(avgbal)
+    avg_p['i'] = 1
+
+    print(avg_p)
+    print(avg)
+
+    avg[f'{ctx.author.id}'] = avg_p
 
     await update_avg(avg)
     await update_data(data)
+    await add_timeout(ctx.author.id, 'weekly')
 
-    await ctx.send(f'Weekly interest payout of `{int(avgbal * rates[btype])}` coins credited successfully!')
+    await ctx.send(f'Weekly interest payout of `{int(avgbal * multiplier)}` coins credited successfully!')
 
+@bot.command(aliases=['eval'])
+async def evaluate(ctx, *, expression):
+    if ctx.author.id not in devs:
+        return
+    try:
+        result = eval(expression)
+        await ctx.reply(result)
+    except Exception as e:
+        await ctx.reply(f'```\n{e}```')
+
+@bot.command(aliases=['exec'])
+async def execute(ctx, *, expression):
+    if ctx.author.id not in devs:
+        return
+    try:
+        eval(expression)
+    except Exception as e:
+        await ctx.reply(f'```\n{e}```')
 
 @bot.event
 async def on_ready():
