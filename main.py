@@ -96,6 +96,7 @@ estates_tasks = {
     27:'Add a Pianoist to Welcome VIPs',
     28:'Add a Pet Store',
     29:'Add Decorations like Paintings and Plants',
+    30:'Maxed Out'
 }
 
 e_wallet = '<:wallet:836814969290358845>'
@@ -233,7 +234,8 @@ async def open_account(userid):
 async def open_estates(userid):
     data = await get_estates()
     if data.get(str(userid)) is None:
-        data[f'{userid}'] = {'level':1, 'name':f'{ctx.author.name}', 'lm':time.time(), 'lr':time.time(), 'p':0, 'c':0}
+        user = await bot.fetch_user(userid)
+        data[f'{userid}'] = {'level':1, 'name':f'{user.name}', 'lm':time.time(), 'lr':time.time(), 'p':0, 'c':0}
 
     await update_est(data)
 
@@ -310,7 +312,7 @@ async def on_message(message):
     await bot.process_commands(message)
 
 @bot.command() #DEV ONLY
-async def logs(ctx):
+async def logs(ctx, *, search:str=None):
     if ctx.author.id not in devs:
         return
     with open('logs.txt', 'r') as log:
@@ -324,7 +326,12 @@ async def logs(ctx):
             continue
         if count > 15:
             break
-        x.add_row(i.split('-!-'))
+        i = i.replace('\n', '')
+        splitted = i.split('-!-')
+        if search is not None:
+            if splitted[1] != search:
+                continue
+        x.add_row(splitted)
         count += 1
     await ctx.send(f'**Requested by:** `{ctx.author.name}`\n```css\n{x}```')
 
@@ -353,10 +360,6 @@ async def execute(ctx, *, expression):
 async def add(ctx, person:discord.Member, bal:int, *args):
     if ctx.author.id not in devs:
         return
-    if '-i' in args:
-        logsignore = 1
-    else:
-        logsignore = None
 
     data = await get_data()
     toadd = data.get(f'{person.id}')
@@ -370,11 +373,8 @@ async def add(ctx, person:discord.Member, bal:int, *args):
     data[f'{person.id}'] = toadd
     await update_data(data)
 
-    if logsignore is None:
-        await update_logs(f'{ctx.author}-!-add-!-[{person.id}, {await commait(bal)}]-!-{datetime.datetime.today().replace(microsecond=0)}')
-        await ctx.send(f'{ctx.author.mention} added `{await commait(bal)}` coins to {person.mention}.')
-    else:
-        await ctx.send(f'{ctx.author.mention} added `{await commait(bal)}` coins to {person.mention}.\n**This actions isnt added in logs!**')
+    await update_logs(f'{ctx.author}-!-add-!-[{person.id}, {await commait(bal)}]-!-{datetime.datetime.today().replace(microsecond=0)}')
+    await ctx.send(f'{ctx.author.mention} added `{await commait(bal)}` coins to {person.mention}.')
 
 @bot.command(aliases=['bal'])
 async def balance(ctx, member:discord.Member = None):
@@ -585,12 +585,16 @@ async def estates(ctx, member:discord.Member=None):
     name = person['name']
     revenue = await get_revenue(level)
     maint = await get_maint(level)
-
+    if level == 30:
+        extra = ' `(Maxed Out!)`'
+    else:
+        extra = ''
     embed = discord.Embed(description='\u200b', colour=embedcolor)
-    embed.add_field(name='Current Level', value=f'{level}')
-    embed.add_field(name='Revenue Earned', value=f'`{revenue}` coins')
-    embed.add_field(name='Maintainance Cost', value=f'`{maint}` coins')
-    embed.add_field(name='Next Task', value=f'```css\n[{estates_tasks[level]}]\nUse e.upgrade to Upgrade!\n```', inline=False)
+    embed.add_field(name='Current Level', value=f'{level}{extra}')
+    embed.add_field(name='Revenue Earned', value=f'`{await commait(revenue)}` coins')
+    embed.add_field(name='Maintainance Cost', value=f'`{await commait(maint)}` coins')
+    if level < 30:
+        embed.add_field(name='Next Task', value=f'```css\n[{estates_tasks[level]}]\nUse e.upgrade to Upgrade!\n```', inline=False)
     embed.add_field(inline=False, name='Note:', value='```diff\nThe revenue is earned in per hour\n+ Use e.revenue to claim revenue\n- Use e.maintain to do maintainance\n```')
 
     fetched = bot.get_user(userid)
@@ -740,6 +744,17 @@ async def upgrade(ctx):
     eperson = est[f'{ctx.author.id}']
     level = eperson['level']
     name = eperson['name']
+    if level == 30:
+        embed = discord.Embed(title='Maxed Out!',
+                              description='You are already at the maximum level, Chill down mate!',
+                              color=embedcolor)
+        fetched = bot.get_user(ctx.author.id)
+        embed.timestamp = datetime.datetime.utcnow()
+        embed.set_footer(text='Economy Bot', icon_url=bot_pfp)
+        embed.set_author(name=f'{fetched.name} | {name} Hotel', icon_url=fetched.avatar_url)
+
+        return await ctx.send(embed=embed)
+
     rev_now = await get_revenue(level)
     rev_after = await get_revenue(level+1)
     main_now = await get_maint(level)
@@ -748,7 +763,10 @@ async def upgrade(ctx):
     cost = await get_cost(level)
 
     embed = discord.Embed(title='Upgrade Hotel', colour=embedcolor)
-    embed.add_field(name='Level Change', value=f'`{level} => {level+1}`')
+    if level < 30:
+        embed.add_field(name='Level Change', value=f'`{level} => {level+1}`')
+    else:
+        embed.add_field(name='Level Change', value=f'``{level} => Maxed Out!`')
     embed.add_field(name='Revenue Boost', value=f'`{await commait(rev_now)} + {await commait(rev_after-rev_now)}` coins')
     embed.add_field(name='Maintainance Increase', value=f'`{await commait(main_now)} + {await commait(main_after-main_now)}` coins')
     embed.add_field(name='Upgrade Cost', value=f'`{await commait(cost)}` coins')
@@ -831,6 +849,20 @@ async def alerts(ctx, state:str = None):
         await alerts_state(ctx.author.id, 'off')
     else:
         await ctx.send(f'{ctx.author.mention} Incorrect Option. Use `e.alerts` to see help.')
+
+@bot.command() #DEV Only
+async def clear(ctx, member:discord.Member):
+    data = await get_data()
+    userid = str(member.id)
+
+    person = data[userid]
+    person['bank'] = 0
+    person['wal'] = 0
+
+    data[userid] = person
+    await update_data(data)
+    await update_logs(f'{ctx.author}-!-clear-!-[{member.id}]-!-{datetime.datetime.today().replace(microsecond=0)}')
+    await ctx.send(f'{ctx.author.mention} Cleared data of `{member.name}#{member.discriminator}` successfully!')
 
 @bot.event
 async def on_ready():
