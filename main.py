@@ -552,8 +552,9 @@ async def give(ctx, member:discord.Member, amount:int):
     if amount > a_wallet:
         return await ctx.send(f'{ctx.author.mention} You dont have enough coins. Go beg or withdraw.')
 
+    new_a_wallet = a_wallet - amount
+
     author['wallet'] = new_a_wallet
-    author['bank'] = new_a_bank
     data[f'{ctx.author.id}'] = author
 
     p_wallet = person['wallet']
