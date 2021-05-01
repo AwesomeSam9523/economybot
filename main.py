@@ -10,7 +10,7 @@ from prettytable import PrettyTable
 
 intents = discord.Intents.default()
 intents.members = True
-bot = commands.Bot(command_prefix="e.", intents=intents)
+bot = commands.Bot(command_prefix=["e.", "E."], intents=intents, case_insensitive=True)
 devs = [771601176155783198, 713056818972066140]
 embedcolor = 3407822
 links_channel = 832083121486037013
@@ -315,7 +315,18 @@ async def logs(ctx):
         return
     with open('logs.txt', 'r') as log:
         logs_data = log.readlines()
-    await ctx.send(f'Logs:\n```{"".join(logs_data)}```') #
+    logs_data.reverse()
+    x = PrettyTable()
+    x.field_names = ['Used By', 'Command', 'Parameters', "Time"]
+    count = 1
+    for i in logs_data:
+        if i == '' or i == '\n':
+            continue
+        if count > 15:
+            break
+        x.add_row(i.split('-!-'))
+        count += 1
+    await ctx.send(f'**Requested by:** `{ctx.author.name}`\n```css\n{x}```')
 
 @bot.command(aliases=['eval'])  # DEV ONLY
 async def evaluate(ctx, *, expression):
@@ -360,7 +371,7 @@ async def add(ctx, person:discord.Member, bal:int, *args):
     await update_data(data)
 
     if logsignore is None:
-        await update_logs(f'{ctx.author} used "add" command [{person.id}, {await commait(bal)}]')
+        await update_logs(f'{ctx.author}-!-add-!-[{person.id}, {await commait(bal)}]-!-{datetime.datetime.today().replace(microsecond=0)}')
         await ctx.send(f'{ctx.author.mention} added `{await commait(bal)}` coins to {person.mention}.')
     else:
         await ctx.send(f'{ctx.author.mention} added `{await commait(bal)}` coins to {person.mention}.\n**This actions isnt added in logs!**')
