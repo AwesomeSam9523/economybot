@@ -224,16 +224,16 @@ async def update_data(data):
     with open('accounts.json', 'w') as f:
         f.write(str(json.dumps(data)))
 
-async def open_account(ctx):
+async def open_account(userid):
     data = await get_data()
-    if data.get(str(ctx.author.id)) is None:
-        data[ctx.author.id] = {'bank_type':1, 'wallet':0, 'bank':1000}
+    if data.get(str(userid)) is None:
+        data[userid] = {'bank_type':1, 'wallet':0, 'bank':1000}
         await update_data(data)
 
-async def open_estates(ctx):
+async def open_estates(userid):
     data = await get_estates()
-    if data.get(str(ctx.author.id)) is None:
-        data[f'{ctx.author.id}'] = {'level':1, 'name':f'{ctx.author.name}', 'lm':time.time(), 'lr':time.time(), 'p':0, 'c':0}
+    if data.get(str(userid)) is None:
+        data[f'{userid}'] = {'level':1, 'name':f'{ctx.author.name}', 'lm':time.time(), 'lr':time.time(), 'p':0, 'c':0}
 
     await update_est(data)
 
@@ -367,12 +367,12 @@ async def add(ctx, person:discord.Member, bal:int, *args):
 
 @bot.command(aliases=['bal'])
 async def balance(ctx, member:discord.Member = None):
-    await open_account(ctx)
-    data = await get_data()
     if member is None:
         userid = ctx.author.id
     else:
         userid = member.id
+    await open_account(userid)
+    data = await get_data()
     person = data.get(str(userid))
     bank_type = person['bank_type']
     wallet = person['wallet']
@@ -440,13 +440,15 @@ async def withdraw(ctx, amount: str = None):
 
 @bot.command()
 async def bank(ctx, member:discord.Member = None):
-    await avg_update()
-    data = await get_data()
-    avgbal = await get_avg()
     if member is None:
         userid = ctx.author.id
     else:
         userid = member.id
+    await open_account(userid)
+    await avg_update()
+    data = await get_data()
+    avgbal = await get_avg()
+
     person = data.get(f'{userid}')
     person2 = avgbal.get(f'{userid}')
     btype = person['bank_type']
@@ -529,6 +531,7 @@ async def give(ctx, member:discord.Member, amount:int):
     amount = int(amount)
 
     data = await get_data()
+    await open_account(member.id)
     author = data.get(f'{ctx.author.id}')
     person = data.get(f'{member.id}')
 
@@ -558,10 +561,15 @@ async def give(ctx, member:discord.Member, amount:int):
     await ctx.send(embed=embed)
 
 @bot.command(aliases=['property'])
-async def estates(ctx):
-    await open_estates(ctx)
+async def estates(ctx, member:discord.Member=None):
+    if member is None:
+        userid = ctx.author.id
+    else:
+        userid = member.id
+
+    await open_estates(userid)
     est = await get_estates()
-    person = est[f'{ctx.author.id}']
+    person = est[f'{userid}']
     level = person['level']
     name = person['name']
     revenue = await get_revenue(level)
@@ -574,7 +582,7 @@ async def estates(ctx):
     embed.add_field(name='Next Task', value=f'```css\n[{estates_tasks[level]}]\nUse e.upgrade to Upgrade!\n```', inline=False)
     embed.add_field(inline=False, name='Note:', value='```diff\nThe revenue is earned in per hour\n+ Use e.revenue to claim revenue\n- Use e.maintain to do maintainance\n```')
 
-    fetched = bot.get_user(ctx.author.id)
+    fetched = bot.get_user(userid)
     embed.timestamp = datetime.datetime.utcnow()
     embed.set_footer(text='Economy Bot', icon_url=bot_pfp)
     embed.set_author(name=f'{fetched.name} | {name} Hotel', icon_url=fetched.avatar_url)
@@ -584,7 +592,8 @@ async def estates(ctx):
 
 @bot.command()
 async def revenue(ctx):
-    await open_estates(ctx)
+    userid = ctx.author.id
+    await open_estates(userid)
     await est_update()
     est = await get_estates()
     person = est[f'{ctx.author.id}']
@@ -647,6 +656,8 @@ async def revenue(ctx):
 
 @bot.command()
 async def maintain(ctx):
+    userid = ctx.author.id
+    await open_estates(userid)
     data = await get_data()
     est = await get_estates()
     userid = str(ctx.author.id)
@@ -712,7 +723,8 @@ async def maintain(ctx):
 
 @bot.command()
 async def upgrade(ctx):
-    await open_estates(ctx)
+    userid = ctx.author.id
+    await open_estates(userid)
     est = await get_estates()
     eperson = est[f'{ctx.author.id}']
     level = eperson['level']
