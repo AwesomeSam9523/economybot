@@ -6,6 +6,7 @@ from discord.ext import commands
 import json
 import datetime
 import inspect
+from prettytable import PrettyTable
 
 intents = discord.Intents.default()
 intents.members = True
@@ -120,9 +121,58 @@ async def update_est(data):
     with open('estates.json', 'w') as f:
         f.write(json.dumps(data))
 
-async def average_bal():
+async def update_alerts(data):
+    with open('alerts.json', 'w') as f:
+        f.write(json.dumps(data))
+
+async def get_alert_info():
+    with open('alerts.json', 'r') as a:
+        aler = json.loads(a.read())
+    return aler
+
+async def est_update():
+    est = await get_estates()
+    keys = [x for x in est.keys()]
+
+    for i in keys:
+        person = est[i]
+        lm = person['lm']
+        pending = person['p']
+
+        cur = time.time()
+        diff = cur - lm
+
+        if diff >= 172800:
+            aler = await get_alert_info()
+            persona = aler[i]
+
+            state, last = persona['state'], persona['last']
+            dm_diff = cur - last
+
+            person['p'] = diff - 172800
+            est[str(i)] = person
+            await update_est(est)
+
+            if state == 'on' and dm_diff > 21600:
+                embed = discord.Embed(title='Maintainance Reminder',
+                                      description='Your Hotel Maintainance is due. Use `e.maintain` to pay for it.\n'
+                                                  'Note: You will get less revenue if maintainance isn\'t done!',
+                                      colour=embedcolor)
+                fetched = bot.get_user(int(i))
+                embed.timestamp = datetime.datetime.utcnow()
+                embed.set_author(name=f'{fetched.name}', icon_url=fetched.avatar_url)
+                embed.set_footer(text='Economy Bot', icon_url=bot_pfp)
+
+                persona['last'] = cur
+                aler[str(i)] = persona
+                await update_alerts(aler)
+
+                await fetched.send(embed=embed)
+
+async def loops():
     while True:
         await avg_update()
+        await est_update()
         await asyncio.sleep(300)
 
 async def avg_update():
@@ -159,6 +209,8 @@ async def create_stuff():
     global bot_pfp
     mybot = bot.get_user(832083717417074689)
     bot_pfp = mybot.avatar_url
+    asyncio.create_task(loops())
+    print('Ready!')
 
 async def get_data():
     with open('accounts.json', 'r') as f:
@@ -181,7 +233,7 @@ async def open_account(ctx):
 async def open_estates(ctx):
     data = await get_estates()
     if data.get(str(ctx.author.id)) is None:
-        data[f'{ctx.author.id}'] = {'level':1, 'name':f'{ctx.author.name}'}
+        data[f'{ctx.author.id}'] = {'level':1, 'name':f'{ctx.author.name}', 'lm':time.time(), 'lr':time.time(), 'p':0, 'c':0}
 
     await update_est(data)
 
@@ -222,6 +274,20 @@ async def get_maint(level:int):
 
 async def get_cost(level:int):
     return int((300*level)**(1.75))
+
+async def alerts_state(userid, state:str):
+    with open('alerts.json', 'r') as a:
+        aler = json.loads(a.read())
+    userid = str(userid)
+    person = aler.get(userid)
+    if person is None:
+        person = {'state':0, 'last':0}
+
+    person['state'] = state
+    aler[userid] = person
+
+    with open('alerts.json', 'w') as aa:
+        aa.write(json.dumps(aler))
 
 async def commait(val):
     val = str(val)
@@ -517,6 +583,69 @@ async def estates(ctx):
     await ctx.send(embed=embed)
 
 @bot.command()
+async def revenue(ctx):
+    await open_estates(ctx)
+    await est_update()
+    est = await get_estates()
+    person = est[f'{ctx.author.id}']
+
+    level = person['level']
+    name = person['name']
+    last_m = person['lm']
+    last_r = person['lr']
+    pending = person['p']
+    alr_claimed = person['c']
+    current = time.time()
+
+    m_diff = current - last_m
+    r_diff = current - last_r
+
+    revenue_rate = await get_revenue(level)
+    if alr_claimed == 1 and m_diff >= 172800:
+        fixed_rev = 0
+        low_rev = int((r_diff/3600)*revenue_rate*0.4)
+    else:
+        fixed_rev = int((r_diff / 3600) * revenue_rate)
+        low_rev = int((pending/3600)*revenue_rate*0.4)
+    if pending > 172800:
+        fine = -5000
+    else:
+        fine = 0
+    totalpay = int(fixed_rev+low_rev+fine)
+
+    x = PrettyTable()
+    x.field_names = ["    Name", "       ", "      ", "Amount  "]
+    x.align["    Name"] = "l"
+    x.align["Amount  "] = "r"
+    x.add_row(["Fixed Revenue", "", "", f'{await commait((fixed_rev))}.00/-'])
+    x.add_row(["Late Revenue", "", "", f'{await commait(low_rev)}.00/-'])
+    x.add_row(["Late Fine", "", "", f'{await commait(fine)}.00/-'])
+    x.add_row(["", "", "", f''])
+    x.add_row(["[Grand Total]", "", "", f'{await commait(totalpay)}.00/-'])
+
+    embed = discord.Embed(title='Hotel Revenue',
+                          description=f'`{totalpay}.00` coins added to bank successfully!\n\nHere is the revenue split:\n```css\n{x}```',
+                          colour=embedcolor)
+    fetched = bot.get_user(ctx.author.id)
+    embed.timestamp = datetime.datetime.utcnow()
+    embed.set_footer(text='Economy Bot', icon_url=bot_pfp)
+    embed.set_author(name=f'{fetched.name} | {name} Hotel', icon_url=fetched.avatar_url)
+
+    data = await get_data()
+    persona = data[f'{ctx.author.id}']
+    bank_ = persona['bank']
+    persona['bank'] = bank_ + totalpay
+    data[f'{ctx.author.id}'] = persona
+    person['lr'] = time.time()
+    person['pending'] = 0
+    person['c'] = 1
+    est[f'{ctx.author.id}'] = person
+
+    await update_est(est)
+    await update_data(data)
+    await ctx.send(embed=embed)
+
+@bot.command()
 async def upgrade(ctx):
     await open_estates(ctx)
     est = await get_estates()
@@ -585,10 +714,39 @@ async def upgrade(ctx):
     except asyncio.TimeoutError:
         pass
 
+@bot.command()
+async def alerts(ctx, state:str = None):
+    if state is None:
+        embed = discord.Embed(title='Alerts System',
+                              description='Get Alerts on pending loans, hotel maintainance, robberies etc straight to your DMs\n'
+                                          '```diff\n+ To turn on: e.alerts on\n- To turn off: e.alerts off\n```',
+                              color=embedcolor)
+        with open('alerts.json', 'r') as a:
+            aler = json.loads(a.read())
+        if f'{ctx.author.id}' in aler:
+            current = 'On'
+        else:
+            current = 'Off'
+
+        embed.add_field(name='Current State', value=current)
+        fetched = bot.get_user(ctx.author.id)
+        embed.timestamp = datetime.datetime.utcnow()
+        embed.set_author(name=f'{fetched.name}', icon_url=fetched.avatar_url)
+        embed.set_footer(text='Economy Bot', icon_url=bot_pfp)
+        return await ctx.send(embed=embed)
+
+    if state == 'on':
+        await ctx.send(f'{ctx.author.mention} Alerts are switched **On**. Make sure you have your DMs open :)')
+        await alerts_state(ctx.author.id, 'on')
+    elif state == 'off':
+        await ctx.send(f'{ctx.author.mention} Alerts are switched **Off**. "Yay no more bot DMs", huh?')
+        await alerts_state(ctx.author.id, 'off')
+    else:
+        await ctx.send(f'{ctx.author.mention} Incorrect Option. Use `e.alerts` to see help.')
+
 @bot.event
 async def on_ready():
     await create_stuff()
-    asyncio.create_task(average_bal())
 
 print("Running...")
 bot.run("ODMyMDgzNzE3NDE3MDc0Njg5.YHeoWQ._O5uoMS_I7abKdI_YzVb9BuEHzs")
