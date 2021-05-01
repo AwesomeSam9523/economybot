@@ -646,6 +646,71 @@ async def revenue(ctx):
     await ctx.send(embed=embed)
 
 @bot.command()
+async def maintain(ctx):
+    data = await get_data()
+    est = await get_estates()
+    userid = str(ctx.author.id)
+
+    persona = data[userid]
+    person = est[userid]
+
+    bank_bal = persona['bank']
+    wal_bal = persona['wallet']
+
+    lm = person['lm']
+    level = person['level']
+    name = person['name']
+    cur = time.time()
+
+    maint = await get_maint(level)
+    cost = int(((cur-lm) / 3600)*maint)
+    cost_d = int(cost*0.1)+int(cost*0.4)+int(cost*0.3)+int(cost*0.2)
+
+    x = PrettyTable()
+    x.field_names = ["    Name", "       ", "      ", "Amount  "]
+    x.align["    Name"] = "l"
+    x.align["Amount  "] = "r"
+    x.add_row(["Cleaning", "", "", f'{await commait(int(cost*0.1))}.00/-'])
+    x.add_row(["Staff Salary", "", "", f'{await commait(int(cost*0.4))}.00/-'])
+    x.add_row(["Meals", "", "", f'{await commait(int(cost*0.3))}.00/-'])
+    x.add_row(["Repair Work", "", "", f'{await commait(int(cost*0.2))}.00/-'])
+    x.add_row(["", "", "", f''])
+    x.add_row(["[Grand Total]", "", "", f'{await commait(cost_d)}.00/-'])
+
+    if bank_bal+wal_bal < cost_d:
+        embed = discord.Embed(title='Oops..',
+                              description=f'You dont have enough coins to find the maintainance.\n```css\n{x}```', color=embedcolor)
+    else:
+        if bank_bal < cost_d:
+            new_bbal = 0
+            new_wbal = wal_bal - cost_d + bank_bal
+        else:
+            new_bbal = bank_bal - cost_d
+            new_wbal = wal_bal
+
+        persona['bank'] = new_bbal
+        persona['wallet'] = new_wbal
+        data[userid] = persona
+
+        person['lm'] = cur
+        person['p'] = 0
+        est[userid] = person
+
+        await update_data(data)
+        await update_est(est)
+
+        embed = discord.Embed(title='Success!',
+                              description=f'`{cost_d}.00` coins have been deducted and your hotel looks shining new!\n```css\n{x}```',
+                              color=embedcolor)
+
+    fetched = bot.get_user(ctx.author.id)
+    embed.timestamp = datetime.datetime.utcnow()
+    embed.set_footer(text='Economy Bot', icon_url=bot_pfp)
+    embed.set_author(name=f'{fetched.name} | {name} Hotel', icon_url=fetched.avatar_url)
+
+    await ctx.send(embed=embed)
+
+@bot.command()
 async def upgrade(ctx):
     await open_estates(ctx)
     est = await get_estates()
