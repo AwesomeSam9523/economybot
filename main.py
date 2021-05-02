@@ -526,7 +526,7 @@ async def bank(ctx, member:discord.Member = None):
     embed.add_field(name='Bank Name', value=f'{bank_names[btype]}')
     embed.add_field(name='Bank Tier', value=f'{bank_tier[btype]}')
     embed.add_field(name='\u200b', value='\u200b')
-    embed.add_field(name='Weekly Interest', value=f'{rates[btype]}%')
+    embed.add_field(name='Daily Interest', value=f'{rates[btype]}%')
     embed.add_field(name='Current Balance', value=f'{person["bank"]}')
     embed.add_field(name='Average Balance', value=f'{person2["avg"]}')
     embed.add_field(name='Note:', value='To claim interest, use `e.daily`.\n'
