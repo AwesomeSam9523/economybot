@@ -307,6 +307,50 @@ async def commait(val):
 
     return string[::-1]
 
+async def current_time():
+    return datetime.datetime.today().replace(microsecond=0)
+
+async def get_fees(user, amt):
+    btype = user['bank_type']
+    fees = {1:1, 2:1.2, 3:1.5}
+
+    if amt > 5000:
+        a = 250
+    elif amt > 20000:
+        a = 500
+    elif amt > 30000:
+        a = 1000
+    elif amt > 50000:
+        a = 2000
+    elif amt > 75000:
+        a = 5000
+    else:
+        a = 0
+
+    return int(a*fees[btype])
+
+async def get_statements():
+    with open('statements.json', 'r') as s:
+        return json.loads(s.read())
+
+async def update_statements(stat):
+    with open('statements.json', 'w') as w:
+        w.write(json.dumps(stat))
+
+async def create_statement(user, person, amount, reason, type):
+    states = await get_statements()
+    user_s = states.get(f'{user.id}')
+    if reason is None:
+        reason = 'N.A.'
+    entry = {'person':f'{person.name}#{person.discriminator}', 'type':type, 'amount':amount, 'time':f'{await current_time()}', 'reason':reason}
+    if user_s is None:
+        user_s = [entry]
+    else:
+        user_s.append(entry)
+
+    states[str(user.id)] = user_s
+    await update_statements(states)
+
 @bot.event
 async def on_message(message):
     await bot.process_commands(message)
@@ -375,6 +419,20 @@ async def add(ctx, person:discord.Member, bal:int, *args):
 
     await update_logs(f'{ctx.author}-!-add-!-[{person.id}, {await commait(bal)}]-!-{datetime.datetime.today().replace(microsecond=0)}')
     await ctx.send(f'{ctx.author.mention} added `{await commait(bal)}` coins to {person.mention}.')
+
+@bot.command() #DEV Only
+async def clear(ctx, member:discord.Member):
+    data = await get_data()
+    userid = str(member.id)
+
+    person = data[userid]
+    person['bank'] = 0
+    person['wal'] = 0
+
+    data[userid] = person
+    await update_data(data)
+    await update_logs(f'{ctx.author}-!-clear-!-[{member.id}]-!-{datetime.datetime.today().replace(microsecond=0)}')
+    await ctx.send(f'{ctx.author.mention} Cleared data of `{member.name}#{member.discriminator}` successfully!')
 
 @bot.command(aliases=['bal'])
 async def balance(ctx, member:discord.Member = None):
@@ -533,14 +591,6 @@ async def daily(ctx):
 
 @bot.command()
 async def give(ctx, member:discord.Member, amount:int):
-    if amount == 0:
-        return await ctx.send(f'{ctx.author.mention} Sending 0 coins... Hmm nice idea but we dont do that here.')
-    if amount < 0:
-        return await ctx.send(f'{ctx.author.mention} Dont try to be oversmart kiddo.')
-    if member == ctx.author:
-        return await ctx.send(f'{ctx.author.mention} Did you just try to send **yourself** some coins?')
-    amount = int(amount)
-
     data = await get_data()
     await open_account(member.id)
     author = data.get(f'{ctx.author.id}')
@@ -548,6 +598,22 @@ async def give(ctx, member:discord.Member, amount:int):
 
     a_wallet = author['wallet']
     a_bank = author['bank']
+    
+    if amount == 'all':
+        amount = a_bank
+    elif amount == 'half':
+        amount = a_bank/2
+    else:
+        amount = int(amount)
+    
+    if amount == 0:
+        return await ctx.send(f'{ctx.author.mention} Sending 0 coins... Hmm nice idea but we dont do that here.')
+    if amount < 0:
+        return await ctx.send(f'{ctx.author.mention} Dont try to be oversmart kiddo.')
+    if amount > 5000:
+        return await ctx.send(f'{ctx.author.mention} You cannot give more than `5,000` coins through `e.give`.\nUse `e.transfer` instead.')
+    if member == ctx.author:
+        return await ctx.send(f'{ctx.author.mention} Did you just try to send **yourself** some coins?')
 
     if amount > a_wallet:
         return await ctx.send(f'{ctx.author.mention} You dont have enough coins. Go beg or withdraw.')
@@ -851,19 +917,82 @@ async def alerts(ctx, state:str = None):
     else:
         await ctx.send(f'{ctx.author.mention} Incorrect Option. Use `e.alerts` to see help.')
 
-@bot.command() #DEV Only
-async def clear(ctx, member:discord.Member):
+@bot.command()
+async def transfer(ctx, togive:discord.Member = None, amount = None, *, reason = None):
+    if togive is None or amount is None:
+        return await ctx.send(f'{ctx.author.mention} The format for the command is: `e.transfer @user <amount> [reason]`')
     data = await get_data()
-    userid = str(member.id)
+    current = data[f'{ctx.author.id}']
+    person = data[f'{togive.id}']
 
-    person = data[userid]
-    person['bank'] = 0
-    person['wal'] = 0
+    c_bank = current['bank']
+    p_bank = person['bank']
+    
+    if amount == 'all':
+        amount = c_bank
+    elif amount == 'half':
+        amount = c_bank/2
+    else:
+        amount = int(amount)
 
-    data[userid] = person
+    if togive == ctx.author:
+        return await ctx.send(f'{ctx.author.mention} Did you just try to send **yourself** some coins?')
+    if amount == 0:
+        return await ctx.send(f'{ctx.author.mention} Sending 0 coins... Hmm nice idea but we dont do that here.')
+    if amount < 0:
+        return await ctx.send(f'{ctx.author.mention} Dont try to be oversmart kiddo.')
+
+    if current['bank_type'] != person['bank_type']:
+        fees = await get_fees(person, amount)
+    else:
+        fees = 0
+
+    if amount > c_bank:
+        return await ctx.send(f'{ctx.author.mention} Well, you don\'t have enough coins. RIP.')
+    if amount + fees > c_bank:
+        return await ctx.send(f'{ctx.author.mention} You don\'t have enough coins to pay for transaction fees.')
+        
+    current['bank'] = c_bank - amount - fees
+    person['bank'] = p_bank + amount
+
+    data[f'{togive.id}'] = person
+    data[f'{ctx.author.id}'] = current
+
     await update_data(data)
-    await update_logs(f'{ctx.author}-!-clear-!-[{member.id}]-!-{datetime.datetime.today().replace(microsecond=0)}')
-    await ctx.send(f'{ctx.author.mention} Cleared data of `{member.name}#{member.discriminator}` successfully!')
+    await create_statement(ctx.author, togive, amount, reason, 'Debit')
+    await create_statement(togive, ctx.author, amount, reason, 'Credit')
+
+    embed = discord.Embed(title='Transfer Successful!',
+                          description=f'You transfered `{amount}` coins to {togive.mention}.',
+                          color=embedcolor)
+    embed.add_field(name='Tax on transaction', value=f'`{fees}` coins')
+    embed.add_field(name='Your Balance', value=f'`{c_bank - amount}` coins')
+    fetched = bot.get_user(ctx.author.id)
+    embed.timestamp = datetime.datetime.utcnow()
+    embed.set_footer(text='Economy Bot', icon_url=bot_pfp)
+    embed.set_author(name=f'{fetched.name}', icon_url=fetched.avatar_url)
+
+    await ctx.send(embed=embed)
+
+@bot.command()
+async def statement(ctx):
+    stats = await get_statements()
+    all_s = stats.get(str(ctx.author.id))
+    if all_s is None:
+        desc = 'No Statements Yet..'
+    else:
+        all_s.reverse()
+        x = PrettyTable()
+        x.field_names = ['S.No.', 'Date and Time','Transfered to', 'Amount', 'Type', 'Reason']
+        count = 1
+        for s in all_s:
+            x.add_row([count, s['time'], s['person'], s['amount'], s['type'], s['reason'][:25]])
+            count += 1
+            if count == 13:
+                break
+        desc = x
+
+    await ctx.send(f'**Bank Statement:**\n```\n{desc}```')
 
 @bot.event
 async def on_ready():
