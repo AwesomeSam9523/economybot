@@ -99,12 +99,61 @@ estates_tasks = {
     30:'Maxed Out'
 }
 
+xp_levels = {
+100:1,
+250:2,
+500:3,
+800:4,
+1200:5,
+1700:6,
+2200:7,
+3000:8,
+3800:9,
+4700:10,
+5800:11,
+8000:12,
+9300:13,
+10500:14,
+12000:15,
+13700:16,
+16300:17,
+18000:18,
+19800:19,
+22000:20,
+24500:21,
+26700:22,
+29000:23,
+31500:24,
+34000:25,
+37200:26,
+40500:27,
+43800:28,
+46800:29,
+50000:30,
+54500:31,
+60000:32,
+66000:33,
+73000:34,
+83000:35,
+95000:36,
+110000:37,
+130000:38,
+165000:39,
+200000:40,
+230000:41,
+270000:42,
+325000:43,
+395000:44,
+470000:45,
+560000:46,
+650000:47,
+740000:48,
+850000:49,
+1000000:50
+}
+
 e_wallet = '<:wallet:836814969290358845>'
 e_bank = '🏦'
-
-async def update_logs(stuff: str):
-    with open('logs.txt', 'a') as logs:
-        logs.write(f'\n{stuff}')
 
 async def get_avg():
     with open('average.json', 'r') as avg:
@@ -113,6 +162,55 @@ async def get_avg():
 async def get_estates():
     with open('estates.json', 'r') as f:
         return json.loads(f.read())
+
+async def get_alert_info():
+    with open('alerts.json', 'r') as a:
+        aler = json.loads(a.read())
+    return aler
+
+async def get_data():
+    with open('accounts.json', 'r') as f:
+        data = f.read()
+        if data == '{}':
+            return {1:1}
+        else:
+            return json.loads(data)
+
+async def get_revenue(level:int):
+    return int((level*200 - 50)*0.97)
+
+async def get_maint(level:int):
+    return int((level*200 - 50)*0.9)
+
+async def get_cost(level:int):
+    return int((300*level)**(1.75))
+
+async def get_fees(user, amt):
+    btype = user['bank_type']
+    fees = {1:1, 2:1.2, 3:1.5}
+
+    if amt > 5000:
+        a = 250
+    elif amt > 20000:
+        a = 500
+    elif amt > 30000:
+        a = 1000
+    elif amt > 50000:
+        a = 2000
+    elif amt > 75000:
+        a = 5000
+    else:
+        a = 0
+
+    return int(a*fees[btype])
+
+async def get_xp():
+    with open('xp.json', 'r') as xp:
+        return json.loads(xp.read())
+
+async def get_statements():
+    with open('statements.json', 'r') as s:
+        return json.loads(s.read())
 
 async def update_avg(avg):
     with open('average.json', 'w') as avgbal:
@@ -126,10 +224,17 @@ async def update_alerts(data):
     with open('alerts.json', 'w') as f:
         f.write(json.dumps(data))
 
-async def get_alert_info():
-    with open('alerts.json', 'r') as a:
-        aler = json.loads(a.read())
-    return aler
+async def update_logs(stuff: str):
+    with open('logs.txt', 'a') as logs:
+        logs.write(f'\n{stuff}')
+
+async def update_data(data):
+    with open('accounts.json', 'w') as f:
+        f.write(str(json.dumps(data)))
+
+async def update_statements(stat):
+    with open('statements.json', 'w') as w:
+        w.write(json.dumps(stat))
 
 async def est_update():
     est = await get_estates()
@@ -157,9 +262,9 @@ async def est_update():
             await update_est(est)
 
             if state == 'on' and dm_diff > 21600:
-                embed = discord.Embed(title='Maintainance Reminder',
-                                      description='Your Hotel Maintainance is due. Use `e.maintain` to pay for it.\n'
-                                                  'Note: You will get less revenue if maintainance isn\'t done!',
+                embed = discord.Embed(title='Maintenance Reminder',
+                                      description='Your Hotel Maintenance is due. Use `e.maintain` to pay for it.\n'
+                                                  'Note: You will get less revenue if maintenance isn\'t done!',
                                       colour=embedcolor)
                 fetched = bot.get_user(int(i))
                 embed.timestamp = datetime.datetime.utcnow()
@@ -171,12 +276,6 @@ async def est_update():
                 await update_alerts(aler)
 
                 await fetched.send(embed=embed)
-
-async def loops():
-    while True:
-        await avg_update()
-        await est_update()
-        await asyncio.sleep(300)
 
 async def avg_update():
     avgbal = await get_avg()
@@ -208,24 +307,18 @@ async def avg_update():
     with open('average.json', 'w') as avg:
         avg.write(str(json.dumps(avgbal)))
 
+async def loops():
+    while True:
+        await avg_update()
+        await est_update()
+        await asyncio.sleep(300)
+
 async def create_stuff():
     global bot_pfp
     mybot = bot.get_user(832083717417074689)
     bot_pfp = mybot.avatar_url
     asyncio.create_task(loops())
     print('Ready!')
-
-async def get_data():
-    with open('accounts.json', 'r') as f:
-        data = f.read()
-        if data == '{}':
-            return {1:1}
-        else:
-            return json.loads(data)
-
-async def update_data(data):
-    with open('accounts.json', 'w') as f:
-        f.write(str(json.dumps(data)))
 
 async def open_account(userid):
     data = await get_data()
@@ -270,15 +363,6 @@ async def add_timeout(userid, event):
     with open('timeouts.json', 'w') as f:
         f.write(json.dumps(data))
 
-async def get_revenue(level:int):
-    return int((level*200 - 50)*0.97)
-
-async def get_maint(level:int):
-    return int((level*200 - 50)*0.9)
-
-async def get_cost(level:int):
-    return int((300*level)**(1.75))
-
 async def alerts_state(userid, state:str):
     with open('alerts.json', 'r') as a:
         aler = json.loads(a.read())
@@ -312,33 +396,6 @@ async def commait(val):
 async def current_time():
     return datetime.datetime.today().replace(microsecond=0)
 
-async def get_fees(user, amt):
-    btype = user['bank_type']
-    fees = {1:1, 2:1.2, 3:1.5}
-
-    if amt > 5000:
-        a = 250
-    elif amt > 20000:
-        a = 500
-    elif amt > 30000:
-        a = 1000
-    elif amt > 50000:
-        a = 2000
-    elif amt > 75000:
-        a = 5000
-    else:
-        a = 0
-
-    return int(a*fees[btype])
-
-async def get_statements():
-    with open('statements.json', 'r') as s:
-        return json.loads(s.read())
-
-async def update_statements(stat):
-    with open('statements.json', 'w') as w:
-        w.write(json.dumps(stat))
-
 async def create_statement(user, person, amount, reason, type):
     states = await get_statements()
     user_s = states.get(f'{user.id}')
@@ -352,6 +409,18 @@ async def create_statement(user, person, amount, reason, type):
 
     states[str(user.id)] = user_s
     await update_statements(states)
+
+async def calculate_level(xp:int):
+    lxp_sum = 0
+    level_found = -1
+    for i in xp_levels.keys():
+        lxp_sum += i
+        if xp <= lxp_sum:
+            for key, value in xp_levels.items():
+                if i == key:
+                    level_found = value
+            break
+    return level_found
 
 @bot.event
 async def on_message(message):
@@ -454,7 +523,6 @@ async def release(ctx, title:str, link:str):
 
     chl = bot.get_channel(838963496476606485)
     await chl.send(embed = embed)
-
 
 @bot.command(aliases=['bal'])
 async def balance(ctx, member:discord.Member = None):
@@ -1009,7 +1077,7 @@ async def statement(ctx):
     else:
         all_s.reverse()
         x = PrettyTable()
-        x.field_names = ['S.No.', 'Date and Time','Transfered to', 'Amount', 'Type', 'Reason']
+        x.field_names = ['S.No.', 'Date and Time','From/To', 'Amount', 'Type', 'Reason']
         count = 1
         for s in all_s:
             x.add_row([count, s['time'], s['person'], s['amount'], s['type'], s['reason'][:25]])
@@ -1019,6 +1087,36 @@ async def statement(ctx):
         desc = x
 
     await ctx.send(f'**Bank Statement:**\n```\n{desc}```')
+
+@bot.command()
+async def level(ctx, member:discord.Member = None):
+    if member is None:
+        member = ctx.author
+
+    xpdata = await get_xp()
+    xp = xpdata.setdefault(f'{member.id}', 0)
+    print(xp)
+    lev = await calculate_level(xp)
+
+    for key, value in xp_levels.items():
+        if lev == value:
+            max_xp = key
+            break
+
+    percent = int((xp/max_xp)*25)
+    bar = f'**`{"▬"*percent}ᐅ{"▬"*(24-percent)}`**'
+
+    embed = discord.Embed(description=bar,
+                          color=embedcolor)
+    embed.add_field(name='Level', value=f'`{lev}`')
+    embed.add_field(name='XP', value=f'`{await commait(xp)}/{await commait(max_xp)}`')
+
+    fetched = bot.get_user(member.id)
+    embed.timestamp = datetime.datetime.utcnow()
+    embed.set_footer(text='Economy Bot', icon_url=bot_pfp)
+    embed.set_author(name=f'{fetched.name} | Level Card', icon_url=fetched.avatar_url)
+    #embed.set_thumbnail(url=fetched.avatar_url)
+    await ctx.send(embed=embed)
 
 @bot.event
 async def on_ready():
