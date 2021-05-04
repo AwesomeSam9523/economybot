@@ -1,3 +1,5 @@
+import os
+import random
 import re
 import json
 import discord
@@ -152,6 +154,10 @@ xp_levels = {
 1000000:50
 }
 
+stock_names = ['Ava', 'Neil', 'Ryan', 'Anthony', 'Bernadette', 'Lauren', 'Justin', 'Matt', 'Wanda', 'James', 'Emily', 'Vanessa', 'Carl', 'Fiona', 'Stephanie', 'Pippa', 'Phil', 'Carol', 'Liam', 'Michael', 'Ella', 'Amanda', 'Caroline', 'Nicola', 'Sean', 'Oliver', 'Kylie', 'Rachel', 'Leonard', 'Julian', 'Richard', 'Peter', 'Irene', 'Dominic', 'Connor', 'Dorothy', 'Gavin', 'Isaac', 'Karen', 'Kimberly', 'Abigail', 'Yvonne', 'Steven', 'Felicity', 'Evan', 'Bella', 'Alison', 'Diane', 'Joan', 'Jan', 'Wendy', 'Nathan', 'Molly', 'Charles', 'Victor', 'Sally', 'Rose', 'Robert', 'Claire', 'Theresa', 'Grace', 'Keith', 'Stewart', 'Andrea', 'Alexander', 'Chloe', 'Nicholas', 'Edward', 'Deirdre', 'Anne', 'Joseph', 'Alan', 'Rebecca', 'Jane', 'Natalie', 'Cameron', 'Owen', 'Eric', 'Gabrielle', 'Sonia', 'Tim', 'Sarah', 'Madeleine', 'Megan', 'Lucas', 'Joe', 'Brandon', 'Brian', 'Jennifer', 'Alexandra', 'Adrian', 'John', 'Mary', 'Tracey', 'Jasmine', 'Penelope', 'Hannah', 'Thomas', 'Angela', 'Warren', 'Blake', 'Simon', 'Audrey', 'Frank', 'Samantha', 'Dan', 'Victoria', 'Paul', 'Jacob', 'Heather', 'Una', 'Lily', 'Carolyn', 'Jonathan', 'Ian', 'Piers', 'William', 'Gordon', 'Dylan', 'Olivia', 'Jake', 'Leah', 'Jessica', 'David', 'Katherine', 'Amelia', 'Benjamin', 'Boris', 'Sebastian', 'Lisa', 'Diana', 'Michelle', 'Emma', 'Sam', 'Stephen', 'Faith', 'Kevin', 'Austin', 'Jack', 'Ruth', 'Colin', 'Trevor', 'Joanne', 'Virginia', 'Anna', 'Max', 'Adam', 'Maria', 'Sophie', 'Sue', 'Andrew', 'Harry', 'Amy', 'Christopher', 'Donna', 'Melanie', 'Elizabeth', 'Lillian', 'Julia', 'Christian', 'Luke', 'Zoe', 'Joshua', 'Jason']
+
+xp_timeout = []
+
 e_wallet = '<:wallet:836814969290358845>'
 e_bank = '🏦'
 
@@ -235,6 +241,10 @@ async def update_data(data):
 async def update_statements(stat):
     with open('statements.json', 'w') as w:
         w.write(json.dumps(stat))
+
+async def update_xp(data):
+    with open('xp.json', 'w') as w:
+        w.write(json.dumps(data))
 
 async def est_update():
     est = await get_estates()
@@ -422,8 +432,22 @@ async def calculate_level(xp:int):
             break
     return level_found
 
+async def add_xp_tm(userid):
+    xp_timeout.append(userid)
+    await asyncio.sleep(50)
+    xp_timeout.remove(userid)
+
 @bot.event
 async def on_message(message):
+    if message.content.startswith('e.') or message.content.startswith('E.'):
+        if message.author.id not in xp_timeout:
+            userid = message.author.id
+            xps = await get_xp()
+            xp = xps.setdefault(f'{userid}', 0)
+            togive = random.randint(10, 25)
+            xps[str(userid)] = xp + togive
+            asyncio.create_task(update_xp(xps))
+            asyncio.create_task(add_xp_tm(userid))
     await bot.process_commands(message)
 
 @bot.command() #DEV ONLY
@@ -1095,7 +1119,6 @@ async def level(ctx, member:discord.Member = None):
 
     xpdata = await get_xp()
     xp = xpdata.setdefault(f'{member.id}', 0)
-    print(xp)
     lev = await calculate_level(xp)
 
     for key, value in xp_levels.items():
@@ -1117,6 +1140,10 @@ async def level(ctx, member:discord.Member = None):
     embed.set_author(name=f'{fetched.name} | Level Card', icon_url=fetched.avatar_url)
     #embed.set_thumbnail(url=fetched.avatar_url)
     await ctx.send(embed=embed)
+
+@bot.command()
+async def stocks(ctx):
+    pass
 
 @bot.event
 async def on_ready():
