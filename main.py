@@ -11,7 +11,7 @@ from prettytable import PrettyTable
 intents = discord.Intents.default()
 intents.members = True
 bot = commands.Bot(command_prefix=["e.", "E."], intents=intents, case_insensitive=True)
-devs = [771601176155783198, 713056818972066140]
+devs = [771601176155783198, 713056818972066140, 619377929951903754]
 embedcolor = 3407822
 links_channel = 832083121486037013
 
@@ -145,7 +145,9 @@ async def est_update():
 
         if diff >= 172800:
             aler = await get_alert_info()
-            persona = aler[i]
+            persona = aler.get(i)
+            if persona is None:
+                continue
 
             state, last = persona['state'], persona['last']
             dm_diff = cur - last
@@ -434,6 +436,26 @@ async def clear(ctx, member:discord.Member):
     await update_logs(f'{ctx.author}-!-clear-!-[{member.id}]-!-{datetime.datetime.today().replace(microsecond=0)}')
     await ctx.send(f'{ctx.author.mention} Cleared data of `{member.name}#{member.discriminator}` successfully!')
 
+@bot.command()
+async def release(ctx, title:str, link:str):
+    if ctx.author.id not in devs:
+        return
+    with open('updates.json', 'r') as upd:
+        updates = json.loads(upd.read())
+
+    update = updates[title]
+    desc = ''
+    for i in update:
+        desc += f'{i}\n'
+    embed = discord.Embed(title=f'Updated to v{title}', color=embedcolor, description=desc)
+    embed.url = link
+    embed.timestamp = datetime.datetime.utcnow()
+    embed.set_author(name=f'Bot Updated!', icon_url=bot_pfp)
+
+    chl = bot.get_channel(838963496476606485)
+    await chl.send(embed = embed)
+
+
 @bot.command(aliases=['bal'])
 async def balance(ctx, member:discord.Member = None):
     if member is None:
@@ -508,7 +530,11 @@ async def withdraw(ctx, amount: str = None):
     await ctx.send(f'{ctx.author.mention} Successfully withdrew `{await commait(amount)}` coins.')
 
 @bot.command()
-async def bank(ctx, member:discord.Member = None):
+async def bank(ctx):
+    await ctx.send(f'{ctx.author.mention} Command renamed to `e.mybank`')
+
+@bot.command()
+async def mybank(ctx, member:discord.Member = None):
     if member is None:
         userid = ctx.author.id
     else:

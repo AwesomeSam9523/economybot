@@ -1,0 +1,15 @@
+{
+  "1.1": ["- New command: evaluate", "- New command: execute", "- New command: daily"],
+  "1.2": ["- New command: give", "- Removed \"Bot is ready to use\" from on_ready"],
+  "1.2.1": ["- Changed \"weekly\" to \"daily\" in embeds", "- All Dev commands have \"#DEV ONLY\" in front of them"],
+  "1.2.2": ["- New command e.estates", "- New command e.upgrade", "- Estates made", "- New important function: commait() to add commas to number\n"],
+  "1.3": ["- New command e.revenue", "- New command e.alerts", "- Estates revenue collection done"],
+  "1.4": ["- New command e.maintain", "", "Estates Command 100% Done!!", "-> e.estates", "-> e.upgrade", "-> e.revenue", "-> e.maintain"],
+  "1.4.1": ["- Few bug fixes"],
+  "1.4.2": ["- Improved e.logs command", "- Made commands case-insensitive"],
+  "1.5": ["- New DEV Command: e.clear", "Clears Users wallet and bank", "- e.estates Bug Fixes", "- e.upgrade level 30 custom message", "- Added search by command feature to e.logs", "- Improved Logs via PrettyTable"],
+  "1.5.1": ["- Fixed e.give"],
+  "1.6": ["- New Command: e.transfer", "- New Command: e.statement", "- Max e.give amount changed to 5000"],
+  "1.6.1": ["- Fixed a small type in e.bank"],
+  "1.6.2": ["- New Command: e.release", "- Renamed e.bank to e.mybank", "- Added CarrySheriff to devs"]
+}
