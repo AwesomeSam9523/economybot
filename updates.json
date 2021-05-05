@@ -14,5 +14,6 @@
   "1.6.2": ["- New Command: e.release", "- Renamed e.bank to e.mybank", "- Added CarrySheriff to devs"],
   "1.6.3": ["- e.level half done: Imageing left (to be done by rish)"],
   "1.7": ["- Added all fake stock files to ./stocks/", "- Added XP: 10-25 XP on any command (cooldown: 50 secs)"],
-  "1.8": ["- New command: e.stocks", "- New command: e.buy <amount> to buy stocks", "- New command: e.sell <amount> to sell stocks", "- Fixed e.clear bug", "- Fixed e.dep and e.with -ve bug", "- Added stocks to e.bal", "- Changed e.bal look"]
+  "1.8": ["- New command: e.stocks", "- New command: e.buy <amount> to buy stocks", "- New command: e.sell <amount> to sell stocks", "- Fixed e.clear bug", "- Fixed e.dep and e.with -ve bug", "- Added stocks to e.bal", "- Changed e.bal look"],
+  "1.8.1": ["- The bot now autosells your stocks on current price when the stock time ends", "- Fixed double line chart issue"]
 }

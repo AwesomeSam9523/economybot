@@ -273,6 +273,31 @@ async def update_xp(data):
     with open('xp.json', 'w') as w:
         w.write(json.dumps(data))
 
+async def clear_dues():
+    data = await get_data()
+    stock_data = await get_stocks()
+
+    for i in stock_data:
+        person = data[str(i)]
+        value = stock_data[i]
+        if value == 0:
+            continue
+        current_price = int(current_stock[-1][5])
+
+        bulk = int(current_price*value)
+        person['bank'] += bulk
+        data[str(i)] = person
+        stock_data[str(i)] = 0
+        user = await bot.fetch_user(i)
+        await create_statement(user, bot.user, bulk, f"Sold {value} Stocks", "Credit")
+
+    await update_data(data)
+    await update_stock_data(stock_data)
+    with open('stock_config.json', 'w') as r:
+        r.write('{}')
+    with open('stocks.json', 'w') as r:
+        r.write('{}')
+
 async def update_stocks():
     global current_stock, total_lines
     stock = await get_todays_stock()
@@ -285,14 +310,11 @@ async def update_stocks():
     line = config.setdefault("line", 1)
     name = config.setdefault("name", random.choice(stock_names))
     if line == total_lines:
-        os.rename(f'stocks/{stock}', f'stocks/{str(stock).replace("_today", "")}.csv')
+        os.rename(f'stocks/{stock}', f'stocks/{str(stock).replace("_today", "_done")}')
         config['line'] = line + 1
         with open('stock_config.json', 'w') as c:
             c.write(json.dumps(config))
-        with open('stock_config.json', 'w') as r:
-            r.write(json.dumps('{}'))
-        with open('stocks.json', 'w') as r:
-            r.write(json.dumps('{}'))
+        await clear_dues()
         await update_stocks()
     else:
         config['line'] = line + 1
@@ -639,7 +661,7 @@ async def release(ctx, title:str, link:str):
     embed.set_author(name=f'Bot Updated!', icon_url=bot_pfp)
 
     chl = bot.get_channel(838963496476606485)
-    await chl.send('<@&839370096248881204>',embed = embed)
+    await chl.send('<@&839370096248881204> New Update Out!',embed = embed)
 
 @bot.command(aliases=['bal'])
 async def balance(ctx, member:discord.Member = None):
@@ -1297,16 +1319,21 @@ async def stocks(ctx):
     with open(f'stocks/{file}', 'r') as f:
         stock_data = list(csv.reader(f))
     gap = int(line/19)
+    if gap == 0:
+        gap = 1
     y_axis = []
 
     for i in range(1, line, gap):
         y_axis.append(float(stock_data[i][5]))
+    y_axis.pop(-1)
+    y_axis.append(float(stock_data[line][5]))
     x_axis = []
     for i in range(1, (len(y_axis))):
         x_axis.append(i)
     x_axis.append('20')
 
     COLOR = '#52FF51'
+
     plt.rcParams['text.color'] = COLOR
     plt.rcParams['axes.labelcolor'] = COLOR
     plt.rcParams['xtick.color'] = COLOR
@@ -1327,6 +1354,7 @@ async def stocks(ctx):
     if maxcount >= 5:
         os.remove('graph.png')
     plt.savefig('graph.png', transparent=True)
+    plt.close()
 
     myfile = discord.File('graph.png','stock_graph.png')
     chl = bot.get_channel(media)
@@ -1371,7 +1399,7 @@ async def buy(ctx, amount):
 
     embed = discord.Embed(title='Success!',
                           description=f'You bought `{await commait(amount)}` stocks at price of `{stock_price}`.\n'
-                                      f'Total Cost: `{bulk}` coins', color=embedcolor)
+                                      f'Coins Spent: `{await commait(bulk)}` coins', color=embedcolor)
     fetched = bot.get_user(ctx.author.id)
     embed.timestamp = datetime.datetime.utcnow()
     embed.set_footer(text='Economy Bot', icon_url=bot_pfp)
@@ -1412,7 +1440,7 @@ async def sell(ctx, amount):
 
     embed = discord.Embed(title='Success!',
                           description=f'You sold `{await commait(amount)}` stocks at price of `{stock_price}`.\n'
-                                      f'Total Cost: `{bulk}` coins', color=embedcolor)
+                                      f'Coins Earned: `{await commait(bulk)}` coins', color=embedcolor)
     fetched = bot.get_user(ctx.author.id)
     embed.timestamp = datetime.datetime.utcnow()
     embed.set_footer(text='Economy Bot', icon_url=bot_pfp)
