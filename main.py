@@ -161,6 +161,10 @@ xp_timeout = []
 
 e_wallet = '<:wallet:836814969290358845>'
 e_bank = '🏦'
+e_developer = '<:developer:835430548619919391>'
+e_bughunter = '<:bughunter:839371860017807411>'
+badge_emoji = {'developer':e_developer,
+               'bughunter':e_bughunter}
 media = 839161613595443292
 
 async def get_avg():
@@ -241,9 +245,17 @@ async def get_stocks():
     with open('stocks.json', 'r') as s:
         return json.loads(s.read())
 
+async def get_badges():
+    with open('badges.json', 'r') as b:
+        return json.loads(b.read())
+
 async def update_stock_data(data):
     with open('stocks.json', 'w') as avgbal:
         avgbal.write(json.dumps(data))
+
+async def update_badges(data):
+    with open('badges.json', 'w') as b:
+        b.write(json.dumps(data))
 
 async def update_avg(avg):
     with open('average.json', 'w') as avgbal:
@@ -644,7 +656,7 @@ async def clear(ctx, member:discord.Member):
     await update_logs(f'{ctx.author}-!-clear-!-[{member.id}]-!-{datetime.datetime.today().replace(microsecond=0)}')
     await ctx.send(f'{ctx.author.mention} Cleared data of `{member.name}#{member.discriminator}` successfully!')
 
-@bot.command()
+@bot.command() #DEV Only
 async def release(ctx, title:str, link:str):
     if ctx.author.id not in devs:
         return
@@ -662,6 +674,25 @@ async def release(ctx, title:str, link:str):
 
     chl = bot.get_channel(838963496476606485)
     await chl.send('<@&839370096248881204> New Update Out!',embed = embed)
+
+@bot.command()
+async def badge(ctx, member:discord.Member, badge:str):
+    if ctx.author.id not in devs: return
+    badges = await get_badges()
+    userid = str(member.id)
+
+    badge_type = badges.get(badge)
+    if badge_type is None:
+        list_of_all = list(badges.keys())
+        await ctx.message.add_reaction('‼️')
+        return await ctx.send(f'{ctx.author.mention} Badge `{badge_type}` not found!\n'
+                        f'Please Choose from: `{" ,".join(list_of_all)}`')
+    if userid in badge_type:
+        return await ctx.message.add_reaction('✅')
+    badge_type.append(userid)
+    badges[badge] = badge_type
+    await update_badges(badges)
+    await ctx.message.add_reaction('✅')
 
 @bot.command(aliases=['bal'])
 async def balance(ctx, member:discord.Member = None):
@@ -822,9 +853,6 @@ async def daily(ctx):
     avg_p['claimed'] = 1
     avg_p['sum'] = int(avgbal)
     avg_p['i'] = 1
-
-    print(avg_p)
-    print(avg)
 
     avg[f'{ctx.author.id}'] = avg_p
 
@@ -1286,8 +1314,12 @@ async def level(ctx, member:discord.Member = None):
 
     percent = int((xp/max_xp)*25)
     bar = f'**`{"▬"*percent}ᐅ{"▬"*(24-percent)}`**'
-
-    embed = discord.Embed(description=bar,
+    badges_data = await get_badges()
+    badges = ''
+    for i in badges_data:
+        if str(member.id) in badges_data[i]:
+            badges += f'{badge_emoji[i]} '
+    embed = discord.Embed(description=f'{badges}\n{bar}',
                           color=embedcolor)
     embed.add_field(name='Level', value=f'`{lev}`')
     embed.add_field(name='XP', value=f'`{await commait(xp)}/{await commait(max_xp)}`')
@@ -1295,7 +1327,7 @@ async def level(ctx, member:discord.Member = None):
     fetched = bot.get_user(member.id)
     embed.timestamp = datetime.datetime.utcnow()
     embed.set_footer(text='Economy Bot', icon_url=bot_pfp)
-    embed.set_author(name=f'{fetched.name} | Level Card', icon_url=fetched.avatar_url)
+    embed.set_author(name=f'{fetched.name}', icon_url=fetched.avatar_url)
     #embed.set_thumbnail(url=fetched.avatar_url)
     await ctx.send(embed=embed)
 
@@ -1303,7 +1335,6 @@ async def level(ctx, member:discord.Member = None):
 async def stocks(ctx):
     columns = ['Name', 'Highest', 'Lowest', 'Current', 'Volume']
     details = list(current_stock)
-    print(details)
     mydata = await perform_stuff(details)
     with open('stock_config.json', 'r') as c:
         config = json.loads(c.read())
@@ -1325,6 +1356,8 @@ async def stocks(ctx):
 
     for i in range(1, line, gap):
         y_axis.append(float(stock_data[i][5]))
+        if len(y_axis) == 20:
+            break
     y_axis.pop(-1)
     y_axis.append(float(stock_data[line][5]))
     x_axis = []
@@ -1340,6 +1373,7 @@ async def stocks(ctx):
     plt.rcParams['ytick.color'] = COLOR
 
     plt.plot(x_axis, y_axis, color='#03FFA9', marker='o', ls='-.')
+    #plt.grid(color='white', linestyle='-.', linewidth=0.69)
     plt.title('Stock Price vs Time')
     plt.xlabel('Time')
     plt.ylabel('Price')
@@ -1357,12 +1391,11 @@ async def stocks(ctx):
     plt.close()
 
     myfile = discord.File('graph.png','stock_graph.png')
-    chl = bot.get_channel(media)
-    msg = await chl.send(file=myfile)
     embed = discord.Embed(title='Today\'s Stock', description=f'```\n{x}```', color=embedcolor)
-    embed.set_image(url=msg.attachments[0].url)
+
+    embed.set_image(url="attachment://graph.png")
+    await ctx.send(embed=embed, file=discord.File("graph.png"))
     os.remove('graph.png')
-    await ctx.send(embed=embed)
 
 @bot.command()
 async def buy(ctx, amount):
@@ -1371,7 +1404,8 @@ async def buy(ctx, amount):
     userid = str(ctx.author.id)
     dperson = data[userid]
     sperson = stock_data.setdefault(userid, 0)
-
+    if dperson['bank'] == 0:
+        return await ctx.send(f'{ctx.author.mention} You have an empty bank bro..')
     stock_price = float(current_stock[3])
     if amount == 'all':
         amount = dperson['bank']
