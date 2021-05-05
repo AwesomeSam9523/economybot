@@ -7,8 +7,9 @@ import asyncio, time
 from discord.ext import commands
 import json
 import datetime
-import inspect
+import inspect, csv
 from prettytable import PrettyTable
+import matplotlib.pyplot as plt
 
 intents = discord.Intents.default()
 intents.members = True
@@ -160,6 +161,7 @@ xp_timeout = []
 
 e_wallet = '<:wallet:836814969290358845>'
 e_bank = '🏦'
+media = 839161613595443292
 
 async def get_avg():
     with open('average.json', 'r') as avg:
@@ -214,9 +216,34 @@ async def get_xp():
     with open('xp.json', 'r') as xp:
         return json.loads(xp.read())
 
+async def get_todays_stock():
+    a = os.listdir('stocks')
+    b = [f'{x}_today.csv' for x in range(1, 1001)]
+    today = [x for x in a if x in b]
+
+    if len(today) == 0:
+        pass
+    else:
+        return today[0]
+
+    b = [f'{x}_done.csv' for x in range(1, 1001)]
+    newlist = [x for x in a if x not in b]
+
+    choose = random.choice(newlist)
+    os.rename(f'stocks/{choose}', f'stocks/{str(choose)[:-4]}_today.csv')
+    return f'{str(choose)[:-4]}_today.csv'
+
 async def get_statements():
     with open('statements.json', 'r') as s:
         return json.loads(s.read())
+
+async def get_stocks():
+    with open('stocks.json', 'r') as s:
+        return json.loads(s.read())
+
+async def update_stock_data(data):
+    with open('stocks.json', 'w') as avgbal:
+        avgbal.write(json.dumps(data))
 
 async def update_avg(avg):
     with open('average.json', 'w') as avgbal:
@@ -245,6 +272,36 @@ async def update_statements(stat):
 async def update_xp(data):
     with open('xp.json', 'w') as w:
         w.write(json.dumps(data))
+
+async def update_stocks():
+    global current_stock, total_lines
+    stock = await get_todays_stock()
+    with open(f'stocks/{stock}', 'r') as st:
+        data = list(csv.reader(st))
+    total_lines = len(data)
+
+    with open('stock_config.json', 'r') as c:
+        config = json.loads(c.read())
+    line = config.setdefault("line", 1)
+    name = config.setdefault("name", random.choice(stock_names))
+    if line == total_lines:
+        os.rename(f'stocks/{stock}', f'stocks/{str(stock).replace("_today", "")}.csv')
+        config['line'] = line + 1
+        with open('stock_config.json', 'w') as c:
+            c.write(json.dumps(config))
+        with open('stock_config.json', 'w') as r:
+            r.write(json.dumps('{}'))
+        with open('stocks.json', 'w') as r:
+            r.write(json.dumps('{}'))
+        await update_stocks()
+    else:
+        config['line'] = line + 1
+        with open('stock_config.json', 'w') as c:
+            c.write(json.dumps(config))
+
+        current_stock = list(data[line])
+        current_stock.pop(0)
+        current_stock.pop(0)
 
 async def est_update():
     est = await get_estates()
@@ -317,18 +374,17 @@ async def avg_update():
     with open('average.json', 'w') as avg:
         avg.write(str(json.dumps(avgbal)))
 
+async def stock_update():
+    while True:
+        await update_stocks()
+        await perform_stuff(current_stock)
+        await asyncio.sleep(86400/total_lines)
+
 async def loops():
     while True:
         await avg_update()
         await est_update()
         await asyncio.sleep(300)
-
-async def create_stuff():
-    global bot_pfp
-    mybot = bot.get_user(832083717417074689)
-    bot_pfp = mybot.avatar_url
-    asyncio.create_task(loops())
-    print('Ready!')
 
 async def open_account(userid):
     data = await get_data()
@@ -420,6 +476,14 @@ async def create_statement(user, person, amount, reason, type):
     states[str(user.id)] = user_s
     await update_statements(states)
 
+async def create_stuff():
+    global bot_pfp
+    mybot = bot.get_user(832083717417074689)
+    bot_pfp = mybot.avatar_url
+    asyncio.create_task(loops())
+    asyncio.create_task(stock_update())
+    print('Ready!')
+
 async def calculate_level(xp:int):
     lxp_sum = 0
     level_found = -1
@@ -437,8 +501,35 @@ async def add_xp_tm(userid):
     await asyncio.sleep(50)
     xp_timeout.remove(userid)
 
+async def perform_stuff(data):
+    with open('stock_config.json', 'r') as r:
+        stock_data = json.loads(r.read())
+    #columns = ['Name', 'Highest', 'Lowest', 'Current', 'Volume']
+    highest = float(stock_data.setdefault('highest', data[1]))
+    lowest = float(stock_data.setdefault('lowest', data[2]))
+    current = float(data[3])
+    if highest < current:
+        highest = current
+    if lowest > current:
+        lowest = current
+
+    users = await get_stocks()
+    volume = 0
+    for i in users.values():
+        volume += i
+    stock_data['volume'] = volume
+    stock_data['lowest'] = lowest
+    stock_data['highest'] = highest
+    with open('stock_config.json', 'w') as r:
+        r.write(json.dumps(stock_data))
+
+    return stock_data
+
 @bot.event
 async def on_message(message):
+    if message.author.bot:
+        return
+    await open_account(message.author.id)
     if message.content.startswith('e.') or message.content.startswith('E.'):
         if message.author.id not in xp_timeout:
             userid = message.author.id
@@ -517,12 +608,14 @@ async def add(ctx, person:discord.Member, bal:int, *args):
 
 @bot.command() #DEV Only
 async def clear(ctx, member:discord.Member):
+    if ctx.author.id not in devs:
+        return
     data = await get_data()
     userid = str(member.id)
 
     person = data[userid]
     person['bank'] = 0
-    person['wal'] = 0
+    person['wallet'] = 0
 
     data[userid] = person
     await update_data(data)
@@ -546,7 +639,7 @@ async def release(ctx, title:str, link:str):
     embed.set_author(name=f'Bot Updated!', icon_url=bot_pfp)
 
     chl = bot.get_channel(838963496476606485)
-    await chl.send(embed = embed)
+    await chl.send('<@&839370096248881204>',embed = embed)
 
 @bot.command(aliases=['bal'])
 async def balance(ctx, member:discord.Member = None):
@@ -560,10 +653,12 @@ async def balance(ctx, member:discord.Member = None):
     bank_type = person['bank_type']
     wallet = person['wallet']
     bank = person['bank']
-
-    embed = discord.Embed(title=f'__{bank_names[bank_type]}__', colour=embedcolor,
-                          description=f'**{e_wallet} Wallet:** {await commait(wallet)}\n**{e_bank} Bank:** {await commait(bank)}')
-
+    s = await get_stocks()
+    stocks_num = s.get(str(userid), 0)
+    embed = discord.Embed(title=f'__{bank_names[bank_type]}__', colour=embedcolor)
+    embed.add_field(name=f'**{e_wallet} Wallet**', value=f'> `{await commait(wallet)}`', inline=False)
+    embed.add_field(name=f'**{e_bank} Bank**', value=f'> `{await commait(bank)}`', inline=False)
+    embed.add_field(name=f'**<:stocks:839162083324198942> Stocks**', value=f'> `{await commait(stocks_num)}`', inline=False)
     fetched = bot.get_user(userid)
     embed.timestamp = datetime.datetime.utcnow()
     embed.set_footer(text='Economy Bot', icon_url=bot_pfp)
@@ -585,6 +680,11 @@ async def deposit(ctx, amount:str = None):
         amount = int(wallet/2)
     else:
         amount = int(amount)
+
+    if amount < 0:
+        return await ctx.send(f'{ctx.author.mention} No over-smartness with me.')
+    if amount == 0:
+        return await ctx.send(f'{ctx.author.mention} `0` coins? Are you drunk or something?')
 
     newbal_w = wallet - amount
     newbal_b = bank + amount
@@ -610,6 +710,11 @@ async def withdraw(ctx, amount: str = None):
         amount = int(bank / 2)
     else:
         amount = int(amount)
+
+    if amount < 0:
+        return await ctx.send(f'{ctx.author.mention} No over-smartness with me.')
+    if amount == 0:
+        return await ctx.send(f'{ctx.author.mention} `0` coins? Are you drunk or something?')
 
     newbal_w = wallet + amount
     newbal_b = bank - amount
@@ -888,22 +993,15 @@ async def maintain(ctx):
     x.add_row(["", "", "", f''])
     x.add_row(["[Grand Total]", "", "", f'{await commait(cost_d)}.00/-'])
 
-    if bank_bal+wal_bal < cost_d:
+    if bank_bal < cost_d:
         embed = discord.Embed(title='Oops..',
-                              description=f'You dont have enough coins to find the maintainance.\n```css\n{x}```', color=embedcolor)
+                              description=f'You dont have enough coins in bank to do the maintainance.\n```css\n{x}```', color=embedcolor)
     else:
-        if bank_bal < cost_d:
-            new_bbal = 0
-            new_wbal = wal_bal - cost_d + bank_bal
-        else:
-            new_bbal = bank_bal - cost_d
-            new_wbal = wal_bal
-
+        new_bbal = bank_bal - cost_d
         persona['bank'] = new_bbal
-        persona['wallet'] = new_wbal
         data[userid] = persona
 
-        person['lm'] = cur
+        person['lm'] = time.time()
         person['p'] = 0
         est[userid] = person
 
@@ -1093,24 +1191,62 @@ async def transfer(ctx, togive:discord.Member = None, amount = None, *, reason =
     await ctx.send(embed=embed)
 
 @bot.command()
-async def statement(ctx):
+async def statement(ctx, *args):
+    if '-u' not in args:
+        member = ctx.author
+    else:
+        if ctx.author.id not in devs:
+            member = ctx.author
+        else:
+            index = 1
+            for i in args:
+                if i == '-u': break
+                index += 1
+            member = await bot.fetch_user(int(args[index]))
+
     stats = await get_statements()
-    all_s = stats.get(str(ctx.author.id))
+    all_s = stats.get(str(member.id))
     if all_s is None:
         desc = 'No Statements Yet..'
     else:
         all_s.reverse()
         x = PrettyTable()
-        x.field_names = ['S.No.', 'Date and Time','From/To', 'Amount', 'Type', 'Reason']
+        x.field_names = ['S.No.', 'From/To', 'Date and Time', 'Amount', 'Type', 'Reason']
+        x.align['Reason'] = 'l'
+
         count = 1
         for s in all_s:
-            x.add_row([count, s['time'], s['person'], s['amount'], s['type'], s['reason'][:25]])
+            date = s['time'].split(" ")[0]
+            time_ = s['time'].split(" ")[1].replace(":", "∶")
+            if '-t' in args:
+                index = 1
+                for i in args:
+                    if i == '-t': break
+                    index += 1
+                cd_type = args[index]
+                if cd_type.lower() == 'c' and s['type'] != 'Credit': continue
+                elif cd_type.lower() == 'd' and s['type'] != 'Debit': continue
+            if '-a' in args:
+                index = 1
+                for i in args:
+                    if i == '-a': break
+                    index += 1
+                amount = args[index]
+                if int(amount) != int(s['amount']): continue
+            if '-r' in args:
+                index = 1
+                for i in args:
+                    if i == '-r': break
+                    index += 1
+                reason = ' '.join(args[index:])
+                if reason.lower() not in s["reason"][:25].lower(): continue
+            x.add_row([count, f'{s["person"]}', f"{date} {time_}",  s['amount'], s['type'], f'[{s["reason"][:25]}]'])
             count += 1
             if count == 13:
                 break
         desc = x
 
-    await ctx.send(f'**Bank Statement:**\n```\n{desc}```')
+    await ctx.send(f'**Bank Statement of `{member.name}`:**\n```css\n{desc}```')
 
 @bot.command()
 async def level(ctx, member:discord.Member = None):
@@ -1143,7 +1279,146 @@ async def level(ctx, member:discord.Member = None):
 
 @bot.command()
 async def stocks(ctx):
-    pass
+    columns = ['Name', 'Highest', 'Lowest', 'Current', 'Volume']
+    details = list(current_stock)
+    print(details)
+    mydata = await perform_stuff(details)
+    with open('stock_config.json', 'r') as c:
+        config = json.loads(c.read())
+    x = PrettyTable()
+    x.add_column('  Name', columns)
+    x.align['  Name'] = 'l'
+    x.add_column('          ', ['          ','          ','          ','          ','          '])
+    x.add_column('Value ', [config['name'], mydata['highest'], mydata['lowest'], details[3], mydata['volume']])
+    x.align['Value '] = 'r'
+
+    line = config['line']
+    file = await get_todays_stock()
+    with open(f'stocks/{file}', 'r') as f:
+        stock_data = list(csv.reader(f))
+    gap = int(line/19)
+    y_axis = []
+
+    for i in range(1, line, gap):
+        y_axis.append(float(stock_data[i][5]))
+    x_axis = []
+    for i in range(1, (len(y_axis))):
+        x_axis.append(i)
+    x_axis.append('20')
+
+    COLOR = '#52FF51'
+    plt.rcParams['text.color'] = COLOR
+    plt.rcParams['axes.labelcolor'] = COLOR
+    plt.rcParams['xtick.color'] = COLOR
+    plt.rcParams['ytick.color'] = COLOR
+
+    plt.plot(x_axis, y_axis, color='#03FFA9', marker='o', ls='-.')
+    plt.title('Stock Price vs Time')
+    plt.xlabel('Time')
+    plt.ylabel('Price')
+    plt.rc('grid', linestyle="-", color='white')
+    maxcount = 0
+    while maxcount < 5:
+        if os.path.exists('graph.png'):
+            await asyncio.sleep(1)
+            maxcount += 1
+        else:
+            break
+    if maxcount >= 5:
+        os.remove('graph.png')
+    plt.savefig('graph.png', transparent=True)
+
+    myfile = discord.File('graph.png','stock_graph.png')
+    chl = bot.get_channel(media)
+    msg = await chl.send(file=myfile)
+    embed = discord.Embed(title='Today\'s Stock', description=f'```\n{x}```', color=embedcolor)
+    embed.set_image(url=msg.attachments[0].url)
+    os.remove('graph.png')
+    await ctx.send(embed=embed)
+
+@bot.command()
+async def buy(ctx, amount):
+    data = await get_data()
+    stock_data = await get_stocks()
+    userid = str(ctx.author.id)
+    dperson = data[userid]
+    sperson = stock_data.setdefault(userid, 0)
+
+    stock_price = float(current_stock[3])
+    if amount == 'all':
+        amount = dperson['bank']
+        amount = int(amount/stock_price)
+    elif amount == 'half':
+        amount = int(dperson['bank']/2)
+        amount = int(amount / stock_price)
+    else:
+        amount = int(amount)
+
+    if amount <= 0:
+        return await ctx.send(f'{ctx.author.mention} No Fam.')
+
+    bulk = int(amount * stock_price)
+    if bulk > dperson['bank']:
+        return await ctx.send(f'{ctx.author.mention} You don\'t have enough bank balance to buy `{amount}` stocks.')
+
+    dperson['bank'] = dperson['bank'] - bulk
+    data[userid] = dperson
+    stock_data[userid] = sperson + amount
+
+    await update_data(data)
+    await update_stock_data(stock_data)
+    await create_statement(ctx.author, bot.user, bulk, f"Bought {amount} stock(s)", "Debit")
+
+    embed = discord.Embed(title='Success!',
+                          description=f'You bought `{await commait(amount)}` stocks at price of `{stock_price}`.\n'
+                                      f'Total Cost: `{bulk}` coins', color=embedcolor)
+    fetched = bot.get_user(ctx.author.id)
+    embed.timestamp = datetime.datetime.utcnow()
+    embed.set_footer(text='Economy Bot', icon_url=bot_pfp)
+    embed.set_author(name=f'{fetched.name}', icon_url=fetched.avatar_url)
+
+    await ctx.send(embed=embed)
+
+@bot.command()
+async def sell(ctx, amount):
+    data = await get_data()
+    stock_data = await get_stocks()
+    userid = str(ctx.author.id)
+    dperson = data[userid]
+    sperson = stock_data.setdefault(userid, 0)
+
+    stock_price = float(current_stock[3])
+    if amount == 'all':
+        amount = sperson
+    elif amount == 'half':
+        amount = int(sperson/2)
+    else:
+        amount = int(amount)
+
+    if amount <= 0:
+        return await ctx.send(f'{ctx.author.mention} No Fam.')
+    bulk = int(amount * stock_price)
+
+    if amount > sperson:
+        return await ctx.send(f'{ctx.author.mention} You don\'t own `{amount}` stocks.')
+
+    dperson['bank'] = dperson['bank'] + bulk
+    data[userid] = dperson
+    stock_data[userid] = sperson - amount
+
+    await update_data(data)
+    await update_stock_data(stock_data)
+    await create_statement(ctx.author, bot.user, bulk, f"Sold {amount} stock(s)", "Credit")
+
+    embed = discord.Embed(title='Success!',
+                          description=f'You sold `{await commait(amount)}` stocks at price of `{stock_price}`.\n'
+                                      f'Total Cost: `{bulk}` coins', color=embedcolor)
+    fetched = bot.get_user(ctx.author.id)
+    embed.timestamp = datetime.datetime.utcnow()
+    embed.set_footer(text='Economy Bot', icon_url=bot_pfp)
+    embed.set_author(name=f'{fetched.name}', icon_url=fetched.avatar_url)
+
+    await ctx.send(embed=embed)
 
 @bot.event
 async def on_ready():
