@@ -163,6 +163,8 @@ e_wallet = '<:wallet:836814969290358845>'
 e_bank = '🏦'
 e_developer = '<:developer:835430548619919391>'
 e_bughunter = '<:bughunter:839371860017807411>'
+error_embed = 16290332
+green = 3211008
 badge_emoji = {'developer':e_developer,
                'bughunter':e_bughunter}
 media = 839161613595443292
@@ -248,6 +250,10 @@ async def get_stocks():
 async def get_badges():
     with open('badges.json', 'r') as b:
         return json.loads(b.read())
+
+async def get_data_stock(file):
+    with open(f'stocks/{file}', 'r') as f:
+        return list(csv.reader(f))
 
 async def update_stock_data(data):
     with open('stocks.json', 'w') as avgbal:
@@ -600,11 +606,11 @@ async def logs(ctx, *, search:str=None):
     await ctx.send(f'**Requested by:** `{ctx.author.name}`\n```css\n{x}```')
 
 @bot.command(aliases=['eval'])  # DEV ONLY
-async def evaluate(ctx, *, expression):
+async def evaluate(ctx, ifawait:int ,*, expression):
     if ctx.author.id not in devs:
         return
     try:
-        if inspect.isawaitable(expression):
+        if ifawait == 1:
             await ctx.reply(await eval(expression))
         else:
             await ctx.reply(eval(expression))
@@ -674,6 +680,25 @@ async def release(ctx, title:str, link:str):
 
     chl = bot.get_channel(838963496476606485)
     await chl.send('<@&839370096248881204> New Update Out!',embed = embed)
+
+@bot.command()
+async def stockinfo(ctx):
+    if ctx.author.id not in devs:
+        return
+    with open(f'stocks/{await get_todays_stock()}', 'r') as f:
+        stock = list(csv.reader(f))
+    with open(f'stock_config.json', 'r') as c:
+        config = json.loads(c.read())
+
+    embed = discord.Embed(title='Stock Info', color=embedcolor)
+    embed.add_field(name='Total Rows', value=f'{len(stock)}')
+    embed.add_field(name='Current Row', value=f'{config["line"]}')
+    embed.add_field(name='Approx Refresh Time', value=f'{round(86400/len(stock), 4)} secs')
+    left = datetime.timedelta(seconds=((len(stock)-config["line"])*round(86400/len(stock), 4)))
+    final = datetime.datetime.strptime(str(left), '%H:%M:%S.%f').replace(microsecond=0)
+    embed.add_field(name='Ending Time', value=f'`{str(final).split(" ")[1]}` (HH:MM:SS)')
+
+    await ctx.send(embed=embed)
 
 @bot.command()
 async def badge(ctx, member:discord.Member, badge:str):
@@ -833,10 +858,13 @@ async def daily(ctx):
         return await ctx.send(f'{ctx.author.mention} Looks like you dont have a bank account. Use `e.bal` to open one.' )
 
     if claimed != 0:
-        check = await checktimeout(ctx.author.id, 'weekly')
+        check = await checktimeout(ctx.author.id, 'daily')
         if check is not None:
             if i < 288:
-                left = datetime.timedelta(seconds=(86400 - check))
+                time_gap = 86400 - check
+                if time_gap < 0:
+                    time_gap = check - 86400
+                left = datetime.timedelta(seconds=(time_gap))
                 final = datetime.datetime.strptime(str(left), '%H:%M:%S.%f').replace(microsecond=0)
                 return await ctx.reply(f'You have to wait for `{str(final).split(" ")[1]}` (HH:MM:SS) time more before you can claim daily interest.')
     elif i < 288:
@@ -982,14 +1010,14 @@ async def revenue(ctx):
     x.align["    Name"] = "l"
     x.align["Amount  "] = "r"
     x.add_row(["Fixed Revenue", "", "", f'{await commait((fixed_rev))}.00/-'])
-    x.add_row(["Late Revenue", "", "", f'{await commait(low_rev)}.00/-'])
+    x.add_row(["Late Maintenance", "", "", f'{await commait(low_rev)}.00/-'])
     x.add_row(["Late Fine", "", "", f'{await commait(fine)}.00/-'])
     x.add_row(["", "", "", f''])
     x.add_row(["[Grand Total]", "", "", f'{await commait(totalpay)}.00/-'])
 
     embed = discord.Embed(title='Hotel Revenue',
                           description=f'`{totalpay}.00` coins added to bank successfully!\n\nHere is the revenue split:\n```css\n{x}```',
-                          colour=embedcolor)
+                          colour=green)
     fetched = bot.get_user(ctx.author.id)
     embed.timestamp = datetime.datetime.utcnow()
     embed.set_footer(text='Economy Bot', icon_url=bot_pfp)
@@ -1045,7 +1073,7 @@ async def maintain(ctx):
 
     if bank_bal < cost_d:
         embed = discord.Embed(title='Oops..',
-                              description=f'You dont have enough coins in bank to do the maintainance.\n```css\n{x}```', color=embedcolor)
+                              description=f'You dont have enough coins in bank to do the maintainance.\n```css\n{x}```', color=error_embed)
     else:
         new_bbal = bank_bal - cost_d
         persona['bank'] = new_bbal
@@ -1060,7 +1088,7 @@ async def maintain(ctx):
 
         embed = discord.Embed(title='Success!',
                               description=f'`{cost_d}.00` coins have been deducted and your hotel looks shining new!\n```css\n{x}```',
-                              color=embedcolor)
+                              color=green)
 
     fetched = bot.get_user(ctx.author.id)
     embed.timestamp = datetime.datetime.utcnow()
@@ -1230,7 +1258,7 @@ async def transfer(ctx, togive:discord.Member = None, amount = None, *, reason =
 
     embed = discord.Embed(title='Transfer Successful!',
                           description=f'You transfered `{amount}` coins to {togive.mention}.',
-                          color=embedcolor)
+                          color=green)
     embed.add_field(name='Tax on transaction', value=f'`{fees}` coins')
     embed.add_field(name='Your Balance', value=f'`{c_bank - amount}` coins')
     fetched = bot.get_user(ctx.author.id)
@@ -1288,8 +1316,9 @@ async def statement(ctx, *args):
                 for i in args:
                     if i == '-r': break
                     index += 1
-                reason = ' '.join(args[index:])
-                if reason.lower() not in s["reason"][:25].lower(): continue
+                reason = list(args[index:])
+                mainr_split = [x.lower() for x in s["reason"][:25].split(' ')]
+                if not (all(x in mainr_split for x in reason)): continue
             x.add_row([count, f'{s["person"]}', f"{date} {time_}",  s['amount'], s['type'], f'[{s["reason"][:25]}]'])
             count += 1
             if count == 13:
@@ -1344,11 +1373,9 @@ async def stocks(ctx):
     x.add_column('          ', ['          ','          ','          ','          ','          '])
     x.add_column('Value ', [config['name'], mydata['highest'], mydata['lowest'], details[3], mydata['volume']])
     x.align['Value '] = 'r'
-
     line = config['line']
     file = await get_todays_stock()
-    with open(f'stocks/{file}', 'r') as f:
-        stock_data = list(csv.reader(f))
+    stock_data = await get_data_stock(file)
     gap = int(line/19)
     if gap == 0:
         gap = 1
@@ -1371,31 +1398,27 @@ async def stocks(ctx):
     plt.rcParams['axes.labelcolor'] = COLOR
     plt.rcParams['xtick.color'] = COLOR
     plt.rcParams['ytick.color'] = COLOR
-
+    plt.rcParams['grid.color'] = '#8A8175'
+    fig = plt.figure()
+    host = fig.add_subplot(111)
+    host.grid()
     plt.plot(x_axis, y_axis, color='#03FFA9', marker='o', ls='-.')
-    #plt.grid(color='white', linestyle='-.', linewidth=0.69)
     plt.title('Stock Price vs Time')
     plt.xlabel('Time')
     plt.ylabel('Price')
     plt.rc('grid', linestyle="-", color='white')
-    maxcount = 0
-    while maxcount < 5:
-        if os.path.exists('graph.png'):
-            await asyncio.sleep(1)
-            maxcount += 1
-        else:
-            break
-    if maxcount >= 5:
-        os.remove('graph.png')
     plt.savefig('graph.png', transparent=True)
     plt.close()
 
+    p_data = await get_stocks()
+    holdings = p_data.get(str(ctx.author.id), 0)
     myfile = discord.File('graph.png','stock_graph.png')
     embed = discord.Embed(title='Today\'s Stock', description=f'```\n{x}```', color=embedcolor)
+    embed.add_field(name='Your Holdings', value=f'`{await commait(holdings)}` stocks')
+    embed.add_field(name='Current Value', value=f'`{await commait(int(holdings*float(details[3])))}` coins')
 
     embed.set_image(url="attachment://graph.png")
     await ctx.send(embed=embed, file=discord.File("graph.png"))
-    os.remove('graph.png')
 
 @bot.command()
 async def buy(ctx, amount):
@@ -1421,7 +1444,12 @@ async def buy(ctx, amount):
 
     bulk = int(amount * stock_price)
     if bulk > dperson['bank']:
-        return await ctx.send(f'{ctx.author.mention} You don\'t have enough bank balance to buy `{amount}` stocks.')
+        embed = discord.Embed(title='Oops..',
+                              description=f'You don\'t have enough bank balance to buy `{await commait(amount)}` stocks.',
+                              color=error_embed)
+        embed.set_footer(
+            text=f'Your Balance: {await commait(dperson["bank"])} coins\nStock Price: {await commait(bulk)} coins\nDifference: {await commait(bulk - dperson["bank"])} coins')
+        return await ctx.send(embed=embed)
 
     dperson['bank'] = dperson['bank'] - bulk
     data[userid] = dperson
@@ -1433,7 +1461,7 @@ async def buy(ctx, amount):
 
     embed = discord.Embed(title='Success!',
                           description=f'You bought `{await commait(amount)}` stocks at price of `{stock_price}`.\n'
-                                      f'Coins Spent: `{await commait(bulk)}` coins', color=embedcolor)
+                                      f'Coins Spent: `{await commait(bulk)}` coins', color=green)
     fetched = bot.get_user(ctx.author.id)
     embed.timestamp = datetime.datetime.utcnow()
     embed.set_footer(text='Economy Bot', icon_url=bot_pfp)
@@ -1474,13 +1502,17 @@ async def sell(ctx, amount):
 
     embed = discord.Embed(title='Success!',
                           description=f'You sold `{await commait(amount)}` stocks at price of `{stock_price}`.\n'
-                                      f'Coins Earned: `{await commait(bulk)}` coins', color=embedcolor)
+                                      f'Coins Earned: `{await commait(bulk)}` coins', color=green)
     fetched = bot.get_user(ctx.author.id)
     embed.timestamp = datetime.datetime.utcnow()
     embed.set_footer(text='Economy Bot', icon_url=bot_pfp)
     embed.set_author(name=f'{fetched.name}', icon_url=fetched.avatar_url)
 
     await ctx.send(embed=embed)
+
+@bot.command()
+async def t(ctx, lang:str):
+    await ctx.send(f'```{lang}\ng.help <module>\ng.pf\ng.maps [user]```')
 
 @bot.event
 async def on_ready():
