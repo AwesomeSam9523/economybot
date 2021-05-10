@@ -5,14 +5,19 @@ import json
 import discord
 import asyncio, time
 from discord.ext import commands
+from typing import Union
 import json
 import datetime
 import inspect, csv
 from prettytable import PrettyTable
 import matplotlib.pyplot as plt
+from PIL import Image, ImageTk, ImageDraw, ImageFont
+from io import BytesIO
+import aiohttp
 
 intents = discord.Intents.default()
 intents.members = True
+intents.presences = True
 bot = commands.Bot(command_prefix=["e.", "E."], intents=intents, case_insensitive=True)
 devs = [771601176155783198, 713056818972066140, 619377929951903754]
 embedcolor = 3407822
@@ -297,7 +302,7 @@ async def clear_dues():
 
     for i in stock_data:
         person = data[str(i)]
-        value = stock_data[i]
+        value = stock_data[str(i)]
         if value == 0:
             continue
         current_price = int(current_stock[-1][5])
@@ -307,6 +312,13 @@ async def clear_dues():
         data[str(i)] = person
         stock_data[str(i)] = 0
         user = await bot.fetch_user(i)
+        if user is None:
+            continue
+        embed = discord.Embed(title='Stock Ended', description=f'The current stock ended and `{await commait(bulk)}` coins have been added to your bank.')
+        embed.timestamp = datetime.datetime.utcnow()
+        embed.set_author(name=f'{user.name}', icon_url=user.avatar_url)
+        embed.set_footer(text='Economy Bot', icon_url=bot_pfp)
+        await user.send(embed=embed)
         await create_statement(user, bot.user, bulk, f"Sold {value} Stocks", "Credit")
 
     await update_data(data)
@@ -374,6 +386,8 @@ async def est_update():
                                                   'Note: You will get less revenue if maintenance isn\'t done!',
                                       colour=embedcolor)
                 fetched = bot.get_user(int(i))
+                if fetched is None:
+                    continue
                 embed.timestamp = datetime.datetime.utcnow()
                 embed.set_author(name=f'{fetched.name}', icon_url=fetched.avatar_url)
                 embed.set_footer(text='Economy Bot', icon_url=bot_pfp)
@@ -484,20 +498,7 @@ async def alerts_state(userid, state:str):
         aa.write(json.dumps(aler))
 
 async def commait(val):
-    val = str(val)
-    val = [x for x in val]
-    val.reverse()
-
-    count = 0
-    string = ''
-    for i in val:
-        if count == 3:
-            string += ','
-            count = 0
-        string += i
-        count += 1
-
-    return string[::-1]
+    return "{:,}".format(val)
 
 async def current_time():
     return datetime.datetime.today().replace(microsecond=0)
@@ -507,7 +508,10 @@ async def create_statement(user, person, amount, reason, type):
     user_s = states.get(f'{user.id}')
     if reason is None:
         reason = 'N.A.'
-    entry = {'person':f'{person.name}#{person.discriminator}', 'type':type, 'amount':amount, 'time':f'{await current_time()}', 'reason':reason}
+    if person != bot.user:
+        entry = {'person':f'{person.name}#{person.discriminator}', 'type':type, 'amount':amount, 'time':f'{await current_time()}', 'reason':reason}
+    else:
+        entry = {'person':f'System', 'type':type, 'amount':amount, 'time':f'{await current_time()}', 'reason':reason}
     if user_s is None:
         user_s = [entry]
     else:
@@ -520,20 +524,22 @@ async def create_stuff():
     global bot_pfp
     mybot = bot.get_user(832083717417074689)
     bot_pfp = mybot.avatar_url
+    await bot.change_presence(
+            activity=discord.Activity(type=discord.ActivityType.watching, name="myself waiting for Thunder"))
     asyncio.create_task(loops())
     asyncio.create_task(stock_update())
     print('Ready!')
 
 async def calculate_level(xp:int):
-    lxp_sum = 0
     level_found = -1
     for i in xp_levels.keys():
-        lxp_sum += i
-        if xp <= lxp_sum:
+        if xp <= i:
             for key, value in xp_levels.items():
                 if i == key:
                     level_found = value
-            break
+                    break
+            if level_found != -1:
+                break
     return level_found
 
 async def add_xp_tm(userid):
@@ -564,6 +570,65 @@ async def perform_stuff(data):
         r.write(json.dumps(stock_data))
 
     return stock_data
+
+async def get_avatar(user):
+    return Image.open(BytesIO(await user.avatar_url_as(format="png").read())).resize((140, 140))
+
+async def make_lvl_img(member, level, xp, total_xp):
+    img = Image.open("./badges/3.png")
+    member_colour = member.color.to_rgb()
+    avatar = await get_avatar(member)
+    ava_mask = Image.open("badges/AVAmask.png").convert('L')
+    ava_mask2 = Image.open("badges/AVAmas2k.png").convert('L')
+    img.paste(Image.new("RGBA", (148, 148), member_colour), (11, 11), ava_mask2)
+    img.paste(avatar, (15, 15), ava_mask)
+    member_status = member.status
+    status = Image.open(f'badges/{member_status}.png')
+    img.paste(status.resize((30, 30)), (124, 113), status.resize((30, 30)))
+
+    xpbar = Image.open("./badges/xpbar.png")
+    pixdata = xpbar.load()
+    for y in range(xpbar.size[1]):
+        for x in range(xpbar.size[0]):
+            pixdata[x, y] = tuple(list(member_colour) + [pixdata[x, y][-1]])
+
+    xpbar = xpbar.crop((0, 0, xpbar.width * (int(xp) / int(total_xp)), xpbar.height))
+    img.paste(xpbar, (181, 106), xpbar)
+
+    badges = await get_badges()
+    if str(member.id) in badges['staff']: staff = True
+    else: staff = False
+    if str(member.id) in badges['patron']: patron = True
+    else: patron = False
+    location = 710
+    if staff:
+        staff_icon = Image.open('badges/staff.png')
+        pixdata = staff_icon.load()
+        for y in range(staff_icon.size[1]):
+            for x in range(staff_icon.size[0]):
+                pixdata[x, y] = tuple(list(member_colour) + [pixdata[x, y][-1]])
+        staff_icon = staff_icon.resize((37, 37))
+        img.paste(staff_icon, (location, 55), staff_icon)
+        location -= 45
+    if patron:
+        patron_icon = Image.open('badges/patron.png')
+        patron_icon = patron_icon.resize((37, 37))
+        img.paste(patron_icon, (location, 55), patron_icon)
+        location -= 45
+
+    draw = ImageDraw.Draw(img)
+    font = ImageFont.truetype("badges/font2.ttf", 19)
+    fontm = ImageFont.truetype("badges/font2.ttf", 13)
+    fonts = ImageFont.truetype("badges/font2.ttf", 10)
+    draw.text((180, 34), f"{member.name}#{member.discriminator}", (255, 255, 255), font=font)
+    draw.text((180, 70), f"Level {level}", (255, 255, 255), font=fontm)
+    twidth, theight = draw.textsize(f"{await commait(xp)}/{await commait(total_xp)}", fonts)
+    draw.text((468 - (twidth / 2), 121 - (theight / 2)), f"{await commait(xp)}/{await commait(total_xp)}", (255, 255, 255), font=fonts,
+              stroke_width=1, stroke_fill=(0, 0, 0))
+    image_bytes = BytesIO()
+    img.save(image_bytes, 'PNG')
+    image_bytes.seek(0)
+    return discord.File(fp=image_bytes, filename='level.png')
 
 @bot.event
 async def on_message(message):
@@ -598,22 +663,20 @@ async def logs(ctx, *, search:str=None):
             break
         i = i.replace('\n', '')
         splitted = i.split('-!-')
+        splitted[3] = splitted[3].replace(':','˸')
         if search is not None:
             if splitted[1] != search:
                 continue
         x.add_row(splitted)
         count += 1
-    await ctx.send(f'**Requested by:** `{ctx.author.name}`\n```css\n{x}```')
+    await ctx.send(f'**Requested by:** `{ctx.author.name}`\n```css\n{x.get_string()[:1900]}```')
 
 @bot.command(aliases=['eval'])  # DEV ONLY
-async def evaluate(ctx, ifawait:int ,*, expression):
+async def evaluate(ctx, *, expression):
     if ctx.author.id not in devs:
         return
     try:
-        if ifawait == 1:
-            await ctx.reply(await eval(expression))
-        else:
-            await ctx.reply(eval(expression))
+        await ctx.reply(eval(expression))
     except Exception as e:
         await ctx.reply(f'```\n{e}```')
 
@@ -899,14 +962,14 @@ async def give(ctx, member:discord.Member, amount:int):
 
     a_wallet = author['wallet']
     a_bank = author['bank']
-    
+
     if amount == 'all':
         amount = a_bank
     elif amount == 'half':
         amount = a_bank/2
     else:
         amount = int(amount)
-    
+
     if amount == 0:
         return await ctx.send(f'{ctx.author.mention} Sending 0 coins... Hmm nice idea but we dont do that here.')
     if amount < 0:
@@ -1221,7 +1284,7 @@ async def transfer(ctx, togive:discord.Member = None, amount = None, *, reason =
 
     c_bank = current['bank']
     p_bank = person['bank']
-    
+
     if amount == 'all':
         amount = c_bank
     elif amount == 'half':
@@ -1245,7 +1308,7 @@ async def transfer(ctx, togive:discord.Member = None, amount = None, *, reason =
         return await ctx.send(f'{ctx.author.mention} Well, you don\'t have enough coins. RIP.')
     if amount + fees > c_bank:
         return await ctx.send(f'{ctx.author.mention} You don\'t have enough coins to pay for transaction fees.')
-        
+
     current['bank'] = c_bank - amount - fees
     person['bank'] = p_bank + amount
 
@@ -1295,7 +1358,7 @@ async def statement(ctx, *args):
         count = 1
         for s in all_s:
             date = s['time'].split(" ")[0]
-            time_ = s['time'].split(" ")[1].replace(":", "∶")
+            time_ = s['time'].split(" ")[1].replace(":", "˸")
             if '-t' in args:
                 index = 1
                 for i in args:
@@ -1327,7 +1390,7 @@ async def statement(ctx, *args):
 
     await ctx.send(f'**Bank Statement of `{member.name}`:**\n```css\n{desc}```')
 
-@bot.command()
+@bot.command(aliases=['pf'])
 async def level(ctx, member:discord.Member = None):
     if member is None:
         member = ctx.author
@@ -1336,43 +1399,27 @@ async def level(ctx, member:discord.Member = None):
     xp = xpdata.setdefault(f'{member.id}', 0)
     lev = await calculate_level(xp)
 
+    max_xp = 0
     for key, value in xp_levels.items():
         if lev == value:
             max_xp = key
             break
-
-    percent = int((xp/max_xp)*25)
-    bar = f'**`{"▬"*percent}ᐅ{"▬"*(24-percent)}`**'
-    badges_data = await get_badges()
-    badges = ''
-    for i in badges_data:
-        if str(member.id) in badges_data[i]:
-            badges += f'{badge_emoji[i]} '
-    embed = discord.Embed(description=f'{badges}\n{bar}',
-                          color=embedcolor)
-    embed.add_field(name='Level', value=f'`{lev}`')
-    embed.add_field(name='XP', value=f'`{await commait(xp)}/{await commait(max_xp)}`')
-
-    fetched = bot.get_user(member.id)
-    embed.timestamp = datetime.datetime.utcnow()
-    embed.set_footer(text='Economy Bot', icon_url=bot_pfp)
-    embed.set_author(name=f'{fetched.name}', icon_url=fetched.avatar_url)
-    #embed.set_thumbnail(url=fetched.avatar_url)
-    await ctx.send(embed=embed)
+    file = await make_lvl_img(member, lev, xp, max_xp)
+    await ctx.send(file=file)
 
 @bot.command()
 async def stocks(ctx):
-    columns = ['Name', 'Highest', 'Lowest', 'Current', 'Volume']
+    columns = ['Name', 'Highest   ', 'Lowest', 'Current', 'Volume']
     details = list(current_stock)
     mydata = await perform_stuff(details)
     with open('stock_config.json', 'r') as c:
         config = json.loads(c.read())
     x = PrettyTable()
-    x.add_column('  Name', columns)
-    x.align['  Name'] = 'l'
+    x.add_column('   Name', columns)
+    x.align['   Name'] = 'l'
     x.add_column('          ', ['          ','          ','          ','          ','          '])
-    x.add_column('Value ', [config['name'], mydata['highest'], mydata['lowest'], details[3], mydata['volume']])
-    x.align['Value '] = 'r'
+    x.add_column('   Value  ', [config['name'], mydata['highest'], mydata['lowest'], details[3], mydata['volume']])
+    x.align['   Value  '] = 'r'
     line = config['line']
     file = await get_todays_stock()
     stock_data = await get_data_stock(file)
@@ -1410,12 +1457,16 @@ async def stocks(ctx):
     plt.savefig('graph.png', transparent=True)
     plt.close()
 
+    left = datetime.timedelta(seconds=((len(stock_data) - config["line"]) * round(86400 / len(stock_data), 4)))
+    final = datetime.datetime.strptime(str(left), '%H:%M:%S.%f').replace(microsecond=0)
+    colon_format = str(final).split(" ")[1].split(':')
     p_data = await get_stocks()
     holdings = p_data.get(str(ctx.author.id), 0)
     myfile = discord.File('graph.png','stock_graph.png')
     embed = discord.Embed(title='Today\'s Stock', description=f'```\n{x}```', color=embedcolor)
     embed.add_field(name='Your Holdings', value=f'`{await commait(holdings)}` stocks')
     embed.add_field(name='Current Value', value=f'`{await commait(int(holdings*float(details[3])))}` coins')
+    embed.add_field(name='Time Left', value=f'`{colon_format[0]}h {colon_format[1]}m {colon_format[2]}s`')
 
     embed.set_image(url="attachment://graph.png")
     await ctx.send(embed=embed, file=discord.File("graph.png"))
@@ -1509,10 +1560,6 @@ async def sell(ctx, amount):
     embed.set_author(name=f'{fetched.name}', icon_url=fetched.avatar_url)
 
     await ctx.send(embed=embed)
-
-@bot.command()
-async def t(ctx, lang:str):
-    await ctx.send(f'```{lang}\ng.help <module>\ng.pf\ng.maps [user]```')
 
 @bot.event
 async def on_ready():
