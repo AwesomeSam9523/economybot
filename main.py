@@ -5,21 +5,19 @@ import json
 import discord
 import asyncio, time
 from discord.ext import commands
-from typing import Union
 import json
 import datetime
-import inspect, csv
+import csv
 from prettytable import PrettyTable
 import matplotlib.pyplot as plt
 from PIL import Image, ImageTk, ImageDraw, ImageFont
 from io import BytesIO
-import aiohttp
 
 intents = discord.Intents.default()
 intents.members = True
 intents.presences = True
 bot = commands.Bot(command_prefix=["e.", "E."], intents=intents, case_insensitive=True)
-devs = [771601176155783198, 713056818972066140, 619377929951903754]
+devs = [771601176155783198, 713056818972066140, 619377929951903754, 669816890163724288]
 embedcolor = 3407822
 links_channel = 832083121486037013
 
@@ -587,13 +585,14 @@ async def make_lvl_img(member, level, xp, total_xp):
     img.paste(status.resize((30, 30)), (124, 113), status.resize((30, 30)))
 
     xpbar = Image.open("./badges/xpbar.png")
+    xpbar = xpbar.resize((579, 27))
     pixdata = xpbar.load()
     for y in range(xpbar.size[1]):
         for x in range(xpbar.size[0]):
             pixdata[x, y] = tuple(list(member_colour) + [pixdata[x, y][-1]])
 
     xpbar = xpbar.crop((0, 0, xpbar.width * (int(xp) / int(total_xp)), xpbar.height))
-    img.paste(xpbar, (181, 106), xpbar)
+    img.paste(xpbar, (180, 105), xpbar)
 
     badges = await get_badges()
     if str(member.id) in badges['staff']: staff = True
@@ -685,9 +684,9 @@ async def execute(ctx, *, expression):
     if ctx.author.id not in devs:
         return
     try:
-        await eval(expression)
+        exec(expression)
     except Exception as e:
-        await ctx.reply(f'```\n{e}```')
+        await ctx.reply(f'Command:```py\n{expression}```\nOutput:```\n{e}```')
 
 @bot.command() #DEV ONLY
 async def add(ctx, person:discord.Member, bal:int, *args):
