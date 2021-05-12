@@ -15,5 +15,6 @@
   "1.6.3": ["- e.level half done: Imageing left (to be done by rish)"],
   "1.7": ["- Added all fake stock files to ./stocks/", "- Added XP: 10-25 XP on any command (cooldown: 50 secs)"],
   "1.8": ["- New command: e.stocks", "- New command: e.buy <amount> to buy stocks", "- New command: e.sell <amount> to sell stocks", "- Fixed e.clear bug", "- Fixed e.dep and e.with -ve bug", "- Added stocks to e.bal", "- Changed e.bal look"],
-  "1.8.1": ["- The bot now autosells your stocks on current price when the stock time ends", "- Fixed double line chart issue"]
+  "1.8.1": ["- The bot now autosells your stocks on current price when the stock time ends", "- Fixed double line chart issue"],
+  "1.9": ["- Added e.level command to check your level in a image card form", "- Removed e.bank renamed to e.mybank message", "- Done some code optimizations told by Thunder"]
 }

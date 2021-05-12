@@ -1,11 +1,9 @@
 import os
 import random
-import re
-import json
+import json, operator
 import discord
 import asyncio, time
 from discord.ext import commands
-import json
 import datetime
 import csv
 from prettytable import PrettyTable
@@ -172,26 +170,29 @@ badge_emoji = {'developer':e_developer,
                'bughunter':e_bughunter}
 media = 839161613595443292
 
+def is_dev(ctx):
+    return ctx.author.id in devs
+
 async def get_avg():
     with open('average.json', 'r') as avg:
-        return json.loads(avg.read())
+        return json.load(avg)
 
 async def get_estates():
     with open('estates.json', 'r') as f:
-        return json.loads(f.read())
+        return json.load(f)
 
 async def get_alert_info():
     with open('alerts.json', 'r') as a:
-        aler = json.loads(a.read())
+        aler = json.load(a)
     return aler
 
 async def get_data():
     with open('accounts.json', 'r') as f:
-        data = f.read()
+        data = f
         if data == '{}':
             return {1:1}
         else:
-            return json.loads(data)
+            return json.load(data)
 
 async def get_revenue(level:int):
     return int((level*200 - 50)*0.97)
@@ -223,7 +224,7 @@ async def get_fees(user, amt):
 
 async def get_xp():
     with open('xp.json', 'r') as xp:
-        return json.loads(xp.read())
+        return json.load(xp)
 
 async def get_todays_stock():
     a = os.listdir('stocks')
@@ -244,15 +245,15 @@ async def get_todays_stock():
 
 async def get_statements():
     with open('statements.json', 'r') as s:
-        return json.loads(s.read())
+        return json.load(s)
 
 async def get_stocks():
     with open('stocks.json', 'r') as s:
-        return json.loads(s.read())
+        return json.load(s)
 
 async def get_badges():
     with open('badges.json', 'r') as b:
-        return json.loads(b.read())
+        return json.load(b)
 
 async def get_data_stock(file):
     with open(f'stocks/{file}', 'r') as f:
@@ -334,7 +335,7 @@ async def update_stocks():
     total_lines = len(data)
 
     with open('stock_config.json', 'r') as c:
-        config = json.loads(c.read())
+        config = json.load(c)
     line = config.setdefault("line", 1)
     name = config.setdefault("name", random.choice(stock_names))
     if line == total_lines:
@@ -454,7 +455,7 @@ async def open_estates(userid):
 
 async def checktimeout(userid, event):
     with open('timeouts.json', 'r') as t:
-        timeouts = json.loads(t.read())
+        timeouts = json.load(t)
     userid = f'{userid}'
     if userid not in timeouts:
         return None
@@ -470,7 +471,7 @@ async def checktimeout(userid, event):
 
 async def add_timeout(userid, event):
     with open('timeouts.json', 'r') as f:
-        data = json.loads(f.read())
+        data = json.load(f)
 
     person = data.get(f'{userid}')
     if person is None:
@@ -483,7 +484,7 @@ async def add_timeout(userid, event):
 
 async def alerts_state(userid, state:str):
     with open('alerts.json', 'r') as a:
-        aler = json.loads(a.read())
+        aler = json.load(a)
     userid = str(userid)
     person = aler.get(userid)
     if person is None:
@@ -547,7 +548,7 @@ async def add_xp_tm(userid):
 
 async def perform_stuff(data):
     with open('stock_config.json', 'r') as r:
-        stock_data = json.loads(r.read())
+        stock_data = json.load(r)
     #columns = ['Name', 'Highest', 'Lowest', 'Current', 'Volume']
     highest = float(stock_data.setdefault('highest', data[1]))
     lowest = float(stock_data.setdefault('lowest', data[2]))
@@ -570,9 +571,9 @@ async def perform_stuff(data):
     return stock_data
 
 async def get_avatar(user):
-    return Image.open(BytesIO(await user.avatar_url_as(format="png").read())).resize((140, 140))
+    return Image.open(BytesIO(await user.avatar_url_as(format="png"))).resize((140, 140))
 
-async def make_lvl_img(member, level, xp, total_xp):
+async def make_lvl_img(member, level, xp, total_xp, guildid):
     img = Image.open("./badges/3.png")
     member_colour = member.color.to_rgb()
     avatar = await get_avatar(member)
@@ -614,13 +615,22 @@ async def make_lvl_img(member, level, xp, total_xp):
         patron_icon = patron_icon.resize((37, 37))
         img.paste(patron_icon, (location, 55), patron_icon)
         location -= 45
-
+    server_r, global_r = await xp_ranks(member.id, guildid)
+    if global_r > 1000:
+        global_r = 'Unknown'
+    else:
+        global_r = f'#{global_r}'
     draw = ImageDraw.Draw(img)
     font = ImageFont.truetype("badges/font2.ttf", 19)
     fontm = ImageFont.truetype("badges/font2.ttf", 13)
     fonts = ImageFont.truetype("badges/font2.ttf", 10)
-    draw.text((180, 34), f"{member.name}#{member.discriminator}", (255, 255, 255), font=font)
-    draw.text((180, 70), f"Level {level}", (255, 255, 255), font=fontm)
+    fontu = ImageFont.truetype("badges/unicode.ttf", 25)
+    draw.text((180, 34), f'{member.name}#{member.discriminator}', (255, 255, 255), font=font)
+    draw.text((180, 70), f"Level {level} || Server Rank: #{server_r} | Global Rank: {global_r}", (255, 255, 255), font=fontm)
+    '''size = fontu.getsize(u'⟐')
+    print(size)
+    draw.text((185, 70), '⟐'.encode('utf-8'))
+    draw.text((190+size[0], 70), f"Server Rank: #{server_r} | Global Rank: {global_r}", (255, 255, 255), font=fontm)'''
     twidth, theight = draw.textsize(f"{await commait(xp)}/{await commait(total_xp)}", fonts)
     draw.text((468 - (twidth / 2), 121 - (theight / 2)), f"{await commait(xp)}/{await commait(total_xp)}", (255, 255, 255), font=fonts,
               stroke_width=1, stroke_fill=(0, 0, 0))
@@ -628,6 +638,23 @@ async def make_lvl_img(member, level, xp, total_xp):
     img.save(image_bytes, 'PNG')
     image_bytes.seek(0)
     return discord.File(fp=image_bytes, filename='level.png')
+
+async def xp_ranks(member, guild):
+    userid = str(member)
+    xp = await get_xp()
+    xp_sorted_desc = sorted(xp.items(), key=operator.itemgetter(1), reverse=True)
+    guild = bot.get_guild(guild)
+    guildmembers = guild.members
+    member_list = [x.id for x in guildmembers]
+    global_rank = 1
+    guild_rank = 1
+    for i in xp_sorted_desc:
+        if i[0] == userid:
+            break
+        global_rank += 1
+        if int(i[0]) in member_list:
+            guild_rank += 1
+    return guild_rank, global_rank
 
 @bot.event
 async def on_message(message):
@@ -646,9 +673,8 @@ async def on_message(message):
     await bot.process_commands(message)
 
 @bot.command() #DEV ONLY
+@commands.check(is_dev(ctx))
 async def logs(ctx, *, search:str=None):
-    if ctx.author.id not in devs:
-        return
     with open('logs.txt', 'r') as log:
         logs_data = log.readlines()
     logs_data.reverse()
@@ -671,28 +697,24 @@ async def logs(ctx, *, search:str=None):
     await ctx.send(f'**Requested by:** `{ctx.author.name}`\n```css\n{x.get_string()[:1900]}```')
 
 @bot.command(aliases=['eval'])  # DEV ONLY
+@commands.check(is_dev(ctx))
 async def evaluate(ctx, *, expression):
-    if ctx.author.id not in devs:
-        return
     try:
         await ctx.reply(eval(expression))
     except Exception as e:
         await ctx.reply(f'```\n{e}```')
 
 @bot.command(aliases=['exec']) #DEV ONLY
+@commands.check(is_dev(ctx))
 async def execute(ctx, *, expression):
-    if ctx.author.id not in devs:
-        return
     try:
-        exec(expression)
+        exec(expression.replace('```', ''))
     except Exception as e:
         await ctx.reply(f'Command:```py\n{expression}```\nOutput:```\n{e}```')
 
 @bot.command() #DEV ONLY
+@commands.check(is_dev(ctx))
 async def add(ctx, person:discord.Member, bal:int, *args):
-    if ctx.author.id not in devs:
-        return
-
     data = await get_data()
     toadd = data.get(f'{person.id}')
 
@@ -709,9 +731,8 @@ async def add(ctx, person:discord.Member, bal:int, *args):
     await ctx.send(f'{ctx.author.mention} added `{await commait(bal)}` coins to {person.mention}.')
 
 @bot.command() #DEV Only
+@commands.check(is_dev(ctx))
 async def clear(ctx, member:discord.Member):
-    if ctx.author.id not in devs:
-        return
     data = await get_data()
     userid = str(member.id)
 
@@ -725,11 +746,10 @@ async def clear(ctx, member:discord.Member):
     await ctx.send(f'{ctx.author.mention} Cleared data of `{member.name}#{member.discriminator}` successfully!')
 
 @bot.command() #DEV Only
+@commands.check(is_dev(ctx))
 async def release(ctx, title:str, link:str):
-    if ctx.author.id not in devs:
-        return
     with open('updates.json', 'r') as upd:
-        updates = json.loads(upd.read())
+        updates = json.load(upd)
 
     update = updates[title]
     desc = ''
@@ -744,13 +764,12 @@ async def release(ctx, title:str, link:str):
     await chl.send('<@&839370096248881204> New Update Out!',embed = embed)
 
 @bot.command()
+@commands.check(is_dev(ctx))
 async def stockinfo(ctx):
-    if ctx.author.id not in devs:
-        return
     with open(f'stocks/{await get_todays_stock()}', 'r') as f:
         stock = list(csv.reader(f))
     with open(f'stock_config.json', 'r') as c:
-        config = json.loads(c.read())
+        config = json.load(c)
 
     embed = discord.Embed(title='Stock Info', color=embedcolor)
     embed.add_field(name='Total Rows', value=f'{len(stock)}')
@@ -763,8 +782,8 @@ async def stockinfo(ctx):
     await ctx.send(embed=embed)
 
 @bot.command()
+@commands.check(is_dev(ctx))
 async def badge(ctx, member:discord.Member, badge:str):
-    if ctx.author.id not in devs: return
     badges = await get_badges()
     userid = str(member.id)
 
@@ -869,38 +888,6 @@ async def withdraw(ctx, amount: str = None):
 @bot.command()
 async def bank(ctx):
     await ctx.send(f'{ctx.author.mention} Command renamed to `e.mybank`')
-
-@bot.command()
-async def mybank(ctx, member:discord.Member = None):
-    if member is None:
-        userid = ctx.author.id
-    else:
-        userid = member.id
-    await open_account(userid)
-    await avg_update()
-    data = await get_data()
-    avgbal = await get_avg()
-
-    person = data.get(f'{userid}')
-    person2 = avgbal.get(f'{userid}')
-    btype = person['bank_type']
-
-    embed = discord.Embed(description='Here are your bank details:\n\u200b', color=embedcolor)
-    embed.add_field(name='Bank Name', value=f'{bank_names[btype]}')
-    embed.add_field(name='Bank Tier', value=f'{bank_tier[btype]}')
-    embed.add_field(name='\u200b', value='\u200b')
-    embed.add_field(name='Daily Interest', value=f'{rates[btype]}%')
-    embed.add_field(name='Current Balance', value=f'{person["bank"]}')
-    embed.add_field(name='Average Balance', value=f'{person2["avg"]}')
-    embed.add_field(name='Note:', value='To claim interest, use `e.daily`.\n'
-                                        'Your average balance in last 24 hours will be taken in account for that.')
-
-    fetched = bot.get_user(userid)
-    embed.timestamp = datetime.datetime.utcnow()
-    embed.set_footer(text='Economy Bot', icon_url=bot_pfp)
-    embed.set_author(name=f'{fetched.name} | {e_bank} Know Your Bank!', icon_url=fetched.avatar_url)
-
-    await ctx.send(embed=embed)
 
 @bot.command()
 async def daily(ctx):
@@ -1251,7 +1238,7 @@ async def alerts(ctx, state:str = None):
                                           '```diff\n+ To turn on: e.alerts on\n- To turn off: e.alerts off\n```',
                               color=embedcolor)
         with open('alerts.json', 'r') as a:
-            aler = json.loads(a.read())
+            aler = json.load(a)
         if f'{ctx.author.id}' in aler:
             current = 'On'
         else:
@@ -1403,7 +1390,7 @@ async def level(ctx, member:discord.Member = None):
         if lev == value:
             max_xp = key
             break
-    file = await make_lvl_img(member, lev, xp, max_xp)
+    file = await make_lvl_img(member, lev, xp, max_xp, ctx.guild.id)
     await ctx.send(file=file)
 
 @bot.command()
@@ -1412,7 +1399,7 @@ async def stocks(ctx):
     details = list(current_stock)
     mydata = await perform_stuff(details)
     with open('stock_config.json', 'r') as c:
-        config = json.loads(c.read())
+        config = json.load(c)
     x = PrettyTable()
     x.add_column('   Name', columns)
     x.align['   Name'] = 'l'
