@@ -219,6 +219,14 @@ async def get_avg():
     with open('average.json', 'r') as avg:
         return json.load(avg)
 
+async def get_admin():
+    with open('admin.json', 'r') as f:
+        return json.load(f)
+
+async def close_admin(a):
+    with open('admin.json', 'w') as f:
+        f.write(json.dumps(a))
+
 async def get_estates():
     with open('estates.json', 'r') as f:
         return json.load(f)
@@ -720,6 +728,13 @@ async def xp_ranks(member, guild):
             guild_rank += 1
     return guild_rank, global_rank
 
+async def check_channel(chlid, guildid):
+    a = await get_admin()
+    server = a.get(str(guildid))
+    if server is None: return True
+    if chlid in server: return True
+    else: return False
+
 devmode = True
 
 @bot.check
@@ -739,6 +754,8 @@ async def on_message(message):
         if bot.dev == 1 and message.author.id not in devs: return
         if message.author.id in disregarded:
             if message.author.id not in devs: return
+        allowed = await check_channel(message.channel.id, message.guild.id)
+        if not allowed: return
         state = await spam_protect(message.author.id)
         if state == 'warn':
             embed = discord.Embed(title='Using commands too fast!', color=error_embed)
@@ -1790,6 +1807,37 @@ async def help(ctx, specify=None):
     if notfound:
         embed = discord.Embed(description='No help found or command doesn\'t exist!', embedcolor=error_embed)
         await ctx.send(embed=embed)
+
+@bot.command()
+@commands.has_permissions(manage_channels=True)
+async def set_chl(ctx, channel:discord.TextChannel):
+    a = await get_admin()
+    server = a.get(str(ctx.guild.id), [])
+    if channel.id in server: return
+    server.append(channel.id)
+    a[str(ctx.guild.id)] = server
+    await close_admin(a)
+    await ctx.send(f'{channel.mention} added successfully')
+
+@bot.command()
+@commands.has_permissions(manage_channels=True)
+async def del_chl(ctx, channel:discord.TextChannel):
+    a = await get_admin()
+    server = a.get(str(ctx.guild.id), [])
+    if channel.id not in server: return
+    server.remove(channel.id)
+    a[str(ctx.guild.id)] = server
+    await close_admin(a)
+    await ctx.send(f'{channel.mention} removed successfully')
+
+@bot.command()
+@commands.has_permissions(manage_channels=True)
+async def list_chl(ctx):
+    a = await get_admin()
+    server = a.get(str(ctx.guild.id), [])
+    channels = [f'<#{x}>' for x in server]
+    embed = discord.Embed(description='\n'.join(channels), color=embedcolor)
+    await ctx.send(embed=embed)
 
 @bot.event
 async def on_ready():
