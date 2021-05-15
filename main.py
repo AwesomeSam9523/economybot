@@ -1,6 +1,7 @@
 import os
 import random
-import json, operator
+import ujson as json
+import requests, operator
 import discord
 import asyncio, time
 from discord.ext import commands
@@ -15,10 +16,14 @@ intents = discord.Intents.default()
 intents.members = True
 intents.presences = True
 bot = commands.Bot(command_prefix=["e.", "E."], intents=intents, case_insensitive=True)
+bot.remove_command('help')
 devs = [771601176155783198, 713056818972066140, 619377929951903754, 669816890163724288]
 embedcolor = 3407822
 links_channel = 832083121486037013
 
+support_server = 'https://discord.gg/aMqWWTunrJ'
+patreon_page = 'https://www.patreon.com/ThunderGameBot'
+invite_url = 'https://i0.wp.com/incipia.co/wp-content/uploads/2016/08/incipia-coming-soon.png'
 bank_names = {
     1: 'Common Finance Bank Ltd.',
     2: 'National Bank Pvt. Ltd.',
@@ -259,6 +264,10 @@ async def get_data_stock(file):
     with open(f'stocks/{file}', 'r') as f:
         return list(csv.reader(f))
 
+async def get_url(url):
+    a = requests.get(url)
+    return a.content
+
 async def update_stock_data(data):
     with open('stocks.json', 'w') as avgbal:
         avgbal.write(json.dumps(data))
@@ -317,7 +326,7 @@ async def clear_dues():
         embed.timestamp = datetime.datetime.utcnow()
         embed.set_author(name=f'{user.name}', icon_url=user.avatar_url)
         embed.set_footer(text='Economy Bot', icon_url=bot_pfp)
-        await user.send(embed=embed)
+        #await user.send(embed=embed)
         await create_statement(user, bot.user, bulk, f"Sold {value} Stocks", "Credit")
 
     await update_data(data)
@@ -393,9 +402,9 @@ async def est_update():
 
                 persona['last'] = cur
                 aler[str(i)] = persona
-                await update_alerts(aler)
+                #await update_alerts(aler)
 
-                await fetched.send(embed=embed)
+                #await fetched.send(embed=embed)
 
 async def avg_update():
     avgbal = await get_avg()
@@ -523,8 +532,8 @@ async def create_stuff():
     global bot_pfp
     mybot = bot.get_user(832083717417074689)
     bot_pfp = mybot.avatar_url
-    await bot.change_presence(
-            activity=discord.Activity(type=discord.ActivityType.watching, name="myself waiting for Thunder"))
+    #await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name="BlackThunder#4007 *EvilGrin*"))
+    await bot.change_presence(status=discord.Status.invisible)
     asyncio.create_task(loops())
     asyncio.create_task(stock_update())
     print('Ready!')
@@ -571,9 +580,25 @@ async def perform_stuff(data):
     return stock_data
 
 async def get_avatar(user):
-    return Image.open(BytesIO(await user.avatar_url_as(format="png"))).resize((140, 140))
+    return Image.open(BytesIO(await user.avatar_url_as(format="png").read())).resize((140, 140))
 
 async def make_lvl_img(member, level, xp, total_xp, guildid):
+    def AddShadow(text, x, y):
+        font = ImageFont.truetype("badges/font2.ttf", 30)
+        sc1 = '#313131'
+        sc2 = '#313131'
+        draw.text((x - 2, y), text, font=font, fill=sc2)
+        draw.text((x + 2, y), text, font=font, fill=sc2)
+        draw.text((x, y - 2), text, font=font, fill=sc2)
+        draw.text((x, y + 2), text, font=font, fill=sc2)
+
+        draw.text((x - 2, y - 2), text, font=font, fill=sc1)
+        draw.text((x + 2, y - 2), text, font=font, fill=sc1)
+        draw.text((x - 2, y + 2), text, font=font, fill=sc1)
+        draw.text((x + 2, y + 2), text, font=font, fill=sc1)
+
+        draw.text((x, y), text, font=font)
+
     img = Image.open("./badges/3.png")
     member_colour = member.color.to_rgb()
     avatar = await get_avatar(member)
@@ -622,15 +647,17 @@ async def make_lvl_img(member, level, xp, total_xp, guildid):
         global_r = f'#{global_r}'
     draw = ImageDraw.Draw(img)
     font = ImageFont.truetype("badges/font2.ttf", 19)
+    font_rank = ImageFont.truetype("badges/font2.ttf", 24)
     fontm = ImageFont.truetype("badges/font2.ttf", 13)
     fonts = ImageFont.truetype("badges/font2.ttf", 10)
-    fontu = ImageFont.truetype("badges/unicode.ttf", 25)
+    #fontu = ImageFont.truetype("badges/unicode.ttf", 25)
     draw.text((180, 34), f'{member.name}#{member.discriminator}', (255, 255, 255), font=font)
-    draw.text((180, 70), f"Level {level} || Server Rank: #{server_r} | Global Rank: {global_r}", (255, 255, 255), font=fontm)
-    '''size = fontu.getsize(u'⟐')
-    print(size)
-    draw.text((185, 70), '⟐'.encode('utf-8'))
-    draw.text((190+size[0], 70), f"Server Rank: #{server_r} | Global Rank: {global_r}", (255, 255, 255), font=fontm)'''
+    draw.text((180, 70), f"Level {level}", (255, 255, 255), font=fontm)
+    draw.text((120, 210), f'Server Rank', font=font)
+    draw.text((530, 210), f'Global Rank', font=font)
+    draw.text((120, 250), f'#{server_r}',(255, 243, 0), font=font_rank)
+    draw.text((530, 250), f'{global_r}', (255, 243, 0), font=font_rank)
+    AddShadow('Some Stuff Soon...', 220, 450)
     twidth, theight = draw.textsize(f"{await commait(xp)}/{await commait(total_xp)}", fonts)
     draw.text((468 - (twidth / 2), 121 - (theight / 2)), f"{await commait(xp)}/{await commait(total_xp)}", (255, 255, 255), font=fonts,
               stroke_width=1, stroke_fill=(0, 0, 0))
@@ -656,12 +683,15 @@ async def xp_ranks(member, guild):
             guild_rank += 1
     return guild_rank, global_rank
 
+devmode = True
 @bot.event
 async def on_message(message):
     if message.author.bot:
         return
     await open_account(message.author.id)
     if message.content.startswith('e.') or message.content.startswith('E.'):
+        if devmode and message.author.id not in devs:
+            return
         if message.author.id not in xp_timeout:
             userid = message.author.id
             xps = await get_xp()
@@ -670,10 +700,22 @@ async def on_message(message):
             xps[str(userid)] = xp + togive
             asyncio.create_task(update_xp(xps))
             asyncio.create_task(add_xp_tm(userid))
-    await bot.process_commands(message)
+    try:
+        await bot.process_commands(message)
+    except Exception as e:
+        if message.author.id in devs:
+            await message.channel.send(f'```\n{e}```')
+
+@bot.command()
+@commands.check(is_dev)
+async def dvm(ctx):
+    if devmode:
+        await ctx.reply('Changed Dev Mode state to: `**Off**`')
+    else:
+        await ctx.reply('Changed Dev Mode state to: `**On**`')
 
 @bot.command() #DEV ONLY
-@commands.check(is_dev(ctx))
+@commands.check(is_dev)
 async def logs(ctx, *, search:str=None):
     with open('logs.txt', 'r') as log:
         logs_data = log.readlines()
@@ -697,7 +739,7 @@ async def logs(ctx, *, search:str=None):
     await ctx.send(f'**Requested by:** `{ctx.author.name}`\n```css\n{x.get_string()[:1900]}```')
 
 @bot.command(aliases=['eval'])  # DEV ONLY
-@commands.check(is_dev(ctx))
+@commands.check(is_dev)
 async def evaluate(ctx, *, expression):
     try:
         await ctx.reply(eval(expression))
@@ -705,7 +747,7 @@ async def evaluate(ctx, *, expression):
         await ctx.reply(f'```\n{e}```')
 
 @bot.command(aliases=['exec']) #DEV ONLY
-@commands.check(is_dev(ctx))
+@commands.check(is_dev)
 async def execute(ctx, *, expression):
     try:
         exec(expression.replace('```', ''))
@@ -713,7 +755,7 @@ async def execute(ctx, *, expression):
         await ctx.reply(f'Command:```py\n{expression}```\nOutput:```\n{e}```')
 
 @bot.command() #DEV ONLY
-@commands.check(is_dev(ctx))
+@commands.check(is_dev)
 async def add(ctx, person:discord.Member, bal:int, *args):
     data = await get_data()
     toadd = data.get(f'{person.id}')
@@ -731,7 +773,7 @@ async def add(ctx, person:discord.Member, bal:int, *args):
     await ctx.send(f'{ctx.author.mention} added `{await commait(bal)}` coins to {person.mention}.')
 
 @bot.command() #DEV Only
-@commands.check(is_dev(ctx))
+@commands.check(is_dev)
 async def clear(ctx, member:discord.Member):
     data = await get_data()
     userid = str(member.id)
@@ -745,8 +787,27 @@ async def clear(ctx, member:discord.Member):
     await update_logs(f'{ctx.author}-!-clear-!-[{member.id}]-!-{datetime.datetime.today().replace(microsecond=0)}')
     await ctx.send(f'{ctx.author.mention} Cleared data of `{member.name}#{member.discriminator}` successfully!')
 
+@bot.command()
+@commands.check(is_dev)
+async def format(ctx, member:discord.Member):
+    data = await get_data()
+    estate = await get_estates()
+    xp = await get_xp()
+    st = await get_stocks()
+    state = await get_statements()
+    userid = str(member.id)
+
+    person = data[userid]
+    person['bank'] = 0
+    person['wallet'] = 0
+
+    data[userid] = person
+    await update_data(data)
+    await update_logs(f'{ctx.author}-!-clear-!-[{member.id}]-!-{datetime.datetime.today().replace(microsecond=0)}')
+    await ctx.send(f'{ctx.author.mention} Cleared data of `{member.name}#{member.discriminator}` successfully!')
+
 @bot.command() #DEV Only
-@commands.check(is_dev(ctx))
+@commands.check(is_dev)
 async def release(ctx, title:str, link:str):
     with open('updates.json', 'r') as upd:
         updates = json.load(upd)
@@ -764,7 +825,7 @@ async def release(ctx, title:str, link:str):
     await chl.send('<@&839370096248881204> New Update Out!',embed = embed)
 
 @bot.command()
-@commands.check(is_dev(ctx))
+@commands.check(is_dev)
 async def stockinfo(ctx):
     with open(f'stocks/{await get_todays_stock()}', 'r') as f:
         stock = list(csv.reader(f))
@@ -782,7 +843,7 @@ async def stockinfo(ctx):
     await ctx.send(embed=embed)
 
 @bot.command()
-@commands.check(is_dev(ctx))
+@commands.check(is_dev)
 async def badge(ctx, member:discord.Member, badge:str):
     badges = await get_badges()
     userid = str(member.id)
@@ -839,11 +900,13 @@ async def deposit(ctx, amount:str = None):
         amount = int(wallet/2)
     else:
         amount = int(amount)
-
+    print(amount, wallet)
     if amount < 0:
         return await ctx.send(f'{ctx.author.mention} No over-smartness with me.')
     if amount == 0:
         return await ctx.send(f'{ctx.author.mention} `0` coins? Are you drunk or something?')
+    if wallet < amount:
+        return await ctx.send(f'{ctx.author.mention} Want to deposit more you have? Nah not here.')
 
     newbal_w = wallet - amount
     newbal_b = bank + amount
@@ -874,6 +937,8 @@ async def withdraw(ctx, amount: str = None):
         return await ctx.send(f'{ctx.author.mention} No over-smartness with me.')
     if amount == 0:
         return await ctx.send(f'{ctx.author.mention} `0` coins? Are you drunk or something?')
+    if bank < amount:
+        return await ctx.send(f'{ctx.author.mention} Now dont\'t try to withdraw more than you have.')
 
     newbal_w = wallet + amount
     newbal_b = bank - amount
@@ -1018,7 +1083,14 @@ async def estates(ctx, member:discord.Member=None):
     embed.timestamp = datetime.datetime.utcnow()
     embed.set_footer(text='Economy Bot', icon_url=bot_pfp)
     embed.set_author(name=f'{fetched.name} | {name} Hotel', icon_url=fetched.avatar_url)
-    embed.set_image(url=getestates_thumb[level])
+    a = Image.open(BytesIO(await get_url(getestates_thumb[level])))
+    h, w = a.size
+    a.resize((int(h*0.6), int(w*0.6)))
+    image_bytes = BytesIO()
+    a.save(image_bytes, 'PNG')
+    image_bytes.seek(0)
+    uri = (await bot.get_guild(826824650713595964).get_channel(837564505952747520).send(f'{level}', file=discord.File(image_bytes, filename="estate.png"))).attachments[0].url
+    embed.set_image(url=uri)
 
     await ctx.send(embed=embed)
 
@@ -1546,6 +1618,48 @@ async def sell(ctx, amount):
     embed.set_author(name=f'{fetched.name}', icon_url=fetched.avatar_url)
 
     await ctx.send(embed=embed)
+
+help_json = {
+    "Estates":{
+      "e.estates": {"aliases":["None"], "usage":"e.estates", "desc":"Estates are a way to earn some coins for free. You have being provided with a hotel which will earn you revenue.\nDont forget, money never comes entirely for free, so you have to maintain your hotel too."},
+      "e.revenue": {"aliases":["None"], "usage":"e.revenue", "desc": "Use this command to earn revenue. The revenue will be added in your bank"},
+      "e.maintain": {"aliases": ["None"], "usage": "e.maintain", "desc": "Use this to maintain your hotel to look shining new! Not maintaining for a long time will lead to lesser revenue."},
+      "e.upgrade": {"aliases": ["None"], "usage": "e.upgrade", "desc": "Upgrading your hotel will lead to more revenue and less maintenance relatively. It also increases your net-worth"}
+    }, "Stocks": {
+      "e.stocks": {"aliases": ["None"], "usage": "e.stocks", "desc": "Invest in stock market which refreshes every 20-30 secs. New stock starts every day. Probably the best and fastest way to earn money?"},
+      "e.buy": {"aliases": ["None"], "usage": "e.buy <quantity>", "desc": "Buy stocks on current price"},
+      "e.sell": {"aliases": ["None"], "usage": "e.sell <quantity>", "desc": "Sell stocks on current price"}
+    }, "Bank": {
+      "e.balance": {"aliases": ["bal"], "usage": "e.balance", "desc": "View you balance: Bank, Wallet and Stocks"}
+    }
+}
+
+@bot.command()
+async def help(ctx, specify=None):
+    embed = discord.Embed(color=embedcolor,
+                          description=f'[Support Server]({support_server}) | [Invite Url]({invite_url}) | [Patreon Page]({patreon_page})\n\u200b')
+    embed.set_author(name='Help', icon_url=bot_pfp)
+    if specify is None:
+        for i in help_json:
+            content = '\n'.join(help_json[i].keys())
+            embed.add_field(name=f'**● __{i}__**', value=f'```less\n{content}```', inline=False)
+
+        try:
+            await ctx.author.send(embed=embed)
+            await ctx.reply('You received a mail!')
+        except:
+            await ctx.send(embed=embed)
+        return
+    x = help_json.values()
+    for i in x:
+        for j in i.keys():
+            if specify.lower() == j[2:]:
+                info = i[j]
+                embed = discord.Embed(title=f'Command: {j}', description=info['desc']+f'\n\n**Usage:** `{info["usage"]}`')
+                embed.add_field(name='Aliases', value='```less\n'+'\n'.join(info['aliases'])+'```', inline=False)
+                await ctx.send(embed=embed)
+                break
+
 
 @bot.event
 async def on_ready():
