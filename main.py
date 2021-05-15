@@ -1,6 +1,7 @@
 import os
 import random
-import ujson as json
+#import ujson as json
+import json
 import requests, operator
 import discord
 import asyncio, time
@@ -16,8 +17,10 @@ intents = discord.Intents.default()
 intents.members = True
 intents.presences = True
 bot = commands.Bot(command_prefix=["e.", "E."], intents=intents, case_insensitive=True)
+bot.dev = 1
 bot.remove_command('help')
 devs = [771601176155783198, 713056818972066140, 619377929951903754, 669816890163724288]
+disregarded = []
 embedcolor = 3407822
 links_channel = 832083121486037013
 
@@ -164,7 +167,9 @@ xp_levels = {
 stock_names = ['Ava', 'Neil', 'Ryan', 'Anthony', 'Bernadette', 'Lauren', 'Justin', 'Matt', 'Wanda', 'James', 'Emily', 'Vanessa', 'Carl', 'Fiona', 'Stephanie', 'Pippa', 'Phil', 'Carol', 'Liam', 'Michael', 'Ella', 'Amanda', 'Caroline', 'Nicola', 'Sean', 'Oliver', 'Kylie', 'Rachel', 'Leonard', 'Julian', 'Richard', 'Peter', 'Irene', 'Dominic', 'Connor', 'Dorothy', 'Gavin', 'Isaac', 'Karen', 'Kimberly', 'Abigail', 'Yvonne', 'Steven', 'Felicity', 'Evan', 'Bella', 'Alison', 'Diane', 'Joan', 'Jan', 'Wendy', 'Nathan', 'Molly', 'Charles', 'Victor', 'Sally', 'Rose', 'Robert', 'Claire', 'Theresa', 'Grace', 'Keith', 'Stewart', 'Andrea', 'Alexander', 'Chloe', 'Nicholas', 'Edward', 'Deirdre', 'Anne', 'Joseph', 'Alan', 'Rebecca', 'Jane', 'Natalie', 'Cameron', 'Owen', 'Eric', 'Gabrielle', 'Sonia', 'Tim', 'Sarah', 'Madeleine', 'Megan', 'Lucas', 'Joe', 'Brandon', 'Brian', 'Jennifer', 'Alexandra', 'Adrian', 'John', 'Mary', 'Tracey', 'Jasmine', 'Penelope', 'Hannah', 'Thomas', 'Angela', 'Warren', 'Blake', 'Simon', 'Audrey', 'Frank', 'Samantha', 'Dan', 'Victoria', 'Paul', 'Jacob', 'Heather', 'Una', 'Lily', 'Carolyn', 'Jonathan', 'Ian', 'Piers', 'William', 'Gordon', 'Dylan', 'Olivia', 'Jake', 'Leah', 'Jessica', 'David', 'Katherine', 'Amelia', 'Benjamin', 'Boris', 'Sebastian', 'Lisa', 'Diana', 'Michelle', 'Emma', 'Sam', 'Stephen', 'Faith', 'Kevin', 'Austin', 'Jack', 'Ruth', 'Colin', 'Trevor', 'Joanne', 'Virginia', 'Anna', 'Max', 'Adam', 'Maria', 'Sophie', 'Sue', 'Andrew', 'Harry', 'Amy', 'Christopher', 'Donna', 'Melanie', 'Elizabeth', 'Lillian', 'Julia', 'Christian', 'Luke', 'Zoe', 'Joshua', 'Jason']
 
 xp_timeout = []
-
+warn1 = []
+warn2 = []
+usercmds = {}
 e_wallet = '<:wallet:836814969290358845>'
 e_bank = '🏦'
 e_developer = '<:developer:835430548619919391>'
@@ -177,6 +182,38 @@ media = 839161613595443292
 
 def is_dev(ctx):
     return ctx.author.id in devs
+
+async def spam_protect(userid):
+    last = usercmds.get(userid, 0)
+    current = time.time()
+    usercmds[userid] = current
+    if current - last < 2:
+        if userid not in warn1:
+            asyncio.create_task(handle_1(userid))
+            return 'warn'
+        elif userid not in warn2:
+            asyncio.create_task(handle_2(userid))
+            return 'warn'
+        else:
+            asyncio.create_task(handle_disregard(userid))
+            return 'disregard'
+    else:
+        return 'ok'
+
+async def handle_1(userid):
+    warn1.append(userid)
+    await asyncio.sleep(2)
+    warn1.remove(userid)
+
+async def handle_2(userid):
+    warn2.append(userid)
+    await asyncio.sleep(2)
+    warn2.remove(userid)
+
+async def handle_disregard(userid):
+    disregarded.append(userid)
+    await asyncio.sleep(10*60)
+    disregarded.remove(userid)
 
 async def get_avg():
     with open('average.json', 'r') as avg:
@@ -212,13 +249,13 @@ async def get_fees(user, amt):
     btype = user['bank_type']
     fees = {1:1, 2:1.2, 3:1.5}
 
-    if amt > 5000:
+    if 20000 >= amt > 5000:
         a = 250
-    elif amt > 20000:
+    elif 30000 >= amt > 20000:
         a = 500
-    elif amt > 30000:
+    elif 50000 >= amt > 30000:
         a = 1000
-    elif amt > 50000:
+    elif 75000 >= amt > 50000:
         a = 2000
     elif amt > 75000:
         a = 5000
@@ -532,8 +569,8 @@ async def create_stuff():
     global bot_pfp
     mybot = bot.get_user(832083717417074689)
     bot_pfp = mybot.avatar_url
-    #await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name="BlackThunder#4007 *EvilGrin*"))
-    await bot.change_presence(status=discord.Status.invisible)
+    await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name="BlackThunder#4007 *EvilGrin*"))
+    #await bot.change_presence(status=discord.Status.invisible)
     asyncio.create_task(loops())
     asyncio.create_task(stock_update())
     print('Ready!')
@@ -684,14 +721,30 @@ async def xp_ranks(member, guild):
     return guild_rank, global_rank
 
 devmode = True
+
+@bot.check
+async def is_dm(ctx):
+    return ctx.guild != None
+
+@bot.event
+async def on_command_error(ctx, error):
+    pass
+
 @bot.event
 async def on_message(message):
     if message.author.bot:
         return
     await open_account(message.author.id)
     if message.content.startswith('e.') or message.content.startswith('E.'):
-        if devmode and message.author.id not in devs:
-            return
+        if bot.dev == 1 and message.author.id not in devs: return
+        if message.author.id in disregarded: return
+        state = await spam_protect(message.author.id)
+        if state == 'warn':
+            embed = discord.Embed(title='Using commands too fast!', color=error_embed)
+            return await message.channel.send(embed=embed)
+        elif state == 'disregard':
+            embed = discord.Embed(title='Warning!', description=f'{message.author.mention} has been disregarded for 10 mins!\n**Reason: Spamming Commands**',color=error_embed)
+            return await message.channel.send(embed=embed)
         if message.author.id not in xp_timeout:
             userid = message.author.id
             xps = await get_xp()
@@ -709,10 +762,12 @@ async def on_message(message):
 @bot.command()
 @commands.check(is_dev)
 async def dvm(ctx):
-    if devmode:
-        await ctx.reply('Changed Dev Mode state to: `**Off**`')
+    if bot.dev == 1:
+        await ctx.reply('Changed Dev Mode state to: **`Off`**')
+        bot.dev = 0
     else:
-        await ctx.reply('Changed Dev Mode state to: `**On**`')
+        await ctx.reply('Changed Dev Mode state to: **`On`**')
+        bot.dev = 1
 
 @bot.command() #DEV ONLY
 @commands.check(is_dev)
@@ -951,8 +1006,37 @@ async def withdraw(ctx, amount: str = None):
     await ctx.send(f'{ctx.author.mention} Successfully withdrew `{await commait(amount)}` coins.')
 
 @bot.command()
-async def bank(ctx):
-    await ctx.send(f'{ctx.author.mention} Command renamed to `e.mybank`')
+async def mybank(ctx, member:discord.Member = None):
+    if member is None:
+        userid = ctx.author.id
+    else:
+        userid = member.id
+    await open_account(userid)
+    await avg_update()
+    data = await get_data()
+    avgbal = await get_avg()
+
+    person = data.get(f'{userid}')
+    person2 = avgbal.get(f'{userid}')
+    btype = person['bank_type']
+
+    embed = discord.Embed(description='Here are your bank details:\n\u200b', color=embedcolor)
+    embed.add_field(name='Bank Name', value=f'{bank_names[btype]}')
+    embed.add_field(name='Bank Tier', value=f'{bank_tier[btype]}')
+    embed.add_field(name='\u200b', value='\u200b')
+    embed.add_field(name='Daily Interest', value=f'{rates[btype]}%')
+    embed.add_field(name='Current Balance', value=f'{person["bank"]}')
+    embed.add_field(name='Average Balance', value=f'{person2["avg"]}')
+    embed.add_field(name='Note:', value='To claim interest, use `e.daily`.\n'
+                                        'Your average balance in last 24 hours will be taken in account for that.')
+
+    fetched = bot.get_user(userid)
+    embed.timestamp = datetime.datetime.utcnow()
+    embed.set_footer(text='Economy Bot', icon_url=bot_pfp)
+    embed.set_author(name=f'{fetched.name} | {e_bank} Know Your Bank!', icon_url=fetched.avatar_url)
+
+    await ctx.send(embed=embed)
+
 
 @bot.command()
 async def daily(ctx):
@@ -1621,45 +1705,77 @@ async def sell(ctx, amount):
 
 help_json = {
     "Estates":{
+        "category":"Estates",
       "e.estates": {"aliases":["None"], "usage":"e.estates", "desc":"Estates are a way to earn some coins for free. You have being provided with a hotel which will earn you revenue.\nDont forget, money never comes entirely for free, so you have to maintain your hotel too."},
       "e.revenue": {"aliases":["None"], "usage":"e.revenue", "desc": "Use this command to earn revenue. The revenue will be added in your bank"},
       "e.maintain": {"aliases": ["None"], "usage": "e.maintain", "desc": "Use this to maintain your hotel to look shining new! Not maintaining for a long time will lead to lesser revenue."},
       "e.upgrade": {"aliases": ["None"], "usage": "e.upgrade", "desc": "Upgrading your hotel will lead to more revenue and less maintenance relatively. It also increases your net-worth"}
     }, "Stocks": {
+    "category":"Stocks",
       "e.stocks": {"aliases": ["None"], "usage": "e.stocks", "desc": "Invest in stock market which refreshes every 20-30 secs. New stock starts every day. Probably the best and fastest way to earn money?"},
       "e.buy": {"aliases": ["None"], "usage": "e.buy <quantity>", "desc": "Buy stocks on current price"},
       "e.sell": {"aliases": ["None"], "usage": "e.sell <quantity>", "desc": "Sell stocks on current price"}
     }, "Bank": {
-      "e.balance": {"aliases": ["bal"], "usage": "e.balance", "desc": "View you balance: Bank, Wallet and Stocks"}
+        "category":"Bank",
+        "e.balance": {"aliases": ["bal"], "usage": "e.balance [user]", "desc": "View you balance: Bank, Wallet and Stocks"},
+        "e.mybank": {"aliases": ["None"], "usage": "e.mybank", "desc": "View interest rate, average balance, bank tier etc."},
+        "e.statement": {"aliases": ["transactions"], "usage":"e.statement [-a <amount>] [-t <Credit | Debit>] [-r <reason>]", "desc":"View your bank statement and filter records based on Type, Amount and/or Reason"},
+        "e.deposit": {"aliases": ["dep"], "usage":"e.deposit <amount>", "desc":"Deposit coins to bank"},
+        "e.withdraw": {"aliases": ["with"], "usage":"e.withdraw <amount>", "desc":"Withdraw coins from bank"}
+    }, "Misc":{
+        "category":"Misc",
+        "e.level": {"aliases":["pf"], "usage":"e.level [user]", "desc":"Shows you level, perks and other stats"},
+        "e.give": {"aliases": ["None"], "usage":"e.give <user> <amount>", "desc":"Send coins to a person from your wallet"},
+        "e.transfer": {"aliases": ["None"], "usage":"e.transfer <user> <amount> [Reason]", "desc":"Transfer coins from your bank to others\' bank. It costs interest if bank isn't same.\nThis action is recorded in bank statements"},
+        "e.alerts": {"aliases":["None"], "usage":"e.alerts <on | off>", "desc":"Receive DMs from bot upon stock ending, pending maintenance etc."},
+        "e.daily": {"aliases":["None"], "usage":"e.daily", "desc":"Gives you your daily interest. It is the product of interest rate and average bank balance"}
     }
 }
 
 @bot.command()
 async def help(ctx, specify=None):
     embed = discord.Embed(color=embedcolor,
-                          description=f'[Support Server]({support_server}) | [Invite Url]({invite_url}) | [Patreon Page]({patreon_page})\n\u200b')
+                          description=f'[Support Server]({support_server}) | [Invite Url]({invite_url}) | [Patreon Page]({patreon_page})\nTo get help on a command, use `e.help <command name>`')
     embed.set_author(name='Help', icon_url=bot_pfp)
+    embed.set_footer(text='Syntax: <> = required, [] = optional')
     if specify is None:
-        for i in help_json:
-            content = '\n'.join(help_json[i].keys())
-            embed.add_field(name=f'**● __{i}__**', value=f'```less\n{content}```', inline=False)
-
+        for j in help_json:
+            mylist = []
+            for i in help_json[j].keys():
+                if i == "category": continue
+                mylist.append(i)
+            content = '\n'.join(mylist)
+            embed.add_field(name=f'**● __{j}__**', value=f'```less\n{content}```', inline=False)
         try:
             await ctx.author.send(embed=embed)
-            await ctx.reply('You received a mail!')
+            embed = discord.Embed(title='📧 You received a mail!', color=green)
+            await ctx.reply(embed=embed)
         except:
             await ctx.send(embed=embed)
         return
     x = help_json.values()
+    notfound = True
     for i in x:
         for j in i.keys():
-            if specify.lower() == j[2:]:
-                info = i[j]
-                embed = discord.Embed(title=f'Command: {j}', description=info['desc']+f'\n\n**Usage:** `{info["usage"]}`')
-                embed.add_field(name='Aliases', value='```less\n'+'\n'.join(info['aliases'])+'```', inline=False)
+            if j == 'category':
+                continue
+            available = []
+            available.append(j[2:])
+            info = i[j]
+            #print(info)
+            for k in info['aliases']:
+                available.append(k)
+            print(available)
+            if specify.lower() in available:
+                embed = discord.Embed(color=embedcolor, title=f'Command: {j[2:]}', description=info['desc']+f'\n\n**Usage:** `{info["usage"]}`\n**Category:** `{i["category"]}`')
+                embed.add_field(name='Aliases', value='```less\n'+'\n'.join([f'e.{q}' for q in info['aliases']])+'```', inline=False)
+                embed.set_footer(text='Syntax: <> = required, [] = optional')
+                notfound = False
                 await ctx.send(embed=embed)
                 break
-
+    if notfound:
+        embed = discord.Embed(description='No help found or command doesn\'t exist!', embedcolor=error_embed)
+        await ctx.send(embed=embed)
 
 @bot.event
 async def on_ready():
