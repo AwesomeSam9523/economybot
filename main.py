@@ -728,7 +728,7 @@ async def is_dm(ctx):
 
 @bot.event
 async def on_command_error(ctx, error):
-    pass
+    print(error)
 
 @bot.event
 async def on_message(message):
@@ -737,7 +737,8 @@ async def on_message(message):
     await open_account(message.author.id)
     if message.content.startswith('e.') or message.content.startswith('E.'):
         if bot.dev == 1 and message.author.id not in devs: return
-        if message.author.id in disregarded: return
+        if message.author.id in disregarded:
+            if message.author.id not in devs: return
         state = await spam_protect(message.author.id)
         if state == 'warn':
             embed = discord.Embed(title='Using commands too fast!', color=error_embed)
@@ -1473,7 +1474,7 @@ async def transfer(ctx, togive:discord.Member = None, amount = None, *, reason =
 
     await ctx.send(embed=embed)
 
-@bot.command()
+@bot.command(aliases=['transactions'])
 async def statement(ctx, *args):
     if '-u' not in args:
         member = ctx.author
@@ -1719,7 +1720,7 @@ help_json = {
         "category":"Bank",
         "e.balance": {"aliases": ["bal"], "usage": "e.balance [user]", "desc": "View you balance: Bank, Wallet and Stocks"},
         "e.mybank": {"aliases": ["None"], "usage": "e.mybank", "desc": "View interest rate, average balance, bank tier etc."},
-        "e.statement": {"aliases": ["transactions"], "usage":"e.statement [-a <amount>] [-t <Credit | Debit>] [-r <reason>]", "desc":"View your bank statement and filter records based on Type, Amount and/or Reason"},
+        "e.statement": {"aliases": ["transactions"], "usage":"e.statement [-a <amount>] [-t <c | d>] [-r <reason>]", "desc":"View your bank statement and filter records based on Type, Amount and/or Reason"},
         "e.deposit": {"aliases": ["dep"], "usage":"e.deposit <amount>", "desc":"Deposit coins to bank"},
         "e.withdraw": {"aliases": ["with"], "usage":"e.withdraw <amount>", "desc":"Withdraw coins from bank"}
     }, "Misc":{
@@ -1741,10 +1742,23 @@ async def help(ctx, specify=None):
     if specify is None:
         for j in help_json:
             mylist = []
+            max_l = 0
             for i in help_json[j].keys():
                 if i == "category": continue
-                mylist.append(i)
-            content = '\n'.join(mylist)
+                info = help_json[j][i]['usage']
+                cmdl = len(info.split(' ')[0])
+                if cmdl > max_l:
+                    max_l = cmdl
+                mylist.append(info)
+            finallist = []
+            for cmds in mylist:
+                splitted = cmds.split(' ')
+                first = splitted[0]
+                first = first + ' '*(max_l-len(first))
+                splitted.pop(0)
+                splitted.insert(0, first)
+                finallist.append(' '.join(splitted))
+            content = '\n'.join(finallist)
             embed.add_field(name=f'**● __{j}__**', value=f'```less\n{content}```', inline=False)
         try:
             await ctx.author.send(embed=embed)
