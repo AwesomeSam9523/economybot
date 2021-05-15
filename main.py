@@ -32,19 +32,16 @@ bank_names = {
     2: 'National Bank Pvt. Ltd.',
     3: 'International Bank of Finance Ltd.'
 }
-
 rates = {
     1: 3,
     2: 5,
     3: 7
 }
-
 bank_tier = {
     1:'III',
     2:'II',
     3:'I'
 }
-
 getestates_thumb = {
     1:'https://media.discordapp.net/attachments/837564505952747520/837681898700537866/1.png',
     2:'https://media.discordapp.net/attachments/837564505952747520/837682702450032660/2.png',
@@ -77,7 +74,6 @@ getestates_thumb = {
     29:'https://cdn.discordapp.com/attachments/837564505952747520/837580694505914398/unknown.png',
     30:'https://cdn.discordapp.com/attachments/837564505952747520/837581436407644190/unknown.png'
 }
-
 estates_tasks = {
     1:'Add a room',
     2:'Improve Restaurant',
@@ -110,7 +106,6 @@ estates_tasks = {
     29:'Add Decorations like Paintings and Plants',
     30:'Maxed Out'
 }
-
 xp_levels = {
 100:1,
 250:2,
@@ -163,22 +158,41 @@ xp_levels = {
 850000:49,
 1000000:50
 }
-
+help_json = {
+    "Estates":{
+        "category":"Estates",
+      "e.estates": {"aliases":["None"], "usage":"e.estates", "desc":"Estates are a way to earn some coins for free. You have being provided with a hotel which will earn you revenue.\nDont forget, money never comes entirely for free, so you have to maintain your hotel too."},
+      "e.revenue": {"aliases":["None"], "usage":"e.revenue", "desc": "Use this command to earn revenue. The revenue will be added in your bank"},
+      "e.maintain": {"aliases": ["None"], "usage": "e.maintain", "desc": "Use this to maintain your hotel to look shining new! Not maintaining for a long time will lead to lesser revenue."},
+      "e.upgrade": {"aliases": ["None"], "usage": "e.upgrade", "desc": "Upgrading your hotel will lead to more revenue and less maintenance relatively. It also increases your net-worth"}
+    }, "Stocks": {
+    "category":"Stocks",
+      "e.stocks": {"aliases": ["None"], "usage": "e.stocks", "desc": "Invest in stock market which refreshes every 20-30 secs. New stock starts every day. Probably the best and fastest way to earn money?"},
+      "e.buy": {"aliases": ["None"], "usage": "e.buy <quantity>", "desc": "Buy stocks on current price"},
+      "e.sell": {"aliases": ["None"], "usage": "e.sell <quantity>", "desc": "Sell stocks on current price"}
+    }, "Bank": {
+        "category":"Bank",
+        "e.balance": {"aliases": ["bal"], "usage": "e.balance [user]", "desc": "View you balance: Bank, Wallet and Stocks"},
+        "e.mybank": {"aliases": ["None"], "usage": "e.mybank", "desc": "View interest rate, average balance, bank tier etc."},
+        "e.statement": {"aliases": ["transactions"], "usage":"e.statement [-a <amount>] [-t <c | d>] [-r <reason>]", "desc":"View your bank statement and filter records based on Type, Amount and/or Reason"},
+        "e.deposit": {"aliases": ["dep"], "usage":"e.deposit <amount>", "desc":"Deposit coins to bank"},
+        "e.withdraw": {"aliases": ["with"], "usage":"e.withdraw <amount>", "desc":"Withdraw coins from bank"}
+    }, "Misc":{
+        "category":"Misc",
+        "e.level": {"aliases":["pf"], "usage":"e.level [user]", "desc":"Shows you level, perks and other stats"},
+        "e.give": {"aliases": ["None"], "usage":"e.give <user> <amount>", "desc":"Send coins to a person from your wallet"},
+        "e.transfer": {"aliases": ["None"], "usage":"e.transfer <user> <amount> [Reason]", "desc":"Transfer coins from your bank to others\' bank. It costs interest if bank isn't same.\nThis action is recorded in bank statements"},
+        "e.alerts": {"aliases":["None"], "usage":"e.alerts <on | off>", "desc":"Receive DMs from bot upon stock ending, pending maintenance etc."},
+        "e.daily": {"aliases":["None"], "usage":"e.daily", "desc":"Gives you your daily interest. It is the product of interest rate and average bank balance"}
+    }
+}
+usercmds = {}
 stock_names = ['Ava', 'Neil', 'Ryan', 'Anthony', 'Bernadette', 'Lauren', 'Justin', 'Matt', 'Wanda', 'James', 'Emily', 'Vanessa', 'Carl', 'Fiona', 'Stephanie', 'Pippa', 'Phil', 'Carol', 'Liam', 'Michael', 'Ella', 'Amanda', 'Caroline', 'Nicola', 'Sean', 'Oliver', 'Kylie', 'Rachel', 'Leonard', 'Julian', 'Richard', 'Peter', 'Irene', 'Dominic', 'Connor', 'Dorothy', 'Gavin', 'Isaac', 'Karen', 'Kimberly', 'Abigail', 'Yvonne', 'Steven', 'Felicity', 'Evan', 'Bella', 'Alison', 'Diane', 'Joan', 'Jan', 'Wendy', 'Nathan', 'Molly', 'Charles', 'Victor', 'Sally', 'Rose', 'Robert', 'Claire', 'Theresa', 'Grace', 'Keith', 'Stewart', 'Andrea', 'Alexander', 'Chloe', 'Nicholas', 'Edward', 'Deirdre', 'Anne', 'Joseph', 'Alan', 'Rebecca', 'Jane', 'Natalie', 'Cameron', 'Owen', 'Eric', 'Gabrielle', 'Sonia', 'Tim', 'Sarah', 'Madeleine', 'Megan', 'Lucas', 'Joe', 'Brandon', 'Brian', 'Jennifer', 'Alexandra', 'Adrian', 'John', 'Mary', 'Tracey', 'Jasmine', 'Penelope', 'Hannah', 'Thomas', 'Angela', 'Warren', 'Blake', 'Simon', 'Audrey', 'Frank', 'Samantha', 'Dan', 'Victoria', 'Paul', 'Jacob', 'Heather', 'Una', 'Lily', 'Carolyn', 'Jonathan', 'Ian', 'Piers', 'William', 'Gordon', 'Dylan', 'Olivia', 'Jake', 'Leah', 'Jessica', 'David', 'Katherine', 'Amelia', 'Benjamin', 'Boris', 'Sebastian', 'Lisa', 'Diana', 'Michelle', 'Emma', 'Sam', 'Stephen', 'Faith', 'Kevin', 'Austin', 'Jack', 'Ruth', 'Colin', 'Trevor', 'Joanne', 'Virginia', 'Anna', 'Max', 'Adam', 'Maria', 'Sophie', 'Sue', 'Andrew', 'Harry', 'Amy', 'Christopher', 'Donna', 'Melanie', 'Elizabeth', 'Lillian', 'Julia', 'Christian', 'Luke', 'Zoe', 'Joshua', 'Jason']
-
 xp_timeout = []
 warn1 = []
 warn2 = []
-usercmds = {}
-e_wallet = '<:wallet:836814969290358845>'
-e_bank = '🏦'
-e_developer = '<:developer:835430548619919391>'
-e_bughunter = '<:bughunter:839371860017807411>'
 error_embed = 16290332
-green = 3211008
-badge_emoji = {'developer':e_developer,
-               'bughunter':e_bughunter}
-media = 839161613595443292
+success_embed = 2293571
 
 def is_dev(ctx):
     return ctx.author.id in devs
@@ -577,7 +591,7 @@ async def create_stuff():
     global bot_pfp
     mybot = bot.get_user(832083717417074689)
     bot_pfp = mybot.avatar_url
-    await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name="BlackThunder#4007 *EvilGrin*"))
+    await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name="Thunder qt"))
     #await bot.change_presence(status=discord.Status.invisible)
     asyncio.create_task(loops())
     asyncio.create_task(stock_update())
@@ -742,6 +756,10 @@ devmode = True
 async def is_dm(ctx):
     return ctx.guild != None
 
+@bot.check
+async def if_allowed(ctx):
+    return await check_channel(ctx.channel.id, ctx.guild.id)
+
 @bot.event
 async def on_command_error(ctx, error):
     print(error)
@@ -755,8 +773,6 @@ async def on_message(message):
         if bot.dev == 1 and message.author.id not in devs: return
         if message.author.id in disregarded:
             if message.author.id not in devs: return
-        allowed = await check_channel(message.channel.id, message.guild.id)
-        if not allowed: return
         state = await spam_protect(message.author.id)
         if state == 'warn':
             embed = discord.Embed(title='Using commands too fast!', color=error_embed)
@@ -950,8 +966,8 @@ async def balance(ctx, member:discord.Member = None):
     s = await get_stocks()
     stocks_num = s.get(str(userid), 0)
     embed = discord.Embed(title=f'__{bank_names[bank_type]}__', colour=embedcolor)
-    embed.add_field(name=f'**{e_wallet} Wallet**', value=f'> `{await commait(wallet)}`', inline=False)
-    embed.add_field(name=f'**{e_bank} Bank**', value=f'> `{await commait(bank)}`', inline=False)
+    embed.add_field(name=f'**<:wallet:836814969290358845> Wallet**', value=f'> `{await commait(wallet)}`', inline=False)
+    embed.add_field(name=f'**🏦 Bank**', value=f'> `{await commait(bank)}`', inline=False)
     embed.add_field(name=f'**<:stocks:839162083324198942> Stocks**', value=f'> `{await commait(stocks_num)}`', inline=False)
     fetched = bot.get_user(userid)
     embed.timestamp = datetime.datetime.utcnow()
@@ -1048,11 +1064,10 @@ async def mybank(ctx, member:discord.Member = None):
     embed.add_field(name='Average Balance', value=f'{person2["avg"]}')
     embed.add_field(name='Note:', value='To claim interest, use `e.daily`.\n'
                                         'Your average balance in last 24 hours will be taken in account for that.')
-
     fetched = bot.get_user(userid)
     embed.timestamp = datetime.datetime.utcnow()
     embed.set_footer(text='Economy Bot', icon_url=bot_pfp)
-    embed.set_author(name=f'{fetched.name} | {e_bank} Know Your Bank!', icon_url=fetched.avatar_url)
+    embed.set_author(name=f'{fetched.name} | 🏦 Know Your Bank!', icon_url=fetched.avatar_url)
 
     await ctx.send(embed=embed)
 
@@ -1241,7 +1256,7 @@ async def revenue(ctx):
 
     embed = discord.Embed(title='Hotel Revenue',
                           description=f'`{totalpay}.00` coins added to bank successfully!\n\nHere is the revenue split:\n```css\n{x}```',
-                          colour=green)
+                          colour=success_embed)
     fetched = bot.get_user(ctx.author.id)
     embed.timestamp = datetime.datetime.utcnow()
     embed.set_footer(text='Economy Bot', icon_url=bot_pfp)
@@ -1312,7 +1327,7 @@ async def maintain(ctx):
 
         embed = discord.Embed(title='Success!',
                               description=f'`{cost_d}.00` coins have been deducted and your hotel looks shining new!\n```css\n{x}```',
-                              color=green)
+                              color=success_embed)
 
     fetched = bot.get_user(ctx.author.id)
     embed.timestamp = datetime.datetime.utcnow()
@@ -1482,7 +1497,7 @@ async def transfer(ctx, togive:discord.Member = None, amount = None, *, reason =
 
     embed = discord.Embed(title='Transfer Successful!',
                           description=f'You transfered `{amount}` coins to {togive.mention}.',
-                          color=green)
+                          color=success_embed)
     embed.add_field(name='Tax on transaction', value=f'`{fees}` coins')
     embed.add_field(name='Your Balance', value=f'`{c_bank - amount}` coins')
     fetched = bot.get_user(ctx.author.id)
@@ -1673,7 +1688,7 @@ async def buy(ctx, amount):
 
     embed = discord.Embed(title='Success!',
                           description=f'You bought `{await commait(amount)}` stocks at price of `{stock_price}`.\n'
-                                      f'Coins Spent: `{await commait(bulk)}` coins', color=green)
+                                      f'\nCoins Spent: `{await commait(bulk)}` coins', color=success_embed)
     fetched = bot.get_user(ctx.author.id)
     embed.timestamp = datetime.datetime.utcnow()
     embed.set_footer(text='Economy Bot', icon_url=bot_pfp)
@@ -1713,43 +1728,14 @@ async def sell(ctx, amount):
     await create_statement(ctx.author, bot.user, bulk, f"Sold {amount} stock(s)", "Credit")
 
     embed = discord.Embed(title='Success!',
-                          description=f'You sold `{await commait(amount)}` stocks at price of `{stock_price}`.\n'
-                                      f'Coins Earned: `{await commait(bulk)}` coins', color=green)
+                          description=f'You sold `{await commait(amount)}` stock(s) at price of `{stock_price}`.\n'
+                                      f'\nCoins Earned: `{await commait(bulk)}` coins', color=success_embed)
     fetched = bot.get_user(ctx.author.id)
     embed.timestamp = datetime.datetime.utcnow()
     embed.set_footer(text='Economy Bot', icon_url=bot_pfp)
     embed.set_author(name=f'{fetched.name}', icon_url=fetched.avatar_url)
 
     await ctx.send(embed=embed)
-
-help_json = {
-    "Estates":{
-        "category":"Estates",
-      "e.estates": {"aliases":["None"], "usage":"e.estates", "desc":"Estates are a way to earn some coins for free. You have being provided with a hotel which will earn you revenue.\nDont forget, money never comes entirely for free, so you have to maintain your hotel too."},
-      "e.revenue": {"aliases":["None"], "usage":"e.revenue", "desc": "Use this command to earn revenue. The revenue will be added in your bank"},
-      "e.maintain": {"aliases": ["None"], "usage": "e.maintain", "desc": "Use this to maintain your hotel to look shining new! Not maintaining for a long time will lead to lesser revenue."},
-      "e.upgrade": {"aliases": ["None"], "usage": "e.upgrade", "desc": "Upgrading your hotel will lead to more revenue and less maintenance relatively. It also increases your net-worth"}
-    }, "Stocks": {
-    "category":"Stocks",
-      "e.stocks": {"aliases": ["None"], "usage": "e.stocks", "desc": "Invest in stock market which refreshes every 20-30 secs. New stock starts every day. Probably the best and fastest way to earn money?"},
-      "e.buy": {"aliases": ["None"], "usage": "e.buy <quantity>", "desc": "Buy stocks on current price"},
-      "e.sell": {"aliases": ["None"], "usage": "e.sell <quantity>", "desc": "Sell stocks on current price"}
-    }, "Bank": {
-        "category":"Bank",
-        "e.balance": {"aliases": ["bal"], "usage": "e.balance [user]", "desc": "View you balance: Bank, Wallet and Stocks"},
-        "e.mybank": {"aliases": ["None"], "usage": "e.mybank", "desc": "View interest rate, average balance, bank tier etc."},
-        "e.statement": {"aliases": ["transactions"], "usage":"e.statement [-a <amount>] [-t <c | d>] [-r <reason>]", "desc":"View your bank statement and filter records based on Type, Amount and/or Reason"},
-        "e.deposit": {"aliases": ["dep"], "usage":"e.deposit <amount>", "desc":"Deposit coins to bank"},
-        "e.withdraw": {"aliases": ["with"], "usage":"e.withdraw <amount>", "desc":"Withdraw coins from bank"}
-    }, "Misc":{
-        "category":"Misc",
-        "e.level": {"aliases":["pf"], "usage":"e.level [user]", "desc":"Shows you level, perks and other stats"},
-        "e.give": {"aliases": ["None"], "usage":"e.give <user> <amount>", "desc":"Send coins to a person from your wallet"},
-        "e.transfer": {"aliases": ["None"], "usage":"e.transfer <user> <amount> [Reason]", "desc":"Transfer coins from your bank to others\' bank. It costs interest if bank isn't same.\nThis action is recorded in bank statements"},
-        "e.alerts": {"aliases":["None"], "usage":"e.alerts <on | off>", "desc":"Receive DMs from bot upon stock ending, pending maintenance etc."},
-        "e.daily": {"aliases":["None"], "usage":"e.daily", "desc":"Gives you your daily interest. It is the product of interest rate and average bank balance"}
-    }
-}
 
 @bot.command()
 async def help(ctx, specify=None):
@@ -1780,7 +1766,7 @@ async def help(ctx, specify=None):
             embed.add_field(name=f'**● __{j}__**', value=f'```less\n{content}```', inline=False)
         try:
             await ctx.author.send(embed=embed)
-            embed = discord.Embed(title='📧 You received a mail!', color=green)
+            embed = discord.Embed(title='📧 You received a mail!', color=success_embed)
             await ctx.reply(embed=embed)
         except:
             await ctx.send(embed=embed)
@@ -1814,31 +1800,38 @@ async def help(ctx, specify=None):
 async def set_chl(ctx, channel:discord.TextChannel):
     a = await get_admin()
     server = a.get(str(ctx.guild.id), [])
-    if channel.id in server: return
+    if channel.id in server:
+        embed = discord.Embed(description=f'{channel.mention} is already in list of registered channels!', color=error_embed)
+        return await ctx.send(embed=embed)
     server.append(channel.id)
     a[str(ctx.guild.id)] = server
     await close_admin(a)
-    await ctx.send(f'{channel.mention} added successfully')
+    embed = discord.Embed(description=f'{channel.mention} added to list of registered channels successfully!', color=success_embed)
+    await ctx.send(embed=embed)
 
 @bot.command()
 @commands.has_permissions(manage_channels=True)
 async def del_chl(ctx, channel:discord.TextChannel):
     a = await get_admin()
     server = a.get(str(ctx.guild.id), [])
-    if channel.id not in server: return
+    if channel.id not in server:
+        embed = discord.Embed(description=f'{channel.mention} not in list of registered channels!', color=error_embed)
+        return await ctx.send(embed=embed)
     server.remove(channel.id)
     a[str(ctx.guild.id)] = server
     await close_admin(a)
-    await ctx.send(f'{channel.mention} removed successfully')
+    embed = discord.Embed(description=f'{channel.mention} removed from list of registered channels successfully!', color=success_embed)
+    await ctx.send(embed=embed)
 
 @bot.command()
 @commands.has_permissions(manage_channels=True)
 async def list_chl(ctx):
     a = await get_admin()
-    server = a.get(str(ctx.guild.id))
-    if server is None: channels = ['No channels set']
-    else: channels = [f'<#{x}>' for x in server]
-    embed = discord.Embed(description='\n'.join(channels), color=embedcolor)
+    server = a.get(str(ctx.guild.id), [])
+    if len(server) == 0: channels = ['> No channels set']
+    else: channels = [f'> <#{x}>' for x in server]
+    embed = discord.Embed(title='Allowed Channels for the bot:', description='\n'.join(channels), color=embedcolor)
+    embed.set_footer(text='Add a channel using e.set_chl <name>\nRemove a channel using e.del_chl <name>')
     await ctx.send(embed=embed)
 
 @bot.event
