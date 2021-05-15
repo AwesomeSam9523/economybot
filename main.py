@@ -732,6 +732,7 @@ async def check_channel(chlid, guildid):
     a = await get_admin()
     server = a.get(str(guildid))
     if server is None: return True
+    if len(server) == 0: return True
     if chlid in server: return True
     else: return False
 
@@ -1834,8 +1835,9 @@ async def del_chl(ctx, channel:discord.TextChannel):
 @commands.has_permissions(manage_channels=True)
 async def list_chl(ctx):
     a = await get_admin()
-    server = a.get(str(ctx.guild.id), [])
-    channels = [f'<#{x}>' for x in server]
+    server = a.get(str(ctx.guild.id))
+    if server is None: channels = ['No channels set']
+    else: channels = [f'<#{x}>' for x in server]
     embed = discord.Embed(description='\n'.join(channels), color=embedcolor)
     await ctx.send(embed=embed)
 
