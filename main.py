@@ -179,9 +179,9 @@ help_json = {
         "e.withdraw": {"aliases": ["with"], "usage":"e.withdraw <amount>", "desc":"Withdraw coins from bank"}
     }, "Admin":{
         "category":"Admin",
-        "e.set_chl":{"aliases":["None"], "usage":"e.set_chl <#channel>", "desc":"Allows the bot to respond in that channel"},
-        "e.del_chl":{"aliases":["None"], "usage":"e.del_chl <#channel>", "desc":"Disallows the bot to respond in that channel"},
-        "e.list_chl":{"aliases":["None"], "usage":"e.list_chl", "desc":"Lists all the channels where the bot is allowed to respond"},
+        "e.set_chl":{"aliases":["add_chl"], "usage":"e.set_chl <#channel>", "desc":"Allows the bot to respond in that channel"},
+        "e.del_chl":{"aliases":["delete_chl", "rem_chl", "remove_chl"], "usage":"e.del_chl <#channel>", "desc":"Disallows the bot to respond in that channel"},
+        "e.list_chl":{"aliases":["show_chl"], "usage":"e.list_chl", "desc":"Lists all the channels where the bot is allowed to respond"},
         "e.reset_chl":{"aliases":["None"], "usage":"e.reset_chl", "desc":"Clears all the configuration and makes the bot to respond again in **all** the channels"}
     }, "Misc":{
         "category":"Misc",
@@ -199,6 +199,8 @@ warn1 = []
 warn2 = []
 error_embed = 16290332
 success_embed = 2293571
+economysuccess = '<a:EconomySuccess:843471726973026315>'
+economyerror = '<a:EconomyError:843465310916968479>'
 
 def is_dev(ctx):
     return ctx.author.id in devs
@@ -1077,7 +1079,6 @@ async def mybank(ctx, member:discord.Member = None):
 
     await ctx.send(embed=embed)
 
-
 @bot.command()
 async def daily(ctx):
     await avg_update()
@@ -1125,8 +1126,8 @@ async def daily(ctx):
     await update_avg(avg)
     await update_data(data)
     await add_timeout(ctx.author.id, 'weekly')
-
-    await ctx.send(f'Daily interest payout of `{await commait(int(avgbal * multiplier))}` coins credited successfully!')
+    embed = discord.Embed(title=f'{economysuccess} Claimed Successfully!', description=f'Daily interest payout of `{await commait(int(avgbal * multiplier))}` coins credited successfully!', color=success_embed)
+    await ctx.send(embed=embed)
 
 @bot.command()
 async def give(ctx, member:discord.Member, amount:int):
@@ -1168,12 +1169,11 @@ async def give(ctx, member:discord.Member, amount:int):
 
     await update_data(data)
 
-    embed = discord.Embed(title='Act of Generosity', color=embedcolor,
-                          description=f'{ctx.author.mention} gave `{await commait(amount)}` coins to {member.mention}')
+    embed = discord.Embed(title=f'{economysuccess} Success!', color=embedcolor,
+                          description=f'You gave `{await commait(amount)}` coin(s) to {member.mention}. What an act of generosity!')
     fetched = bot.get_user(ctx.author.id)
     embed.timestamp = datetime.datetime.utcnow()
     embed.set_footer(text='Economy Bot', icon_url=bot_pfp)
-    embed.set_author(name=fetched.name, icon_url=fetched.avatar_url)
 
     await ctx.send(embed=embed)
 
@@ -1260,7 +1260,7 @@ async def revenue(ctx):
     x.add_row(["", "", "", f''])
     x.add_row(["[Grand Total]", "", "", f'{await commait(totalpay)}.00/-'])
 
-    embed = discord.Embed(title='Hotel Revenue',
+    embed = discord.Embed(title=f'{economysuccess} Revenue Claimed!',
                           description=f'`{totalpay}.00` coins added to bank successfully!\n\nHere is the revenue split:\n```css\n{x}```',
                           colour=success_embed)
     fetched = bot.get_user(ctx.author.id)
@@ -1317,7 +1317,7 @@ async def maintain(ctx):
     x.add_row(["[Grand Total]", "", "", f'{await commait(cost_d)}.00/-'])
 
     if bank_bal < cost_d:
-        embed = discord.Embed(title='Oops..',
+        embed = discord.Embed(title=f'{economyerror} Oops..',
                               description=f'You dont have enough coins in bank to do the maintainance.\n```css\n{x}```', color=error_embed)
     else:
         new_bbal = bank_bal - cost_d
@@ -1331,7 +1331,7 @@ async def maintain(ctx):
         await update_data(data)
         await update_est(est)
 
-        embed = discord.Embed(title='Success!',
+        embed = discord.Embed(title=f'{economysuccess} Success!',
                               description=f'`{cost_d}.00` coins have been deducted and your hotel looks shining new!\n```css\n{x}```',
                               color=success_embed)
 
@@ -1405,7 +1405,10 @@ async def upgrade(ctx):
                 left = cost-wallet
                 new_wallet = 0
                 if left > bank:
-                    return await ctx.send(f'{ctx.author.mention} Oopsie! Looks like there aren\'t enough coins in your pockets.')
+                    embed = discord.Embed(title=f'{economysuccess} Oopsie!',
+                                          description='Looks like there aren\'t enough coins in your bank. Please deposit or earn more.',
+                                          color=success_embed)
+                    return await ctx.send(embed=embed)
                 new_bank = bank - left
             else:
                 new_wallet = wallet - cost
@@ -1420,7 +1423,8 @@ async def upgrade(ctx):
 
             await update_data(data)
             await update_est(est)
-            await ctx.send(f'{ctx.author.mention} Wohoo! Your upgrade was successful! Use `e.estates` to see newly upgraded property!')
+            embed = discord.Embed(title=f'{economysuccess} Success!', description='Wohoo! Your upgrade was successful! Use `e.estates` to see newly upgraded property!', color=success_embed)
+            await ctx.send(embed=embed)
         else:
             await ctx.send(f'{ctx.author.mention} Cancelled!')
     except asyncio.TimeoutError:
@@ -1448,10 +1452,14 @@ async def alerts(ctx, state:str = None):
         return await ctx.send(embed=embed)
 
     if state == 'on':
-        await ctx.send(f'{ctx.author.mention} Alerts are switched **On**. Make sure you have your DMs open :)')
+        embed = discord.Embed(title=f'{economysuccess} Success!', description='Alerts are switched **On**. Make sure you have your DMs open', colour=success_embed)
+        await ctx.send(embed=embed)
         await alerts_state(ctx.author.id, 'on')
     elif state == 'off':
-        await ctx.send(f'{ctx.author.mention} Alerts are switched **Off**. "Yay no more bot DMs", huh?')
+        embed = discord.Embed(title=f'{economysuccess} Success!',
+                              description='Alerts are switched **Off**. "Yay no more DMs" huh?',
+                              colour=success_embed)
+        await ctx.send(embed=embed)
         await alerts_state(ctx.author.id, 'off')
     else:
         await ctx.send(f'{ctx.author.mention} Incorrect Option. Use `e.alerts` to see help.')
@@ -1501,7 +1509,7 @@ async def transfer(ctx, togive:discord.Member = None, amount = None, *, reason =
     await create_statement(ctx.author, togive, amount, reason, 'Debit')
     await create_statement(togive, ctx.author, amount, reason, 'Credit')
 
-    embed = discord.Embed(title='Transfer Successful!',
+    embed = discord.Embed(title=f'{economysuccess} Transfer Successful!',
                           description=f'You transfered `{amount}` coins to {togive.mention}.',
                           color=success_embed)
     embed.add_field(name='Tax on transaction', value=f'`{fees}` coins')
@@ -1692,7 +1700,7 @@ async def buy(ctx, amount):
     await update_stock_data(stock_data)
     await create_statement(ctx.author, bot.user, bulk, f"Bought {amount} stock(s)", "Debit")
 
-    embed = discord.Embed(title='Success!',
+    embed = discord.Embed(title=f'{economysuccess} Success!',
                           description=f'You bought `{await commait(amount)}` stocks at price of `{stock_price}`.\n'
                                       f'\nCoins Spent: `{await commait(bulk)}` coins', color=success_embed)
     fetched = bot.get_user(ctx.author.id)
@@ -1733,7 +1741,7 @@ async def sell(ctx, amount):
     await update_stock_data(stock_data)
     await create_statement(ctx.author, bot.user, bulk, f"Sold {amount} stock(s)", "Credit")
 
-    embed = discord.Embed(title='Success!',
+    embed = discord.Embed(title=f'{economysuccess} Success!',
                           description=f'You sold `{await commait(amount)}` stock(s) at price of `{stock_price}`.\n'
                                       f'\nCoins Earned: `{await commait(bulk)}` coins', color=success_embed)
     fetched = bot.get_user(ctx.author.id)
@@ -1772,7 +1780,7 @@ async def help(ctx, specify=None):
             embed.add_field(name=f'**● __{j}__**', value=f'```less\n{content}```', inline=False)
         try:
             await ctx.author.send(embed=embed)
-            embed = discord.Embed(title='📧 You received a mail!', color=success_embed)
+            embed = discord.Embed(title=f'{economysuccess} You received a mail!', color=success_embed)
             await ctx.reply(embed=embed)
         except:
             await ctx.send(embed=embed)
@@ -1789,54 +1797,65 @@ async def help(ctx, specify=None):
             #print(info)
             for k in info['aliases']:
                 available.append(k)
-            print(available)
             if specify.lower() in available:
+                alias_list = [f'{q}' for q in info['aliases']]
+                print(alias_list)
+                for aliases in alias_list:
+                    print(aliases)
+                    if aliases == 'e.None':
+                        alias_list.remove(aliases)
+                    elif aliases[0:2] != 'e.':
+                        alias_list.remove(aliases)
+                        aliases = 'e.' + aliases
+                        alias_list.insert(0, aliases)
                 embed = discord.Embed(color=embedcolor, title=f'Command: {j[2:]}', description=info['desc']+f'\n\n**Usage:** `{info["usage"]}`\n**Category:** `{i["category"]}`')
-                embed.add_field(name='Aliases', value='```less\n'+'\n'.join([f'e.{q}' for q in info['aliases']])+'```', inline=False)
+                embed.add_field(name='Aliases', value='```less\n'+'\n'.join(alias_list)+'```', inline=False)
                 embed.set_footer(text='Syntax: <> = required, [] = optional')
                 notfound = False
                 await ctx.send(embed=embed)
                 break
     if notfound:
-        embed = discord.Embed(description='No help found or command doesn\'t exist!', embedcolor=error_embed)
+        embed = discord.Embed(description=f'{economyerror} No help found or command doesn\'t exist!', color=error_embed)
         await ctx.send(embed=embed)
 
-@bot.command()
+@bot.command(aliases=['add_chl'])
 @commands.has_permissions(manage_channels=True)
 async def set_chl(ctx, channel:discord.TextChannel):
     a = await get_admin()
     server = a.get(str(ctx.guild.id), [])
     if channel.id in server:
-        embed = discord.Embed(description=f'{channel.mention} is already in list of registered channels!', color=error_embed)
+        embed = discord.Embed(description=f'{economyerror} {channel.mention} is already in list of registered channels!', color=error_embed)
         return await ctx.send(embed=embed)
     server.append(channel.id)
+    if ctx.channel.id not in server:
+        server.append(ctx.channel.id)
     a[str(ctx.guild.id)] = server
     await close_admin(a)
-    embed = discord.Embed(description=f'{channel.mention} added to list of registered channels successfully!', color=success_embed)
+    embed = discord.Embed(description=f'{economysuccess} {channel.mention} added to list of registered channels successfully!', color=success_embed)
     await ctx.send(embed=embed)
 
-@bot.command()
+@bot.command(aliases=['rem_chl', 'remove_chl', 'delete_chl'])
 @commands.has_permissions(manage_channels=True)
 async def del_chl(ctx, channel:discord.TextChannel):
     a = await get_admin()
     server = a.get(str(ctx.guild.id), [])
     if channel.id not in server:
-        embed = discord.Embed(description=f'{channel.mention} not in list of registered channels!', color=error_embed)
+        embed = discord.Embed(description=f'{economyerror} {channel.mention} not in list of registered channels!', color=error_embed)
         return await ctx.send(embed=embed)
     server.remove(channel.id)
     a[str(ctx.guild.id)] = server
     await close_admin(a)
-    embed = discord.Embed(description=f'{channel.mention} removed from list of registered channels successfully!', color=success_embed)
+    embed = discord.Embed(description=f'{economysuccess} {channel.mention} removed from list of registered channels successfully!', color=success_embed)
     await ctx.send(embed=embed)
 
-@bot.command()
+@bot.command(aliases=['show_chl'])
 @commands.has_permissions(manage_channels=True)
 async def list_chl(ctx):
     a = await get_admin()
     server = a.get(str(ctx.guild.id), [])
     if len(server) == 0: channels = ['> No channels set']
     else: channels = [f'> <#{x}>' for x in server]
-    embed = discord.Embed(title='Allowed Channels for the bot:', description='\n'.join(channels), color=embedcolor)
+    embed = discord.Embed(title=f'{economysuccess} Allowed Channels for the bot:', description='\n'.join(channels), color=embedcolor)
     embed.set_footer(text='Add a channel using e.set_chl <name>\nRemove a channel using e.del_chl <name>')
     await ctx.send(embed=embed)
 
@@ -1845,7 +1864,7 @@ async def list_chl(ctx):
 async def reset_chl(ctx):
     a = await get_admin()
     a[str(ctx.guild.id)] = []
-    embed = discord.Embed(title='Done', description='Cleared Successfully!', color=embedcolor)
+    embed = discord.Embed(title=f'{economysuccess} Done', description='Cleared Successfully!', color=embedcolor)
     await close_admin(a)
     embed.set_footer(text='Add a channel using e.set_chl <name>\nRemove a channel using e.del_chl <name>')
     await ctx.send(embed=embed)
