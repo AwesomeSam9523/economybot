@@ -179,8 +179,8 @@ help_json = {
         "e.withdraw": {"aliases": ["with"], "usage":"e.withdraw <amount>", "desc":"Withdraw coins from bank"}
     }, "Admin":{
         "category":"Admin",
-        "e.set_chl":{"aliases":["None"], "usage":"e.set_chl #channel", "desc":"Allows the bot to respond in that channel"},
-        "e.del_chl":{"aliases":["None"], "usage":"e.del_chl #channel", "desc":"Disallows the bot to respond in that channel"},
+        "e.set_chl":{"aliases":["None"], "usage":"e.set_chl <#channel>", "desc":"Allows the bot to respond in that channel"},
+        "e.del_chl":{"aliases":["None"], "usage":"e.del_chl <#channel>", "desc":"Disallows the bot to respond in that channel"},
         "e.list_chl":{"aliases":["None"], "usage":"e.list_chl", "desc":"Lists all the channels where the bot is allowed to respond"},
         "e.reset_chl":{"aliases":["None"], "usage":"e.reset_chl", "desc":"Clears all the configuration and makes the bot to respond again in **all** the channels"}
     }, "Misc":{
