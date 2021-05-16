@@ -10,7 +10,7 @@ import datetime
 import csv
 from prettytable import PrettyTable
 import matplotlib.pyplot as plt
-from PIL import Image, ImageTk, ImageDraw, ImageFont
+from PIL import Image, ImageTk, ImageDraw, ImageFont, ImageEnhance, ImageFilter
 from io import BytesIO
 
 intents = discord.Intents.default()
@@ -19,14 +19,15 @@ intents.presences = True
 bot = commands.Bot(command_prefix=["e.", "E."], intents=intents, case_insensitive=True)
 bot.dev = 1
 bot.remove_command('help')
-devs = [771601176155783198, 713056818972066140, 619377929951903754, 669816890163724288]
+devs = [669816890163724288, 771601176155783198]
+staff = [669816890163724288, 771601176155783198, 619377929951903754, 713056818972066140, 517402093066256404, 459350068877852683]
 disregarded = []
 embedcolor = 3407822
 links_channel = 832083121486037013
 
 support_server = 'https://discord.gg/aMqWWTunrJ'
 patreon_page = 'https://www.patreon.com/ThunderGameBot'
-invite_url = 'https://i0.wp.com/incipia.co/wp-content/uploads/2016/08/incipia-coming-soon.png'
+invite_url = 'https://discord.com/api/oauth2/authorize?client_id=832083717417074689&permissions=392256&scope=bot'
 bank_names = {
     1: 'Common Finance Bank Ltd.',
     2: 'National Bank Pvt. Ltd.',
@@ -199,11 +200,14 @@ warn1 = []
 warn2 = []
 error_embed = 16290332
 success_embed = 2293571
-economysuccess = '<a:EconomySuccess:843471726973026315>'
-economyerror = '<a:EconomyError:843465310916968479>'
+economysuccess = '<a:EconomySuccess:843499891522797568>'
+economyerror = '<a:EconomyError:843499981695746098>'
 
 def is_dev(ctx):
     return ctx.author.id in devs
+
+def is_staff(ctx):
+    return ctx.author.id in staff
 
 async def spam_protect(userid):
     last = usercmds.get(userid, 0)
@@ -650,21 +654,40 @@ async def get_avatar(user):
     return Image.open(BytesIO(await user.avatar_url_as(format="png").read())).resize((140, 140))
 
 async def make_lvl_img(member, level, xp, total_xp, guildid):
-    def AddShadow(text, x, y):
-        font = ImageFont.truetype("badges/font2.ttf", 30)
-        sc1 = '#313131'
-        sc2 = '#313131'
-        draw.text((x - 2, y), text, font=font, fill=sc2)
-        draw.text((x + 2, y), text, font=font, fill=sc2)
-        draw.text((x, y - 2), text, font=font, fill=sc2)
-        draw.text((x, y + 2), text, font=font, fill=sc2)
+    def makeShadow(image, iterations, border, offset, backgroundColour, shadowColour):
+        # image: base image to give a drop shadow
+        # iterations: number of times to apply the blur filter to the shadow
+        # border: border to give the image to leave space for the shadow
+        # offset: offset of the shadow as [x,y]
+        # backgroundColour: colour of the background
+        # shadowColour: colour of the drop shadow
 
-        draw.text((x - 2, y - 2), text, font=font, fill=sc1)
-        draw.text((x + 2, y - 2), text, font=font, fill=sc1)
-        draw.text((x - 2, y + 2), text, font=font, fill=sc1)
-        draw.text((x + 2, y + 2), text, font=font, fill=sc1)
+        # Calculate the size of the shadow's image
+        fullWidth = image.size[0] + abs(offset[0]) + 2 * border
+        fullHeight = image.size[1] + abs(offset[1]) + 2 * border
 
-        draw.text((x, y), text, font=font)
+        # Create the shadow's image. Match the parent image's mode.
+        shadow = Image.new(image.mode, (fullWidth, fullHeight), backgroundColour)
+
+        # Place the shadow, with the required offset
+        shadowLeft = border + max(offset[0], 0)  # if <0, push the rest of the image right
+        shadowTop = border + max(offset[1], 0)  # if <0, push the rest of the image down
+        # Paste in the constant colour
+        shadow.paste(shadowColour,
+                     [shadowLeft, shadowTop,
+                      shadowLeft + image.size[0],
+                      shadowTop + image.size[1]])
+
+        # Apply the BLUR filter repeatedly
+        for i in range(iterations):
+            shadow = shadow.filter(ImageFilter.BLUR)
+
+        # Paste the original image on top of the shadow
+        imgLeft = border - min(offset[0], 0)  # if the shadow offset was <0, push right
+        imgTop = border - min(offset[1], 0)  # if the shadow offset was <0, push down
+        shadow.paste(image, (imgLeft, imgTop))
+
+        return shadow
 
     img = Image.open("./badges/3.png")
     member_colour = member.color.to_rgb()
@@ -717,17 +740,17 @@ async def make_lvl_img(member, level, xp, total_xp, guildid):
     font_rank = ImageFont.truetype("badges/font2.ttf", 24)
     fontm = ImageFont.truetype("badges/font2.ttf", 13)
     fonts = ImageFont.truetype("badges/font2.ttf", 10)
-    #fontu = ImageFont.truetype("badges/unicode.ttf", 25)
     draw.text((180, 34), f'{member.name}#{member.discriminator}', (255, 255, 255), font=font)
     draw.text((180, 70), f"Level {level}", (255, 255, 255), font=fontm)
     draw.text((120, 210), f'Server Rank', font=font)
     draw.text((530, 210), f'Global Rank', font=font)
     draw.text((120, 250), f'#{server_r}',(255, 243, 0), font=font_rank)
     draw.text((530, 250), f'{global_r}', (255, 243, 0), font=font_rank)
-    AddShadow('Some Stuff Soon...', 220, 450)
     twidth, theight = draw.textsize(f"{await commait(xp)}/{await commait(total_xp)}", fonts)
     draw.text((468 - (twidth / 2), 121 - (theight / 2)), f"{await commait(xp)}/{await commait(total_xp)}", (255, 255, 255), font=fonts,
               stroke_width=1, stroke_fill=(0, 0, 0))
+    enhancer = ImageEnhance.Sharpness(img)
+    img = enhancer.enhance(2)
     image_bytes = BytesIO()
     img.save(image_bytes, 'PNG')
     image_bytes.seek(0)
@@ -762,15 +785,16 @@ devmode = True
 
 @bot.check
 async def is_dm(ctx):
-    return ctx.guild != None
+    if ctx.author.id in devs: return True
+    else: return False
 
 @bot.check
 async def if_allowed(ctx):
     return await check_channel(ctx.channel.id, ctx.guild.id)
 
-@bot.event
+''''@bot.event
 async def on_command_error(ctx, error):
-    print(error)
+    print(error)'''
 
 @bot.event
 async def on_message(message):
@@ -837,16 +861,16 @@ async def logs(ctx, *, search:str=None):
     await ctx.send(f'**Requested by:** `{ctx.author.name}`\n```css\n{x.get_string()[:1900]}```')
 
 @bot.command(aliases=['eval'])  # DEV ONLY
-@commands.check(is_dev)
 async def evaluate(ctx, *, expression):
+    if ctx.author.id != 669816890163724288: return
     try:
         await ctx.reply(eval(expression))
     except Exception as e:
         await ctx.reply(f'```\n{e}```')
 
 @bot.command(aliases=['exec']) #DEV ONLY
-@commands.check(is_dev)
 async def execute(ctx, *, expression):
+    if ctx.author.id != 669816890163724288: return
     try:
         exec(expression.replace('```', ''))
     except Exception as e:
@@ -867,11 +891,11 @@ async def add(ctx, person:discord.Member, bal:int, *args):
     data[f'{person.id}'] = toadd
     await update_data(data)
 
-    await update_logs(f'{ctx.author}-!-add-!-[{person.id}, {await commait(bal)}]-!-{datetime.datetime.today().replace(microsecond=0)}')
+    await update_logs(f'{ctx.author}-!-add-!-[{person.id}; {await commait(bal)}]-!-{datetime.datetime.today().replace(microsecond=0)}')
     await ctx.send(f'{ctx.author.mention} added `{await commait(bal)}` coins to {person.mention}.')
 
 @bot.command() #DEV Only
-@commands.check(is_dev)
+@commands.check(is_staff)
 async def clear(ctx, member:discord.Member):
     data = await get_data()
     userid = str(member.id)
@@ -905,8 +929,8 @@ async def format(ctx, member:discord.Member):
     await ctx.send(f'{ctx.author.mention} Cleared data of `{member.name}#{member.discriminator}` successfully!')
 
 @bot.command() #DEV Only
-@commands.check(is_dev)
 async def release(ctx, title:str, link:str):
+    if ctx.author.id != 771601176155783198: return
     with open('updates.json', 'r') as upd:
         updates = json.load(upd)
 
@@ -923,7 +947,7 @@ async def release(ctx, title:str, link:str):
     await chl.send('<@&839370096248881204> New Update Out!',embed = embed)
 
 @bot.command()
-@commands.check(is_dev)
+@commands.check(is_staff)
 async def stockinfo(ctx):
     with open(f'stocks/{await get_todays_stock()}', 'r') as f:
         stock = list(csv.reader(f))
@@ -941,7 +965,7 @@ async def stockinfo(ctx):
     await ctx.send(embed=embed)
 
 @bot.command()
-@commands.check(is_dev)
+@commands.check(is_staff)
 async def badge(ctx, member:discord.Member, badge:str):
     badges = await get_badges()
     userid = str(member.id)
