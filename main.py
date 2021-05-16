@@ -177,6 +177,12 @@ help_json = {
         "e.statement": {"aliases": ["transactions"], "usage":"e.statement [-a <amount>] [-t <c | d>] [-r <reason>]", "desc":"View your bank statement and filter records based on Type, Amount and/or Reason"},
         "e.deposit": {"aliases": ["dep"], "usage":"e.deposit <amount>", "desc":"Deposit coins to bank"},
         "e.withdraw": {"aliases": ["with"], "usage":"e.withdraw <amount>", "desc":"Withdraw coins from bank"}
+    }, "Admin":{
+        "category":"Admin",
+        "e.set_chl":{"aliases":["None"], "usage":"e.set_chl #channel", "desc":"Allows the bot to respond in that channel"},
+        "e.del_chl":{"aliases":["None"], "usage":"e.del_chl #channel", "desc":"Disallows the bot to respond in that channel"},
+        "e.list_chl":{"aliases":["None"], "usage":"e.list_chl", "desc":"Lists all the channels where the bot is allowed to respond"},
+        "e.reset_chl":{"aliases":["None"], "usage":"e.reset_chl", "desc":"Clears all the configuration and makes the bot to respond again in **all** the channels"}
     }, "Misc":{
         "category":"Misc",
         "e.level": {"aliases":["pf"], "usage":"e.level [user]", "desc":"Shows you level, perks and other stats"},
@@ -1831,6 +1837,16 @@ async def list_chl(ctx):
     if len(server) == 0: channels = ['> No channels set']
     else: channels = [f'> <#{x}>' for x in server]
     embed = discord.Embed(title='Allowed Channels for the bot:', description='\n'.join(channels), color=embedcolor)
+    embed.set_footer(text='Add a channel using e.set_chl <name>\nRemove a channel using e.del_chl <name>')
+    await ctx.send(embed=embed)
+
+@bot.command()
+@commands.has_permissions(manage_channels=True)
+async def reset_chl(ctx):
+    a = await get_admin()
+    a[str(ctx.guild.id)] = []
+    embed = discord.Embed(title='Done', description='Cleared Successfully!', color=embedcolor)
+    await close_admin(a)
     embed.set_footer(text='Add a channel using e.set_chl <name>\nRemove a channel using e.del_chl <name>')
     await ctx.send(embed=embed)
 
