@@ -17,5 +17,6 @@
   "1.8": ["- New command: e.stocks", "- New command: e.buy <amount> to buy stocks", "- New command: e.sell <amount> to sell stocks", "- Fixed e.clear bug", "- Fixed e.dep and e.with -ve bug", "- Added stocks to e.bal", "- Changed e.bal look"],
   "1.8.1": ["- The bot now autosells your stocks on current price when the stock time ends", "- Fixed double line chart issue"],
   "1.9": ["- Added e.level command to check your level in a image card form", "- Removed e.bank renamed to e.mybank message", "- Done some code optimizations told by Thunder"],
-  "2.0": ["**Alpha build complete! Ready to be tested**", "- Fixed g.mybank not working", "- Disabled bot working in DMs", "- New command: e.help", "- Added anti-spam mechanism. You will be disregarded for 10 mins for spamming commands!"]
+  "2.0": ["**Alpha build complete! Ready to be tested**", "- Fixed g.mybank not working", "- Disabled bot working in DMs", "- New command: e.help", "- Added anti-spam mechanism. You will be disregarded for 10 mins for spamming commands!"],
+  "2.1": ["- New command: e.rob", "- New command: e.find", "- New command: e.report"]
 }

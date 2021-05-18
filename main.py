@@ -12,6 +12,7 @@ from prettytable import PrettyTable
 import matplotlib.pyplot as plt
 from PIL import Image, ImageTk, ImageDraw, ImageFont, ImageEnhance, ImageFilter
 from io import BytesIO
+from discord.ext.commands import *
 
 intents = discord.Intents.default()
 intents.members = True
@@ -160,6 +161,10 @@ xp_levels = {
 1000000:50
 }
 help_json = {
+    "Fun":{
+        "category":"Fun",
+        "e.rob":{"aliases":["None"], "usage":"e.rob <user>", "desc":"Rob your friend's wallet! Need minimum 100 coins to start"}
+    },
     "Estates":{
         "category":"Estates",
       "e.estates": {"aliases":["None"], "usage":"e.estates", "desc":"Estates are a way to earn some coins for free. You have being provided with a hotel which will earn you revenue.\nDont forget, money never comes entirely for free, so you have to maintain your hotel too."},
@@ -190,9 +195,50 @@ help_json = {
         "e.give": {"aliases": ["None"], "usage":"e.give <user> <amount>", "desc":"Send coins to a person from your wallet"},
         "e.transfer": {"aliases": ["None"], "usage":"e.transfer <user> <amount> [Reason]", "desc":"Transfer coins from your bank to others\' bank. It costs interest if bank isn't same.\nThis action is recorded in bank statements"},
         "e.alerts": {"aliases":["None"], "usage":"e.alerts <on | off>", "desc":"Receive DMs from bot upon stock ending, pending maintenance etc."},
-        "e.daily": {"aliases":["None"], "usage":"e.daily", "desc":"Gives you your daily interest. It is the product of interest rate and average bank balance"}
+        "e.daily": {"aliases":["None"], "usage":"e.daily", "desc":"Gives you your daily interest. It is the product of interest rate and average bank balance"},
+        "e.report": {"aliases":["None"], "usage":"e.report <error-code>", "desc":"Report an error to developers"}
     }
 }
+phrases = {"selfrob_success":['You tried robbing yourself and got {prize} coins. But surprisingly {prize} coins were missing from your wallet too!',
+                              'You robbed yourself of {prize} coins. WHat did ya achieve by this?',
+                              'You fought yourself and stole {prize} coins from your own wallet. Tiring day!',
+                              'You thought of robbing yourself. Even got hands on {prize} coins! But they were missing from your wallet. Mystery..?',
+                              'Your wallet was missing {prize} coins, know why? Because you robbed yourself of it!'],
+           "selfrob_failed":['You bonked your head to rob yourself, but you fainted right after it. Hospital costed {prize*2} coins',
+                             'You punched your own face because you thought of robbing youself. Medication costed {prize} coins',
+                             'You tried stealing money from your own wallet, but dropped the coins in drain. Lost {prize} coins!',
+                             'You gave yourself poison to rob, but ended up being in hospital. Spent {prize*5} coins for treatment'],
+           "rob_success":['You robbed {whom} and got {prize} coins. Shhh!',
+                          'You sneaked quitely from behind and robbed {whom} of {prize} coins',
+                          'You DDOSed {whom}\'s just to get {prize} coins. Quite big crime for it!',
+                          '{whom} was robbed of {prize} coins. Dont know who did it',
+                          'You robbed {whom} by punching him for mere {prize} coins. Got them, though.'],
+           "rob_failed":['You tried robbing {whom}, but he was alert and you got caught. Lost {prize} coins.',
+                         'You punched {whom} to rob, but he was stronger. You lost {prize} coins in medication',
+                         'You sneaked in your {whom}\'s house, but he caught you. Payed {prize} fine to cops to get off',
+                         'You missed the pick-pocket to {whom} and got caught. Payed {prize} to police to escape',
+                         'You tried to rob {whom} but he caught and complained about you. Payed {prize} as a fine'],
+           "find_success":['Yoo I found {c} coins in my sofa!',
+                           'I wonder who left {c} coins on the bus seat?',
+                           'Did anyone see my picking up {c} coins from footpath?',
+                           'Damn, imagine leaving {c} coins in the trash!',
+                           'Did my cat pooped out {c} coins? Must have eaten in dinner..',
+                           'Sheesh I found {c} coins in my coat pockets!',
+                           'Is sock a place to keep {c} coins? Nevermind I ll just take it',
+                           'Yeah! {c} coins on top of refrigerator ain\'t a joke'],
+           "find_failed":['Well I went to find coins, but lost {c} instead',
+                          'What a bad day, lost {c} coins due to greed',
+                          'I shouldn\'t be greedy, lost {c} coins to a theif. oof',
+                          'Well I searched the drain for coins, but lost {c} of my own!',
+                          'Noo! Lost {c} coins in search of more',
+                          'Did I just lose {c} coins? Oh yes, I did.',
+                          'I don\'t know how I ended up losing {c} coins today'],
+           "find_neutral":['Well I expected something this time',
+                           '0? R.I.P. my expectations',
+                           'Comeone I found nothing again!?',
+                           'How come I searched and searched but found absolutely nothing?',
+                           'And here I went to find coins, but came back empty handed']}
+
 usercmds = {}
 stock_names = ['Ava', 'Neil', 'Ryan', 'Anthony', 'Bernadette', 'Lauren', 'Justin', 'Matt', 'Wanda', 'James', 'Emily', 'Vanessa', 'Carl', 'Fiona', 'Stephanie', 'Pippa', 'Phil', 'Carol', 'Liam', 'Michael', 'Ella', 'Amanda', 'Caroline', 'Nicola', 'Sean', 'Oliver', 'Kylie', 'Rachel', 'Leonard', 'Julian', 'Richard', 'Peter', 'Irene', 'Dominic', 'Connor', 'Dorothy', 'Gavin', 'Isaac', 'Karen', 'Kimberly', 'Abigail', 'Yvonne', 'Steven', 'Felicity', 'Evan', 'Bella', 'Alison', 'Diane', 'Joan', 'Jan', 'Wendy', 'Nathan', 'Molly', 'Charles', 'Victor', 'Sally', 'Rose', 'Robert', 'Claire', 'Theresa', 'Grace', 'Keith', 'Stewart', 'Andrea', 'Alexander', 'Chloe', 'Nicholas', 'Edward', 'Deirdre', 'Anne', 'Joseph', 'Alan', 'Rebecca', 'Jane', 'Natalie', 'Cameron', 'Owen', 'Eric', 'Gabrielle', 'Sonia', 'Tim', 'Sarah', 'Madeleine', 'Megan', 'Lucas', 'Joe', 'Brandon', 'Brian', 'Jennifer', 'Alexandra', 'Adrian', 'John', 'Mary', 'Tracey', 'Jasmine', 'Penelope', 'Hannah', 'Thomas', 'Angela', 'Warren', 'Blake', 'Simon', 'Audrey', 'Frank', 'Samantha', 'Dan', 'Victoria', 'Paul', 'Jacob', 'Heather', 'Una', 'Lily', 'Carolyn', 'Jonathan', 'Ian', 'Piers', 'William', 'Gordon', 'Dylan', 'Olivia', 'Jake', 'Leah', 'Jessica', 'David', 'Katherine', 'Amelia', 'Benjamin', 'Boris', 'Sebastian', 'Lisa', 'Diana', 'Michelle', 'Emma', 'Sam', 'Stephen', 'Faith', 'Kevin', 'Austin', 'Jack', 'Ruth', 'Colin', 'Trevor', 'Joanne', 'Virginia', 'Anna', 'Max', 'Adam', 'Maria', 'Sophie', 'Sue', 'Andrew', 'Harry', 'Amy', 'Christopher', 'Donna', 'Melanie', 'Elizabeth', 'Lillian', 'Julia', 'Christian', 'Luke', 'Zoe', 'Joshua', 'Jason']
 xp_timeout = []
@@ -397,7 +443,7 @@ async def clear_dues():
         embed.timestamp = datetime.datetime.utcnow()
         embed.set_author(name=f'{user.name}', icon_url=user.avatar_url)
         embed.set_footer(text='Economy Bot', icon_url=bot_pfp)
-        #await user.send(embed=embed)
+        await user.send(embed=embed)
         await create_statement(user, bot.user, bulk, f"Sold {value} Stocks", "Credit")
 
     await update_data(data)
@@ -473,9 +519,8 @@ async def est_update():
 
                 persona['last'] = cur
                 aler[str(i)] = persona
-                #await update_alerts(aler)
-
-                #await fetched.send(embed=embed)
+                await update_alerts(aler)
+                await fetched.send(embed=embed)
 
 async def avg_update():
     avgbal = await get_avg()
@@ -654,40 +699,10 @@ async def get_avatar(user):
     return Image.open(BytesIO(await user.avatar_url_as(format="png").read())).resize((140, 140))
 
 async def make_lvl_img(member, level, xp, total_xp, guildid):
-    def makeShadow(image, iterations, border, offset, backgroundColour, shadowColour):
-        # image: base image to give a drop shadow
-        # iterations: number of times to apply the blur filter to the shadow
-        # border: border to give the image to leave space for the shadow
-        # offset: offset of the shadow as [x,y]
-        # backgroundColour: colour of the background
-        # shadowColour: colour of the drop shadow
-
-        # Calculate the size of the shadow's image
-        fullWidth = image.size[0] + abs(offset[0]) + 2 * border
-        fullHeight = image.size[1] + abs(offset[1]) + 2 * border
-
-        # Create the shadow's image. Match the parent image's mode.
-        shadow = Image.new(image.mode, (fullWidth, fullHeight), backgroundColour)
-
-        # Place the shadow, with the required offset
-        shadowLeft = border + max(offset[0], 0)  # if <0, push the rest of the image right
-        shadowTop = border + max(offset[1], 0)  # if <0, push the rest of the image down
-        # Paste in the constant colour
-        shadow.paste(shadowColour,
-                     [shadowLeft, shadowTop,
-                      shadowLeft + image.size[0],
-                      shadowTop + image.size[1]])
-
-        # Apply the BLUR filter repeatedly
-        for i in range(iterations):
-            shadow = shadow.filter(ImageFilter.BLUR)
-
-        # Paste the original image on top of the shadow
-        imgLeft = border - min(offset[0], 0)  # if the shadow offset was <0, push right
-        imgTop = border - min(offset[1], 0)  # if the shadow offset was <0, push down
-        shadow.paste(image, (imgLeft, imgTop))
-
-        return shadow
+    font = ImageFont.truetype("badges/font2.ttf", 19)
+    font_rank = ImageFont.truetype("badges/font2.ttf", 24)
+    fontm = ImageFont.truetype("badges/font2.ttf", 13)
+    fonts = ImageFont.truetype("badges/font2.ttf", 10)
 
     img = Image.open("./badges/3.png")
     member_colour = member.color.to_rgb()
@@ -736,19 +751,29 @@ async def make_lvl_img(member, level, xp, total_xp, guildid):
     else:
         global_r = f'#{global_r}'
     draw = ImageDraw.Draw(img)
-    font = ImageFont.truetype("badges/font2.ttf", 19)
-    font_rank = ImageFont.truetype("badges/font2.ttf", 24)
-    fontm = ImageFont.truetype("badges/font2.ttf", 13)
-    fonts = ImageFont.truetype("badges/font2.ttf", 10)
+    newimg = Image.new('RGBA', img.size, (0,0,0,0))
+    newdraw = ImageDraw.Draw(newimg)
+
+    newdraw.text((180, 34), f'{member.name}#{member.discriminator}', font=font, fill='#000000')
+    newdraw.text((180, 70), f"Level {level}", font=fontm, fill='#000000')
+    newdraw.text((120, 210), f'Server Rank', font=font, fill='#000000')
+    newdraw.text((530, 210), f'Global Rank', font=font, fill='#000000')
+    newdraw.text((120, 250), f'#{server_r}', font=font_rank, fill='#000000')
+    newdraw.text((530, 250), f'{global_r}', font=font_rank, fill='#000000')
+
+    newimg = newimg.filter(ImageFilter.GaussianBlur(radius=2))
+    newimg = newimg.filter(ImageFilter.GaussianBlur(radius=4))
+    img.paste(newimg, (0, 0), newimg)
+
     draw.text((180, 34), f'{member.name}#{member.discriminator}', (255, 255, 255), font=font)
     draw.text((180, 70), f"Level {level}", (255, 255, 255), font=fontm)
     draw.text((120, 210), f'Server Rank', font=font)
     draw.text((530, 210), f'Global Rank', font=font)
-    draw.text((120, 250), f'#{server_r}',(255, 243, 0), font=font_rank)
+    draw.text((120, 250), f'#{server_r}', (255, 243, 0), font=font_rank)
     draw.text((530, 250), f'{global_r}', (255, 243, 0), font=font_rank)
+
     twidth, theight = draw.textsize(f"{await commait(xp)}/{await commait(total_xp)}", fonts)
-    draw.text((468 - (twidth / 2), 121 - (theight / 2)), f"{await commait(xp)}/{await commait(total_xp)}", (255, 255, 255), font=fonts,
-              stroke_width=1, stroke_fill=(0, 0, 0))
+    draw.text((468 - (twidth / 2), 121 - (theight / 2)), f"{await commait(xp)}/{await commait(total_xp)}", (255, 255, 255), font=fonts, stroke_width=1, stroke_fill=(0, 0, 0))
     enhancer = ImageEnhance.Sharpness(img)
     img = enhancer.enhance(2)
     image_bytes = BytesIO()
@@ -781,20 +806,99 @@ async def check_channel(chlid, guildid):
     if chlid in server: return True
     else: return False
 
+async def get_errorfile():
+    with open('errors.json', 'r') as f:
+        return json.load(f)
+
+async def update_errorfile(a):
+    with open('errors.json', 'w') as f:
+        f.write(json.dumps(a))
+
+async def debugcode(code, error):
+    a = await get_errorfile()
+    if code in a:
+        return False
+    a[code] = error
+    await update_errorfile(a)
+    return True
+
 devmode = True
 
 @bot.check
 async def is_dm(ctx):
-    if ctx.author.id in devs: return True
-    else: return False
+    return ctx.guild != None
 
 @bot.check
 async def if_allowed(ctx):
     return await check_channel(ctx.channel.id, ctx.guild.id)
 
-''''@bot.event
+@bot.event
 async def on_command_error(ctx, error):
-    print(error)'''
+    if isinstance(error, CommandNotFound) or isinstance(error, CheckFailure): return
+    code = f'0x{random.randint(10, 99)}{chr(random.randint(ord("a"), ord("z")))}{random.randint(0, 9)}'
+
+    a = await debugcode(code, f'{ctx.author} ({ctx.author.id}) =>\n**Command:** `{ctx.command}`\n**Message:** `{ctx.message.content}`\n**Error:** `{error}`')
+    if not a:
+        while True:
+            code = f'0x{random.randint(10, 99)}{chr(random.randint(ord("a"), ord("z")))}{random.randint(0, 9)}'
+            a = await debugcode(code, f'{ctx.author} ({ctx.author.id}) =>\n\n**Command:** `{ctx.command}`\n**Message:** `{ctx.message.content}`\n**Error:** `{error}`')
+            if a:
+                break
+    embed = discord.Embed(title=f'{economyerror} Oops! You just ran into an error',
+                          description=f'Kindly report this error using `e.report {code}` for further investigation.\n'
+                                      f'For a unique and error that is never been reported before, you get `1,000` coins!\n',
+                          color=error_embed)
+    embed.set_footer(text='Sorry for the inconvinience')
+    embed.timestamp = datetime.datetime.utcnow()
+    await ctx.send(embed=embed)
+
+@bot.command()
+async def re(ctx, a):
+    pass
+
+@bot.command()
+async def report(ctx, code):
+    a = await get_errorfile()
+    if code not in a:
+        return await ctx.reply('Invalid Code or Error may be already fixed!')
+    already = a['reported']
+    if code in already:
+        return await ctx.reply('Error already reported')
+
+    already.append(code)
+    a['reported'] = already
+    await update_errorfile(a)
+    errors_chl = await bot.fetch_channel(844184710678577193)
+    e = await errors_chl.send(f'New error reported: `{code}` by {ctx.author} ({ctx.author.id})')
+    await e.add_reaction(economysuccess)
+    await ctx.message.add_reaction(economysuccess)
+
+@bot.event
+async def on_raw_reaction_add(payload):
+    if payload.channel_id != 844184710678577193: return
+    print(payload.user_id)
+    if payload.user_id not in devs: return
+    print('ahead')
+    a = await get_errorfile()
+    if str(payload.emoji) == economysuccess:
+        chl = await bot.fetch_channel(payload.channel_id)
+        msg = await chl.fetch_message(payload.message_id)
+        cont = str(msg.content)
+        errorcode = cont.split(' ')[3].replace('`', '')
+        a.pop(errorcode)
+        await update_errorfile(a)
+
+@bot.command()
+@commands.check(is_dev)
+async def debug(ctx, code):
+    a = await get_errorfile()
+    if code not in a:
+        return await ctx.send('No matching code found!')
+
+    embed=discord.Embed(title=f'Error {code}',
+                        description=a[code],
+                        color=success_embed)
+    await ctx.send(embed=embed)
 
 @bot.event
 async def on_message(message):
@@ -1128,7 +1232,7 @@ async def daily(ctx):
                 if time_gap < 0:
                     time_gap = check - 86400
                 left = datetime.timedelta(seconds=(time_gap))
-                final = datetime.datetime.strptime(str(left), '%H:%M:%S.%f').replace(microsecond=0)
+                final = datetime.datetime.strptime(str(left).split(" ")[-1], '%H:%M:%S.%f').replace(microsecond=0)
                 return await ctx.reply(f'You have to wait for `{str(final).split(" ")[1]}` (HH:MM:SS) time more before you can claim daily interest.')
     elif i < 288:
         return await ctx.send(f'{ctx.author.mention} Looks like you dont own a bank account over 24 hours! Try Later.')
@@ -1241,6 +1345,13 @@ async def estates(ctx, member:discord.Member=None):
     embed.set_image(url=uri)
 
     await ctx.send(embed=embed)
+
+@bot.command()
+@commands.check(is_dev)
+async def disregard(ctx, member:discord.Member):
+    if member.id in disregarded: disregarded.remove(member.id)
+    else: disregarded.append(member.id)
+    await ctx.message.add_reaction(economysuccess)
 
 @bot.command()
 async def revenue(ctx):
@@ -1429,9 +1540,9 @@ async def upgrade(ctx):
                 left = cost-wallet
                 new_wallet = 0
                 if left > bank:
-                    embed = discord.Embed(title=f'{economysuccess} Oopsie!',
+                    embed = discord.Embed(title=f'{economyerror} Oopsie!',
                                           description='Looks like there aren\'t enough coins in your bank. Please deposit or earn more.',
-                                          color=success_embed)
+                                          color=error_embed)
                     return await ctx.send(embed=embed)
                 new_bank = bank - left
             else:
@@ -1891,6 +2002,70 @@ async def reset_chl(ctx):
     embed = discord.Embed(title=f'{economysuccess} Done', description='Cleared Successfully!', color=embedcolor)
     await close_admin(a)
     embed.set_footer(text='Add a channel using e.set_chl <name>\nRemove a channel using e.del_chl <name>')
+    await ctx.send(embed=embed)
+
+@bot.command()
+async def rob(ctx, member:discord.Member):
+    success = random.randint(0, 1)
+    a = await get_data()
+    wallet = a[str(ctx.author.id)]['wallet']
+    if wallet < 100:
+        return await ctx.send(f'{ctx.author.mention} You need `100` coins to start a robbery!')
+    if success == 1:
+        if member == ctx.author:
+            walleta = a[str(ctx.author.id)]['wallet']
+            prize = random.randint(int(walleta / 5), int(walleta / 2))
+            desc = random.choice(phrases['selfrob_success']).format(prize=f'`{await commait(prize)}`')
+        else:
+            walletm = a[str(member.id)]['wallet']
+            if walletm == 0:
+                return await ctx.send(f'{ctx.author.mention} Robbing a person with empty wallet.\n**Logic: 100**')
+            prize = random.randint(int(walletm / 5), int(walletm / 2))
+            walletm -= prize
+            walleta = a[str(ctx.author.id)]['wallet']
+            walleta += prize
+            a[str(member.id)]['wallet'] = walletm
+            a[str(ctx.author.id)]['wallet'] = walleta
+            await update_data(a)
+            desc = random.choice(phrases['rob_success']).format(prize=f'`{await commait(prize)}`', whom=member.mention)
+        embed = discord.Embed(title=f'{economysuccess} Robbery Successful!', description=desc, color=success_embed)
+    else:
+        if member == ctx.author:
+            walleta = a[str(ctx.author.id)]['wallet']
+            prize = random.randint(int(walleta / 5), int(walleta / 2))
+            desc = random.choice(phrases['selfrob_failed']).format(prize=f'`{await commait(prize)}`')
+            walleta -= prize
+            a[str(ctx.author.id)]['wallet'] = walleta
+            await update_data(a)
+        else:
+            walletm = a[str(ctx.author.id)]['wallet']
+            prize = random.randint(int(walletm / 5), int(walletm / 2))
+            walleta = a[str(ctx.author.id)]['wallet']
+            walleta -= prize
+            a[str(ctx.author.id)]['wallet'] = walleta
+            await update_data(a)
+            desc = random.choice(phrases['rob_failed']).format(prize=f'`{await commait(prize)}`', whom=member.mention)
+        embed = discord.Embed(title=f'{economyerror} Robbery Failed!', description=desc, color=error_embed)
+    await ctx.send(embed=embed)
+
+@bot.command()
+async def find(ctx):
+    chance = random.randint(1, 100)
+    a = await get_data()
+    wallet = a[str(ctx.author.id)]['wallet']
+    if wallet < 50:
+        chance = 1
+    if 45 > chance > 0:
+        c = random.randint(50, 400)
+        embed = discord.Embed(description=economysuccess+ ' ' +random.choice(phrases['find_success']).format(c=c), color=success_embed)
+        a[str(ctx.author.id)]['wallet'] = wallet + c
+    elif 90 > chance >= 45:
+        c = random.randint(int(wallet/5), int(wallet/2))
+        embed = discord.Embed(description=economyerror+ ' ' +random.choice(phrases['find_failed']).format(c=c), color=error_embed)
+        a[str(ctx.author.id)]['wallet'] = wallet - c
+    else:
+        embed = discord.Embed(description=economyerror+ ' ' +random.choice(phrases['find_neutral']), color=error_embed)
+    await update_data(a)
     await ctx.send(embed=embed)
 
 @bot.event
