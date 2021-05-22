@@ -1,10 +1,12 @@
+import time
+t1 = time.time()
 import os
 import random
 #import ujson as json
 import json
 import requests, operator
 import discord
-import asyncio, time
+import asyncio
 from discord.ext import commands
 import datetime
 import csv
@@ -14,12 +16,18 @@ from PIL import Image, ImageTk, ImageDraw, ImageFont, ImageEnhance, ImageFilter
 from io import BytesIO
 from discord.ext.commands import *
 
+print(f"Imports Complete in {float('{:.2f}'.format(time.time()-t1))} secs")
+tnew = time.time()
 intents = discord.Intents.default()
 intents.members = True
 intents.presences = True
 bot = commands.Bot(command_prefix=["e.", "E."], intents=intents, case_insensitive=True)
 bot.dev = 1
 bot.remove_command('help')
+bot.loop.set_debug(True)
+bot.loop.slow_callback_duration = 0.3
+print(f'Bot Initialized in {float("{:.2f}".format(time.time()-tnew))} secs')
+tnew = time.time()
 devs = [669816890163724288, 771601176155783198]
 staff = [669816890163724288, 771601176155783198, 619377929951903754, 713056818972066140, 517402093066256404, 459350068877852683]
 disregarded = []
@@ -163,7 +171,11 @@ xp_levels = {
 help_json = {
     "Fun":{
         "category":"Fun",
-        "e.rob":{"aliases":["None"], "usage":"e.rob <user>", "desc":"Rob your friend's wallet! Need minimum 100 coins to start"}
+        "e.rob":{"aliases":["None"], "usage":"e.rob <user>", "desc":"Rob your friend's wallet! Need minimum 100 coins to start"},
+        "e.find":{"aliases":["None"], "usage":"e.find", "desc":"Find coins or lose them!"},
+        "e.store":{"aliases":["shop"], "usage":"e.store [page]", "desc":"See items in shop, get to know about daily offers etc."},
+        "e.buy":{"aliases":["purchase"], "usage":"e.buy <item name> [quantity]", "desc":"Buy an item from shop"},
+        "e.inventory":{"aliases":["inv"], "usage":"e.inventory", "desc":"View your inventory"}
     },
     "Estates":{
         "category":"Estates",
@@ -174,8 +186,8 @@ help_json = {
     }, "Stocks": {
     "category":"Stocks",
       "e.stocks": {"aliases": ["None"], "usage": "e.stocks", "desc": "Invest in stock market which refreshes every 20-30 secs. New stock starts every day. Probably the best and fastest way to earn money?"},
-      "e.buy": {"aliases": ["None"], "usage": "e.buy <quantity>", "desc": "Buy stocks on current price"},
-      "e.sell": {"aliases": ["None"], "usage": "e.sell <quantity>", "desc": "Sell stocks on current price"}
+      "e.buystocks": {"aliases": ["None"], "usage": "e.buystocks <quantity>", "desc": "Buy stocks on current price"},
+      "e.sellstocks": {"aliases": ["None"], "usage": "e.sellstocks <quantity>", "desc": "Sell stocks on current price"}
     }, "Bank": {
         "category":"Bank",
         "e.balance": {"aliases": ["bal"], "usage": "e.balance [user]", "desc": "View you balance: Bank, Wallet and Stocks"},
@@ -237,13 +249,25 @@ phrases = {"selfrob_success":['You tried robbing yourself and got {prize} coins.
                            '0? R.I.P. my expectations',
                            'Comeone I found nothing again!?',
                            'How come I searched and searched but found absolutely nothing?',
-                           'And here I went to find coins, but came back empty handed']}
+                           'And here I went to find coins, but came back empty handed'],
+           "shop_noitem":['Maybe you should wear spectacles?',
+                          'Did you even read the name properly?',
+                          'Time to send you back to 1st grade to learn how to read',
+                          'Why didn\'t you cross-check the item name before bothering me?',
+                          'Bro, just go and re-check the name!'],
+           "shop_nobal":['Aww my poor soul, you dont have coins to buy it',
+                         'Oh No! Not enough money? Go beg from our mum haha',
+                         'Imagine not having enough money to buy items',
+                         'Ew you poor, go and do something worthwhile!',
+                         'Bro, atleast check with your wallet before buying',
+                         'Why you bother me when you dont have enough coins?']}
 
 usercmds = {}
 stock_names = ['Ava', 'Neil', 'Ryan', 'Anthony', 'Bernadette', 'Lauren', 'Justin', 'Matt', 'Wanda', 'James', 'Emily', 'Vanessa', 'Carl', 'Fiona', 'Stephanie', 'Pippa', 'Phil', 'Carol', 'Liam', 'Michael', 'Ella', 'Amanda', 'Caroline', 'Nicola', 'Sean', 'Oliver', 'Kylie', 'Rachel', 'Leonard', 'Julian', 'Richard', 'Peter', 'Irene', 'Dominic', 'Connor', 'Dorothy', 'Gavin', 'Isaac', 'Karen', 'Kimberly', 'Abigail', 'Yvonne', 'Steven', 'Felicity', 'Evan', 'Bella', 'Alison', 'Diane', 'Joan', 'Jan', 'Wendy', 'Nathan', 'Molly', 'Charles', 'Victor', 'Sally', 'Rose', 'Robert', 'Claire', 'Theresa', 'Grace', 'Keith', 'Stewart', 'Andrea', 'Alexander', 'Chloe', 'Nicholas', 'Edward', 'Deirdre', 'Anne', 'Joseph', 'Alan', 'Rebecca', 'Jane', 'Natalie', 'Cameron', 'Owen', 'Eric', 'Gabrielle', 'Sonia', 'Tim', 'Sarah', 'Madeleine', 'Megan', 'Lucas', 'Joe', 'Brandon', 'Brian', 'Jennifer', 'Alexandra', 'Adrian', 'John', 'Mary', 'Tracey', 'Jasmine', 'Penelope', 'Hannah', 'Thomas', 'Angela', 'Warren', 'Blake', 'Simon', 'Audrey', 'Frank', 'Samantha', 'Dan', 'Victoria', 'Paul', 'Jacob', 'Heather', 'Una', 'Lily', 'Carolyn', 'Jonathan', 'Ian', 'Piers', 'William', 'Gordon', 'Dylan', 'Olivia', 'Jake', 'Leah', 'Jessica', 'David', 'Katherine', 'Amelia', 'Benjamin', 'Boris', 'Sebastian', 'Lisa', 'Diana', 'Michelle', 'Emma', 'Sam', 'Stephen', 'Faith', 'Kevin', 'Austin', 'Jack', 'Ruth', 'Colin', 'Trevor', 'Joanne', 'Virginia', 'Anna', 'Max', 'Adam', 'Maria', 'Sophie', 'Sue', 'Andrew', 'Harry', 'Amy', 'Christopher', 'Donna', 'Melanie', 'Elizabeth', 'Lillian', 'Julia', 'Christian', 'Luke', 'Zoe', 'Joshua', 'Jason']
 xp_timeout = []
 warn1 = []
 warn2 = []
+storeitems = []
 error_embed = 16290332
 success_embed = 2293571
 economysuccess = '<a:EconomySuccess:843499891522797568>'
@@ -256,19 +280,22 @@ def is_staff(ctx):
     return ctx.author.id in staff
 
 async def spam_protect(userid):
+    if userid in disregarded:
+        if userid not in devs: return 'return'
+        else: return 'ok'
     last = usercmds.get(userid, 0)
     current = time.time()
     usercmds[userid] = current
     if current - last < 2:
-        if userid not in warn1:
-            asyncio.create_task(handle_1(userid))
-            return 'warn'
-        elif userid not in warn2:
+        if userid in warn2:
+            asyncio.create_task(handle_disregard(userid))
+            return 'disregard'
+        elif userid in warn1:
             asyncio.create_task(handle_2(userid))
             return 'warn'
         else:
-            asyncio.create_task(handle_disregard(userid))
-            return 'disregard'
+            asyncio.create_task(handle_1(userid))
+            return 'warn'
     else:
         return 'ok'
 
@@ -288,33 +315,36 @@ async def handle_disregard(userid):
     disregarded.remove(userid)
 
 async def get_avg():
-    with open('average.json', 'r') as avg:
+    with open('files/average.json', 'r') as avg:
         return json.load(avg)
 
 async def get_admin():
-    with open('admin.json', 'r') as f:
+    with open('files/admin.json', 'r') as f:
         return json.load(f)
 
 async def close_admin(a):
-    with open('admin.json', 'w') as f:
+    with open('files/admin.json', 'w') as f:
         f.write(json.dumps(a))
 
 async def get_estates():
-    with open('estates.json', 'r') as f:
+    with open('files/estates.json', 'r') as f:
         return json.load(f)
 
 async def get_alert_info():
-    with open('alerts.json', 'r') as a:
-        aler = json.load(a)
-    return aler
+    with open('files/alerts.json', 'r') as a:
+        return json.load(a)
 
 async def get_data():
-    with open('accounts.json', 'r') as f:
+    with open('files/accounts.json', 'r') as f:
         data = f
         if data == '{}':
             return {1:1}
         else:
             return json.load(data)
+
+async def get_stockconfigs():
+    with open('files/stock_config.json', 'r') as stc:
+        return json.load(stc)
 
 async def get_revenue(level:int):
     return int((level*200 - 50)*0.97)
@@ -345,7 +375,7 @@ async def get_fees(user, amt):
     return int(a*fees[btype])
 
 async def get_xp():
-    with open('xp.json', 'r') as xp:
+    with open('files/xp.json', 'r') as xp:
         return json.load(xp)
 
 async def get_todays_stock():
@@ -366,15 +396,15 @@ async def get_todays_stock():
     return f'{str(choose)[:-4]}_today.csv'
 
 async def get_statements():
-    with open('statements.json', 'r') as s:
+    with open('files/statements.json', 'r') as s:
         return json.load(s)
 
 async def get_stocks():
-    with open('stocks.json', 'r') as s:
+    with open('files/stocks.json', 'r') as s:
         return json.load(s)
 
 async def get_badges():
-    with open('badges.json', 'r') as b:
+    with open('files/badges.json', 'r') as b:
         return json.load(b)
 
 async def get_data_stock(file):
@@ -385,40 +415,52 @@ async def get_url(url):
     a = requests.get(url)
     return a.content
 
+async def get_inv():
+    with open('files/inventory.json', 'r') as e:
+        return json.load(e)
+
+async def update_inv(a):
+    with open('files/inventory.json', 'w') as e:
+        e.write(json.dumps(a))
+
+async def update_stockinfo(data):
+    with open('files/stock_config.json', 'w') as stc:
+        stc.write(json.dumps(data))
+
 async def update_stock_data(data):
-    with open('stocks.json', 'w') as avgbal:
+    with open('files/stocks.json', 'w') as avgbal:
         avgbal.write(json.dumps(data))
 
 async def update_badges(data):
-    with open('badges.json', 'w') as b:
+    with open('files/badges.json', 'w') as b:
         b.write(json.dumps(data))
 
 async def update_avg(avg):
-    with open('average.json', 'w') as avgbal:
+    with open('files/average.json', 'w') as avgbal:
         avgbal.write(json.dumps(avg))
 
 async def update_est(data):
-    with open('estates.json', 'w') as f:
+    with open('files/estates.json', 'w') as f:
         f.write(json.dumps(data))
 
 async def update_alerts(data):
-    with open('alerts.json', 'w') as f:
+    with open('files/alerts.json', 'w') as f:
         f.write(json.dumps(data))
 
 async def update_logs(stuff: str):
-    with open('logs.txt', 'a') as logs:
+    with open('files/logs.txt', 'a') as logs:
         logs.write(f'\n{stuff}')
 
 async def update_data(data):
-    with open('accounts.json', 'w') as f:
+    with open('files/accounts.json', 'w') as f:
         f.write(str(json.dumps(data)))
 
 async def update_statements(stat):
-    with open('statements.json', 'w') as w:
+    with open('files/statements.json', 'w') as w:
         w.write(json.dumps(stat))
 
 async def update_xp(data):
-    with open('xp.json', 'w') as w:
+    with open('files/xp.json', 'w') as w:
         w.write(json.dumps(data))
 
 async def clear_dues():
@@ -448,10 +490,10 @@ async def clear_dues():
 
     await update_data(data)
     await update_stock_data(stock_data)
-    with open('stock_config.json', 'w') as r:
-        r.write('{}')
-    with open('stocks.json', 'w') as r:
-        r.write('{}')
+    with open('files/stock_config.json', 'w') as stc:
+        stc.write('{}')
+    with open('files/stocks.json', 'w') as stc:
+        stc.write('{}')
 
 async def update_stocks():
     global current_stock, total_lines
@@ -460,21 +502,18 @@ async def update_stocks():
         data = list(csv.reader(st))
     total_lines = len(data)
 
-    with open('stock_config.json', 'r') as c:
-        config = json.load(c)
+    config = await get_stockconfigs()
     line = config.setdefault("line", 1)
     name = config.setdefault("name", random.choice(stock_names))
     if line == total_lines:
         os.rename(f'stocks/{stock}', f'stocks/{str(stock).replace("_today", "_done")}')
         config['line'] = line + 1
-        with open('stock_config.json', 'w') as c:
-            c.write(json.dumps(config))
+        await update_stockinfo(config)
         await clear_dues()
         await update_stocks()
     else:
         config['line'] = line + 1
-        with open('stock_config.json', 'w') as c:
-            c.write(json.dumps(config))
+        await update_stockinfo(config)
 
         current_stock = list(data[line])
         current_stock.pop(0)
@@ -549,8 +588,7 @@ async def avg_update():
         person_avg['i'] = i + 1
         avgbal[x] = person_avg
 
-    with open('average.json', 'w') as avg:
-        avg.write(str(json.dumps(avgbal)))
+    await update_avg(avgbal)
 
 async def stock_update():
     while True:
@@ -558,10 +596,40 @@ async def stock_update():
         await perform_stuff(current_stock)
         await asyncio.sleep(86400/total_lines)
 
+async def check_storetime():
+    with open('files/shopconfig.json', 'r') as c:
+        config = json.load(c)
+    return config["updated"]
+
+async def shop_update():
+    with open('files/shopconfig.json', 'r') as c:
+        config = json.load(c)
+    ct = time.time()
+    if ct - config["updated"] < 86400: return
+    for items in storeitems:
+        storeitems.remove(items)
+    await load_shop()
+    for i in storeitems:
+        i["special"] = False
+    storetime = config["updated"]
+    newitem = random.choice(storeitems)
+    storeitems.remove(newitem)
+    newitem["special"] = True
+    disc = int(newitem["price"].replace(",", ""))
+    percent = random.randint(10, 50)
+    newitem["disc"] = await commait(int(disc*(100-percent)/100))
+    newitem["percent"] = percent
+    storeitems.append(newitem)
+    config['updated'] = ct
+    config['value'] = storeitems
+    with open('files/shopconfig.json', 'w') as c:
+        c.write(json.dumps(config))
+
 async def loops():
     while True:
         await avg_update()
         await est_update()
+        await shop_update()
         await asyncio.sleep(300)
 
 async def open_account(userid):
@@ -579,23 +647,19 @@ async def open_estates(userid):
     await update_est(data)
 
 async def checktimeout(userid, event):
-    with open('timeouts.json', 'r') as t:
+    with open('files/timeouts.json', 'r') as t:
         timeouts = json.load(t)
     userid = f'{userid}'
     if userid not in timeouts:
-        return None
+        return 0
     person = timeouts[userid]
     event_t = person.get(event)
 
-    if event_t is None:
-        return None
-
     current = time.time()
-    difference = current - event_t
-    return difference
+    return current - event_t
 
 async def add_timeout(userid, event):
-    with open('timeouts.json', 'r') as f:
+    with open('files/timeouts.json', 'r') as f:
         data = json.load(f)
 
     person = data.get(f'{userid}')
@@ -604,12 +668,11 @@ async def add_timeout(userid, event):
     person[event] = time.time()
 
     data[userid] = person
-    with open('timeouts.json', 'w') as f:
+    with open('files/timeouts.json', 'w') as f:
         f.write(json.dumps(data))
 
 async def alerts_state(userid, state:str):
-    with open('alerts.json', 'r') as a:
-        aler = json.load(a)
+    aler = get_alert_info()
     userid = str(userid)
     person = aler.get(userid)
     if person is None:
@@ -618,8 +681,7 @@ async def alerts_state(userid, state:str):
     person['state'] = state
     aler[userid] = person
 
-    with open('alerts.json', 'w') as aa:
-        aa.write(json.dumps(aler))
+    await update_alerts(aler)
 
 async def commait(val):
     return "{:,}".format(val)
@@ -644,15 +706,25 @@ async def create_statement(user, person, amount, reason, type):
     states[str(user.id)] = user_s
     await update_statements(states)
 
+async def load_shop():
+    with open('files/shopconfig.json', 'r') as s:
+        config = json.load(s)
+    for i in config["value"]:
+        storeitems.append(i)
+
 async def create_stuff():
     global bot_pfp
+    tnew = time.time()
     mybot = bot.get_user(832083717417074689)
     bot_pfp = mybot.avatar_url
     await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name="Thunder qt"))
+    tnew = time.time()
     #await bot.change_presence(status=discord.Status.invisible)
+    await load_shop()
+    print(f'Shop Loaded and Activity set in {float("{:.2f}".format(time.time() - tnew))} secs')
     asyncio.create_task(loops())
     asyncio.create_task(stock_update())
-    print('Ready!')
+    print(f'Loops created! Boot Time: {float("{:.2f}".format(time.time()-t1))} secs')
 
 async def calculate_level(xp:int):
     level_found = -1
@@ -672,8 +744,7 @@ async def add_xp_tm(userid):
     xp_timeout.remove(userid)
 
 async def perform_stuff(data):
-    with open('stock_config.json', 'r') as r:
-        stock_data = json.load(r)
+    stock_data = await get_stockconfigs()
     #columns = ['Name', 'Highest', 'Lowest', 'Current', 'Volume']
     highest = float(stock_data.setdefault('highest', data[1]))
     lowest = float(stock_data.setdefault('lowest', data[2]))
@@ -690,8 +761,7 @@ async def perform_stuff(data):
     stock_data['volume'] = volume
     stock_data['lowest'] = lowest
     stock_data['highest'] = highest
-    with open('stock_config.json', 'w') as r:
-        r.write(json.dumps(stock_data))
+    await update_stockinfo(stock_data)
 
     return stock_data
 
@@ -807,11 +877,11 @@ async def check_channel(chlid, guildid):
     else: return False
 
 async def get_errorfile():
-    with open('errors.json', 'r') as f:
+    with open('files/errors.json', 'r') as f:
         return json.load(f)
 
 async def update_errorfile(a):
-    with open('errors.json', 'w') as f:
+    with open('files/errors.json', 'w') as f:
         f.write(json.dumps(a))
 
 async def debugcode(code, error):
@@ -822,7 +892,160 @@ async def debugcode(code, error):
     await update_errorfile(a)
     return True
 
-devmode = True
+async def createstore(start, page):
+    storetime = await check_storetime()
+    storetime = 86400 - time.time() + storetime
+    frame = Image.open('store/frame.png')
+    title = ImageFont.truetype("badges/font2.ttf", 22)
+    special = ImageFont.truetype("badges/font2.ttf", 25)
+    description = ImageFont.truetype("badges/font2.ttf", 17)
+    newimg = Image.new('RGBA', frame.size, (0, 0, 0, 0))
+    newdraw = ImageDraw.Draw(newimg)
+    special_item = {}
+    left = datetime.timedelta(seconds=storetime)
+    final = datetime.datetime.strptime(str(left), '%H:%M:%S.%f').replace(microsecond=0)
+    colon_format = str(final).split(" ")[1].split(':')
+    for i in storeitems:
+        if i["special"]:
+            special_item = i
+    price_sp = special_item["price"]
+    text_loc = 267
+    icon_loc = 258
+    desc_loc = 270
+    allpages=0
+    leng = len(storeitems)
+    while True:
+        allpages += 1
+        leng -= 8
+        if leng < 0: break
+    for i in range(start, page):
+        if i > len(storeitems) - 1: break
+        item = storeitems[i]
+        if item["special"]: continue
+        newdraw.text((135, text_loc), text=item['name'], fill=(0, 0, 0), font=title)
+        newdraw.text((145 + title.getsize(item["name"])[0], desc_loc), text=item['desc'], fill=(0, 0, 0),
+                  font=description)
+        newdraw.text((800, text_loc), text=item['price'], fill=(0, 0, 0), font=title)
+
+        text_loc += 62
+        desc_loc += 62
+        icon_loc += 61
+    newdraw.text((210, 90), f'{special_item["name"]}', font=special, fill=(0,0,0))
+    newdraw.text((210, 130), f'{special_item["desc"]}', font=description, fill=(0,0,0))
+    newdraw.text((73, 694), f'Refreshes in: {colon_format[0]}h {colon_format[1]}m {colon_format[2]}s', fill=(0, 0, 0),
+              font=ImageFont.truetype("badges/font2.ttf", 20))
+    newdraw.text((800, 694), f'Page #{int(page/8)}/{allpages}', font=ImageFont.truetype("badges/font2.ttf", 20), fill=(0, 0, 0))
+    newdraw.text((700, 90), price_sp, font=title, fill=(0,0,0))
+    newdraw.text((715+title.getsize(price_sp)[0], 90),
+              special_item["disc"], font=ImageFont.truetype("badges/font2.ttf", 30), fill=(0,0,0))
+    newdraw.text((700, 139), f'{special_item["percent"]}% DISCOUNT!', font=ImageFont.truetype("badges/font2.ttf", 20),
+              fill=(0,0,0))
+
+    newimg = newimg.filter(ImageFilter.GaussianBlur(radius=2))
+    newimg = newimg.filter(ImageFilter.GaussianBlur(radius=4))
+    #frame.paste(newimg, (0, 0), newimg)
+    frame = Image.alpha_composite(frame, newimg)
+    draw = ImageDraw.Draw(frame)
+    draw.text((210, 90), f'{special_item["name"]}', font=special)
+    draw.text((210, 130), f'{special_item["desc"]}', font=description, fill=(189, 189, 189))
+    draw.text((700, 90), price_sp, font=title, fill=(189, 189, 189))
+    draw.line((698, 100, 699+title.getsize(price_sp)[0], 100), width=6, fill=(255, 91, 91))
+    draw.text((715+title.getsize(price_sp)[0], 90), special_item["disc"], font=ImageFont.truetype("badges/font2.ttf", 30))
+    draw.text((700, 139), f'{special_item["percent"]}% DISCOUNT!', font=ImageFont.truetype("badges/font2.ttf", 20), fill=(255,100,69))
+    icon = Image.open(f'store/{special_item["icon"]}').resize((50, 50))
+    frame.paste(icon, (140, 100), icon.convert('RGBA'))
+
+    text_loc=267
+    icon_loc=258
+    desc_loc=270
+    for i in range(start, page):
+        if i > len(storeitems)-1: break
+        item = storeitems[i]
+        if item["special"]: continue
+        icon = Image.open(f'store/{item["icon"]}').resize((40, 40))
+        frame.paste(icon, (71, icon_loc), icon.convert('RGBA'))
+        draw.text((135, text_loc), text=item['name'], fill=(255, 255, 255), font=title)
+        draw.text((145+title.getsize(item["name"])[0], desc_loc), text=item['desc'], fill=(189, 189, 189), font=description)
+        draw.text((800, text_loc), text=item['price'], fill=(255, 255, 255), font=title)
+
+        text_loc += 62
+        desc_loc += 62
+        icon_loc += 61
+    draw.text((73, 694), f'Refreshes in: {colon_format[0]}h {colon_format[1]}m {colon_format[2]}s', fill=(61, 255, 48), font=ImageFont.truetype("badges/font2.ttf", 20))
+    draw.text((800, 694), f'Page #{int(page/8)}/{allpages}', font=ImageFont.truetype("badges/font2.ttf", 20), fill=(61, 255, 48))
+    enhancer = ImageEnhance.Sharpness(frame)
+    frame = enhancer.enhance(2)
+    image_bytes = BytesIO()
+    frame.save(image_bytes, 'PNG')
+    image_bytes.seek(0)
+    return discord.File(fp=image_bytes, filename='store.png')
+
+async def inventory_image(userid):
+    userid = str(userid)
+    invdata = await get_inv()
+    userinv = invdata.get(userid, [])
+
+    heading = ImageFont.truetype("badges/font2.ttf", 32)
+    inv_font = ImageFont.truetype("badges/font2.ttf", 18)
+    bg = Image.open('store/bg.png')
+    newimg = Image.new('RGBA', bg.size)
+    newdraw = ImageDraw.Draw(newimg)
+    inv = {}
+    empty = False
+    if len(userinv) == 0:
+        empty = True
+    else:
+        for i in userinv:
+            qty = inv.setdefault(i, 0)
+            inv[i] = qty + 1
+
+    if empty:
+        newdraw.text((270, 146), '-- Empty Inventory --', font=inv_font, fill=(0,0,0))
+        newimg = newimg.crop((0, 0, newimg.width, 200))
+        newimg = newimg.filter(ImageFilter.GaussianBlur(radius=2))
+        newimg = newimg.filter(ImageFilter.GaussianBlur(radius=4))
+        bg = bg.crop((0, 0, bg.width, 200))
+        bg = Image.alpha_composite(bg.convert('RGBA'), newimg)
+
+        draw = ImageDraw.Draw(bg)
+        draw.line((47, 133, 47, 183), (149, 149, 149), width=5)
+        draw.line((752, 133, 752, 183), (149, 149, 149), width=5)
+        draw.line((46, 181, 753, 181), (149, 149, 149), width=5)
+        draw.text((270, 146), '-- Empty Inventory --', font=inv_font)
+    else:
+        print(inv)
+        item_loc = 146
+        for i in inv:
+            newdraw.text((120, item_loc), i, font=inv_font, fill=(0, 0, 0))
+            newdraw.text((558+(int(194-inv_font.getsize(f'{inv[i]}')[0])/2), item_loc), f'{inv[i]}', font=inv_font, fill=(0, 0, 0))
+            item_loc += 43
+        newimg = newimg.crop((0, 0, newimg.width, item_loc+10))
+        newimg = newimg.filter(ImageFilter.GaussianBlur(radius=2))
+        newimg = newimg.filter(ImageFilter.GaussianBlur(radius=4))
+        bg = bg.crop((0, 0, bg.width, item_loc+10))
+        bg = Image.alpha_composite(bg.convert('RGBA'), newimg)
+
+        draw = ImageDraw.Draw(bg)
+        line_loc = 133
+        item_loc = 146
+        for i in inv:
+            draw.line((47, line_loc, 47, line_loc+50), (149, 149, 149), width=5)
+            draw.line((752, line_loc, 752, line_loc+50), (149, 149, 149), width=5)
+            draw.line((98, line_loc, 98, line_loc + 50), (149, 149, 149), width=5)
+            draw.line((558, line_loc, 558, line_loc + 50), (149, 149, 149), width=5)
+
+            draw.text((120, item_loc), i, font=inv_font)
+            draw.text((558+(int(194-inv_font.getsize(f'{inv[i]}')[0])/2), item_loc), f'{inv[i]}', font=inv_font)
+            item_loc += 43
+            line_loc += 43
+        draw.line((46, line_loc+5, 753, line_loc+5), (149, 149, 149), width=5)
+
+    enhancer = ImageEnhance.Sharpness(bg)
+    bg = enhancer.enhance(2)
+    image_bytes = BytesIO()
+    bg.save(image_bytes, 'PNG')
+    image_bytes.seek(0)
+    return discord.File(fp=image_bytes, filename='inventory.png')
 
 @bot.check
 async def is_dm(ctx):
@@ -851,10 +1074,6 @@ async def on_command_error(ctx, error):
     embed.set_footer(text='Sorry for the inconvinience')
     embed.timestamp = datetime.datetime.utcnow()
     await ctx.send(embed=embed)
-
-@bot.command()
-async def re(ctx, a):
-    pass
 
 @bot.command()
 async def report(ctx, code):
@@ -911,11 +1130,12 @@ async def on_message(message):
             if message.author.id not in devs: return
         state = await spam_protect(message.author.id)
         if state == 'warn':
-            embed = discord.Embed(title='Using commands too fast!', color=error_embed)
+            embed = discord.Embed(title=f'{economyerror} Using commands too fast!', color=error_embed)
             return await message.channel.send(embed=embed)
         elif state == 'disregard':
-            embed = discord.Embed(title='Warning!', description=f'{message.author.mention} has been disregarded for 10 mins!\n**Reason: Spamming Commands**',color=error_embed)
+            embed = discord.Embed(title=f'{economyerror} Warning!', description=f'{message.author.mention} has been disregarded for 10 mins!\n**Reason: Spamming Commands**',color=error_embed)
             return await message.channel.send(embed=embed)
+        elif state == 'return': return
         if message.author.id not in xp_timeout:
             userid = message.author.id
             xps = await get_xp()
@@ -943,7 +1163,7 @@ async def dvm(ctx):
 @bot.command() #DEV ONLY
 @commands.check(is_dev)
 async def logs(ctx, *, search:str=None):
-    with open('logs.txt', 'r') as log:
+    with open('files/logs.txt', 'r') as log:
         logs_data = log.readlines()
     logs_data.reverse()
     x = PrettyTable()
@@ -995,8 +1215,8 @@ async def add(ctx, person:discord.Member, bal:int, *args):
     data[f'{person.id}'] = toadd
     await update_data(data)
 
-    await update_logs(f'{ctx.author}-!-add-!-[{person.id}; {await commait(bal)}]-!-{datetime.datetime.today().replace(microsecond=0)}')
-    await ctx.send(f'{ctx.author.mention} added `{await commait(bal)}` coins to {person.mention}.')
+    await update_logs(f'{ctx.author}-!-add-!-[{person.id}; {await commait(bal)}]-!-{await current_time()}')
+    await ctx.send(f'{ctx.author.mention} added `{await commait(bal)}` coins to {person.name}.')
 
 @bot.command() #DEV Only
 @commands.check(is_staff)
@@ -1035,7 +1255,7 @@ async def format(ctx, member:discord.Member):
 @bot.command() #DEV Only
 async def release(ctx, title:str, link:str):
     if ctx.author.id != 771601176155783198: return
-    with open('updates.json', 'r') as upd:
+    with open('files/updates.json', 'r') as upd:
         updates = json.load(upd)
 
     update = updates[title]
@@ -1055,8 +1275,7 @@ async def release(ctx, title:str, link:str):
 async def stockinfo(ctx):
     with open(f'stocks/{await get_todays_stock()}', 'r') as f:
         stock = list(csv.reader(f))
-    with open(f'stock_config.json', 'r') as c:
-        config = json.load(c)
+    config = await get_stockconfigs()
 
     embed = discord.Embed(title='Stock Info', color=embedcolor)
     embed.add_field(name='Total Rows', value=f'{len(stock)}')
@@ -1085,6 +1304,7 @@ async def badge(ctx, member:discord.Member, badge:str):
     badge_type.append(userid)
     badges[badge] = badge_type
     await update_badges(badges)
+    await update_logs(f'{ctx.author}-!-badges-!-[{member.id}; {badge}]-!-{await current_time()}')
     await ctx.message.add_reaction('✅')
 
 @bot.command(aliases=['bal'])
@@ -1216,7 +1436,6 @@ async def daily(ctx):
 
     avg_p = avg.get(f'{ctx.author.id}')
     data_p = data.get(f'{ctx.author.id}')
-    claimed = avg_p['claimed']
     if avg_p is not None:
         i = avg_p['i']
     else:
@@ -1224,19 +1443,12 @@ async def daily(ctx):
     if data_p is None:
         return await ctx.send(f'{ctx.author.mention} Looks like you dont have a bank account. Use `e.bal` to open one.' )
 
-    if claimed != 0:
-        check = await checktimeout(ctx.author.id, 'daily')
-        if check is not None:
-            if i < 288:
-                time_gap = 86400 - check
-                if time_gap < 0:
-                    time_gap = check - 86400
-                left = datetime.timedelta(seconds=(time_gap))
-                final = datetime.datetime.strptime(str(left).split(" ")[-1], '%H:%M:%S.%f').replace(microsecond=0)
-                return await ctx.reply(f'You have to wait for `{str(final).split(" ")[1]}` (HH:MM:SS) time more before you can claim daily interest.')
-    elif i < 288:
-        return await ctx.send(f'{ctx.author.mention} Looks like you dont own a bank account over 24 hours! Try Later.')
-
+    check = await checktimeout(ctx.author.id, 'daily')
+    time_gap = 86400 - check
+    if time_gap > 0 and check != 0:
+        left = datetime.timedelta(seconds=time_gap)
+        final = datetime.datetime.strptime(str(left).split(" ")[-1], '%H:%M:%S.%f').replace(microsecond=0)
+        return await ctx.reply(f'You have to wait for `{str(final).split(" ")[-1]}` (HH:MM:SS) time more before you can claim daily interest.')
     btype = data_p['bank_type']
     avgbal = avg_p['avg']
     bank_d = data_p['bank']
@@ -1253,7 +1465,7 @@ async def daily(ctx):
 
     await update_avg(avg)
     await update_data(data)
-    await add_timeout(ctx.author.id, 'weekly')
+    await add_timeout(ctx.author.id, 'daily')
     embed = discord.Embed(title=f'{economysuccess} Claimed Successfully!', description=f'Daily interest payout of `{await commait(int(avgbal * multiplier))}` coins credited successfully!', color=success_embed)
     await ctx.send(embed=embed)
 
@@ -1511,7 +1723,7 @@ async def upgrade(ctx):
     embed.add_field(name='Revenue Boost', value=f'`{await commait(rev_now)} + {await commait(rev_after-rev_now)}` coins')
     embed.add_field(name='Maintainance Increase', value=f'`{await commait(main_now)} + {await commait(main_after-main_now)}` coins')
     embed.add_field(name='Upgrade Cost', value=f'`{await commait(cost)}` coins')
-    embed.add_field(name='Confirm?', value='Click ✅ to confirm or ❌ to cancel', inline=False)
+    embed.add_field(name='Confirm?', value=f'Click {economysuccess} to confirm or {economyerror} to cancel', inline=False)
     embed.add_field(name='\u200b', value='Here is the look after upgrade:', inline=False)
     embed.set_image(url=getestates_thumb[level+1])
     fetched = bot.get_user(ctx.author.id)
@@ -1520,17 +1732,17 @@ async def upgrade(ctx):
     embed.set_author(name=f'{fetched.name} | {name} Hotel', icon_url=fetched.avatar_url)
 
     msg = await ctx.send(embed=embed)
-    await msg.add_reaction('✅')
-    await msg.add_reaction('❌')
+    await msg.add_reaction(economysuccess)
+    await msg.add_reaction(economyerror)
 
     def check(reaction, user):
-        if user == ctx.author and str(reaction.emoji) in ['✅', '❌']:
+        if user == ctx.author and str(reaction.emoji) in [economyerror, economysuccess]:
             return True
     try:
         reaction, user = await bot.wait_for('reaction_add', timeout=60.0, check=check)
-        await msg.clear_reaction('✅')
-        await msg.clear_reaction('❌')
-        if str(reaction) == '✅':
+        await msg.clear_reaction(economyerror)
+        await msg.clear_reaction(economysuccess)
+        if str(reaction) == economysuccess:
             data = await get_data()
             person = data[f'{ctx.author.id}']
             wallet = person['wallet']
@@ -1559,9 +1771,10 @@ async def upgrade(ctx):
             await update_data(data)
             await update_est(est)
             embed = discord.Embed(title=f'{economysuccess} Success!', description='Wohoo! Your upgrade was successful! Use `e.estates` to see newly upgraded property!', color=success_embed)
-            await ctx.send(embed=embed)
+            await msg.edit(embed=embed)
         else:
-            await ctx.send(f'{ctx.author.mention} Cancelled!')
+            embed=discord.Embed(title=f'{economyerror} Cancelled!', color=error_embed)
+            await msg.edit(embed=embed)
     except asyncio.TimeoutError:
         pass
 
@@ -1572,8 +1785,7 @@ async def alerts(ctx, state:str = None):
                               description='Get Alerts on pending loans, hotel maintainance, robberies etc straight to your DMs\n'
                                           '```diff\n+ To turn on: e.alerts on\n- To turn off: e.alerts off\n```',
                               color=embedcolor)
-        with open('alerts.json', 'r') as a:
-            aler = json.load(a)
+        aler = get_alert_info()
         if f'{ctx.author.id}' in aler:
             current = 'On'
         else:
@@ -1737,8 +1949,7 @@ async def stocks(ctx):
     columns = ['Name', 'Highest   ', 'Lowest', 'Current', 'Volume']
     details = list(current_stock)
     mydata = await perform_stuff(details)
-    with open('stock_config.json', 'r') as c:
-        config = json.load(c)
+    config = await get_stockconfigs()
     x = PrettyTable()
     x.add_column('   Name', columns)
     x.align['   Name'] = 'l'
@@ -1797,7 +2008,7 @@ async def stocks(ctx):
     await ctx.send(embed=embed, file=discord.File("graph.png"))
 
 @bot.command()
-async def buy(ctx, amount):
+async def buystocks(ctx, amount):
     data = await get_data()
     stock_data = await get_stocks()
     userid = str(ctx.author.id)
@@ -1846,7 +2057,7 @@ async def buy(ctx, amount):
     await ctx.send(embed=embed)
 
 @bot.command()
-async def sell(ctx, amount):
+async def sellstocks(ctx, amount):
     data = await get_data()
     stock_data = await get_stocks()
     userid = str(ctx.author.id)
@@ -2006,12 +2217,21 @@ async def reset_chl(ctx):
 
 @bot.command()
 async def rob(ctx, member:discord.Member):
-    success = random.randint(0, 1)
+    success = random.randint(0, 100)
     a = await get_data()
+
+    lock = 0
+    inv = await get_inv()
+    user = inv.get(str(member.id), [])
+    if len(user) == 0: pass
+    else:
+        if 'Silver Lock' in user: lock = 25
+        elif 'Gold Lock' in user: lock = 40
+        elif 'Bronze Lock' in user: lock = 10
     wallet = a[str(ctx.author.id)]['wallet']
     if wallet < 100:
         return await ctx.send(f'{ctx.author.mention} You need `100` coins to start a robbery!')
-    if success == 1:
+    if success > 50+lock:
         if member == ctx.author:
             walleta = a[str(ctx.author.id)]['wallet']
             prize = random.randint(int(walleta / 5), int(walleta / 2))
@@ -2028,6 +2248,18 @@ async def rob(ctx, member:discord.Member):
             a[str(ctx.author.id)]['wallet'] = walleta
             await update_data(a)
             desc = random.choice(phrases['rob_success']).format(prize=f'`{await commait(prize)}`', whom=member.mention)
+            alert = await get_alert_info()
+            if str(member.id) in alert:
+                if alert[str(member.id)]['state'] == 'on':
+                    embed = discord.Embed(title=f'{economyerror} You were robbed!',
+                                          description=f'You were robbed of `{await commait(prize)}` coins by `{ctx.author.name}#????` in `{ctx.guild.name}`!', color=error_embed)
+                    await member.send(embed=embed)
+            if lock != 0:
+                if lock == 25: user.remove('Silver Lock')
+                elif lock == 10: user.remove('Bronze Lock')
+                elif lock == 40: user.remove('Gold Lock')
+            inv[str(member.id)] = user
+            await update_inv(inv)
         embed = discord.Embed(title=f'{economysuccess} Robbery Successful!', description=desc, color=success_embed)
     else:
         if member == ctx.author:
@@ -2068,9 +2300,61 @@ async def find(ctx):
     await update_data(a)
     await ctx.send(embed=embed)
 
+@bot.command(aliases=['store'])
+async def shop(ctx, page:int=1):
+    if page <= 0: page = 1
+    storeimg = await createstore((page-1)*8,page*8)
+    await ctx.send(file=storeimg)
+
+@bot.command(aliases=['inv'])
+async def inventory(ctx):
+    inv = await inventory_image(ctx.author.id)
+    await ctx.send(file=inv)
+
+@bot.command(aliases=['purchase'])
+async def buy(ctx, *, item, qty=1):
+    found = False
+    store_item = ''
+    for i in storeitems:
+        if item.lower() == i["name"].lower():
+            found = True
+            store_item = i
+            break
+
+    if not found:
+        embed = discord.Embed(title=f'{economyerror} Item Not Found!',
+                              description=f'The item `{item}` wasn\'t found. {random.choice(phrases["shop_noitem"])}',
+                              color=error_embed)
+        return await ctx.send(embed=embed)
+
+    data = await get_data()
+    if store_item["special"]: price = store_item["disc"]
+    else: price = store_item["price"]
+
+    user = data[str(ctx.author.id)]
+    wallet = user["wallet"]
+    qty = int(qty)
+    price = int(price.replace(',', ''))
+    if price*qty > wallet:
+        embed = discord.Embed(title=f'{economyerror} Insufficient Funds',
+                              description=f'{random.choice(phrases["shop_nobal"])}',
+                              color=error_embed)
+        return await ctx.send(embed=embed)
+    inv = await get_inv()
+    memberinv = inv.get(str(ctx.author.id), [])
+    memberinv.append(store_item["name"])
+    inv[str(ctx.author.id)] = memberinv
+    user["wallet"] = wallet - (price*qty)
+    data[str(ctx.author.id)] = user
+    embed = discord.Embed(description=f'{economysuccess} Done! `{qty}` quantity of `{store_item["name"]}` purchased successfully!',
+                          color=success_embed)
+    await update_data(data)
+    await update_inv(inv)
+    await ctx.send(embed=embed)
+
 @bot.event
 async def on_ready():
     await create_stuff()
 
-print("Running...")
+print("Entering on_ready()")
 bot.run("ODMyMDgzNzE3NDE3MDc0Njg5.YHeoWQ._O5uoMS_I7abKdI_YzVb9BuEHzs")
