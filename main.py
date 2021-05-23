@@ -232,7 +232,7 @@ phrases = {"selfrob_success":['You tried robbing yourself and got {prize} coins.
                          'You tried to rob {whom} but he caught and complained about you. Payed {prize} as a fine'],
            "find_success":['Yoo I found {c} coins in my sofa!',
                            'I wonder who left {c} coins on the bus seat?',
-                           'Did anyone see my picking up {c} coins from footpath?',
+                           'Did anyone see me picking up {c} coins from footpath?',
                            'Damn, imagine leaving {c} coins in the trash!',
                            'Did my cat pooped out {c} coins? Must have eaten in dinner..',
                            'Sheesh I found {c} coins in my coat pockets!',
@@ -606,8 +606,8 @@ async def shop_update():
         config = json.load(c)
     ct = time.time()
     if ct - config["updated"] < 86400: return
-    for items in storeitems:
-        storeitems.remove(items)
+    for i in range(len(storeitems)):
+        storeitems.pop(0)
     await load_shop()
     for i in storeitems:
         i["special"] = False
@@ -622,6 +622,7 @@ async def shop_update():
     storeitems.append(newitem)
     config['updated'] = ct
     config['value'] = storeitems
+
     with open('files/shopconfig.json', 'w') as c:
         c.write(json.dumps(config))
 
@@ -1013,7 +1014,6 @@ async def inventory_image(userid):
         draw.line((46, 181, 753, 181), (149, 149, 149), width=5)
         draw.text((270, 146), '-- Empty Inventory --', font=inv_font)
     else:
-        print(inv)
         item_loc = 146
         for i in inv:
             newdraw.text((120, item_loc), i, font=inv_font, fill=(0, 0, 0))
@@ -1029,6 +1029,12 @@ async def inventory_image(userid):
         line_loc = 133
         item_loc = 146
         for i in inv:
+            icon_name = 'undefined.png'
+            for j in storeitems:
+                if j["name"] == i: icon_name = j["icon"]
+            icon = Image.open(f'store/{icon_name}').resize((35, 35))
+            bg.paste(icon, (55, item_loc-5), icon.convert('RGBA'))
+
             draw.line((47, line_loc, 47, line_loc+50), (149, 149, 149), width=5)
             draw.line((752, line_loc, 752, line_loc+50), (149, 149, 149), width=5)
             draw.line((98, line_loc, 98, line_loc + 50), (149, 149, 149), width=5)
@@ -1058,12 +1064,18 @@ async def if_allowed(ctx):
 @bot.event
 async def on_command_error(ctx, error):
     if isinstance(error, CommandNotFound) or isinstance(error, CheckFailure): return
-    code = f'0x{random.randint(10, 99)}{chr(random.randint(ord("a"), ord("z")))}{random.randint(0, 9)}'
+    if isinstance(error, MissingRequiredArgument):
+        embed = discord.Embed(description=f'{economyerror} Missing an argument! Use `e.help <command>` for syntax.', color=error_embed)
+        return await ctx.send(embed=embed)
+    if isinstance(error, BadArgument):
+        embed = discord.Embed(description=f'{economyerror} Bad/Incorrect argument(s)! Use `e.help <command>` for syntax.', color=error_embed)
+        return await ctx.send(embed=embed)
+    code = hex(random.randint(1000, 9999))
 
     a = await debugcode(code, f'{ctx.author} ({ctx.author.id}) =>\n**Command:** `{ctx.command}`\n**Message:** `{ctx.message.content}`\n**Error:** `{error}`')
     if not a:
         while True:
-            code = f'0x{random.randint(10, 99)}{chr(random.randint(ord("a"), ord("z")))}{random.randint(0, 9)}'
+            code = hex(random.randint(1000, 9999))
             a = await debugcode(code, f'{ctx.author} ({ctx.author.id}) =>\n\n**Command:** `{ctx.command}`\n**Message:** `{ctx.message.content}`\n**Error:** `{error}`')
             if a:
                 break
@@ -1075,7 +1087,56 @@ async def on_command_error(ctx, error):
     embed.timestamp = datetime.datetime.utcnow()
     await ctx.send(embed=embed)
 
+@bot.event
+async def on_raw_reaction_add(payload):
+    if payload.channel_id != 844184710678577193: return
+    if payload.user_id not in devs: return
+    a = await get_errorfile()
+    if str(payload.emoji) == economysuccess:
+        chl = await bot.fetch_channel(payload.channel_id)
+        msg = await chl.fetch_message(payload.message_id)
+        cont = str(msg.content)
+        errorcode = cont.split(' ')[3].replace('`', '')
+        a.pop(errorcode)
+        await update_errorfile(a)
+
+@bot.event
+async def on_message(message):
+    if message.author.bot:
+        return
+    await open_account(message.author.id)
+    await bot.process_commands(message)
+
+async def general_checks_loop(ctx):
+    if bot.dev == 1 and ctx.author.id not in devs: return False
+    if ctx.author.id in disregarded:
+        if ctx.author.id not in devs: return False
+    state = await spam_protect(ctx.author.id)
+    toreturn = True
+    if state == 'warn':
+        embed = discord.Embed(title=f'{economyerror} Using commands too fast!', color=error_embed)
+        await ctx.send(embed=embed)
+        toreturn = False
+    elif state == 'disregard':
+        embed = discord.Embed(title=f'{economyerror} Warning!',
+                              description=f'{ctx.author.mention} has been disregarded for 10 mins!\n**Reason: Spamming Commands**',
+                              color=error_embed)
+        await ctx.send(embed=embed)
+        toreturn= False
+    elif state == 'return':
+        toreturn= False
+    if ctx.author.id not in xp_timeout:
+        userid = ctx.author.id
+        xps = await get_xp()
+        xp = xps.setdefault(f'{userid}', 0)
+        togive = random.randint(10, 25)
+        xps[str(userid)] = xp + togive
+        asyncio.create_task(update_xp(xps))
+        asyncio.create_task(add_xp_tm(userid))
+    return toreturn
+
 @bot.command()
+@commands.check(general_checks_loop)
 async def report(ctx, code):
     a = await get_errorfile()
     if code not in a:
@@ -1092,21 +1153,6 @@ async def report(ctx, code):
     await e.add_reaction(economysuccess)
     await ctx.message.add_reaction(economysuccess)
 
-@bot.event
-async def on_raw_reaction_add(payload):
-    if payload.channel_id != 844184710678577193: return
-    print(payload.user_id)
-    if payload.user_id not in devs: return
-    print('ahead')
-    a = await get_errorfile()
-    if str(payload.emoji) == economysuccess:
-        chl = await bot.fetch_channel(payload.channel_id)
-        msg = await chl.fetch_message(payload.message_id)
-        cont = str(msg.content)
-        errorcode = cont.split(' ')[3].replace('`', '')
-        a.pop(errorcode)
-        await update_errorfile(a)
-
 @bot.command()
 @commands.check(is_dev)
 async def debug(ctx, code):
@@ -1119,37 +1165,6 @@ async def debug(ctx, code):
                         color=success_embed)
     await ctx.send(embed=embed)
 
-@bot.event
-async def on_message(message):
-    if message.author.bot:
-        return
-    await open_account(message.author.id)
-    if message.content.startswith('e.') or message.content.startswith('E.'):
-        if bot.dev == 1 and message.author.id not in devs: return
-        if message.author.id in disregarded:
-            if message.author.id not in devs: return
-        state = await spam_protect(message.author.id)
-        if state == 'warn':
-            embed = discord.Embed(title=f'{economyerror} Using commands too fast!', color=error_embed)
-            return await message.channel.send(embed=embed)
-        elif state == 'disregard':
-            embed = discord.Embed(title=f'{economyerror} Warning!', description=f'{message.author.mention} has been disregarded for 10 mins!\n**Reason: Spamming Commands**',color=error_embed)
-            return await message.channel.send(embed=embed)
-        elif state == 'return': return
-        if message.author.id not in xp_timeout:
-            userid = message.author.id
-            xps = await get_xp()
-            xp = xps.setdefault(f'{userid}', 0)
-            togive = random.randint(10, 25)
-            xps[str(userid)] = xp + togive
-            asyncio.create_task(update_xp(xps))
-            asyncio.create_task(add_xp_tm(userid))
-    try:
-        await bot.process_commands(message)
-    except Exception as e:
-        if message.author.id in devs:
-            await message.channel.send(f'```\n{e}```')
-
 @bot.command()
 @commands.check(is_dev)
 async def dvm(ctx):
@@ -1160,7 +1175,7 @@ async def dvm(ctx):
         await ctx.reply('Changed Dev Mode state to: **`On`**')
         bot.dev = 1
 
-@bot.command() #DEV ONLY
+@bot.command()
 @commands.check(is_dev)
 async def logs(ctx, *, search:str=None):
     with open('files/logs.txt', 'r') as log:
@@ -1200,7 +1215,7 @@ async def execute(ctx, *, expression):
     except Exception as e:
         await ctx.reply(f'Command:```py\n{expression}```\nOutput:```\n{e}```')
 
-@bot.command() #DEV ONLY
+@bot.command()
 @commands.check(is_dev)
 async def add(ctx, person:discord.Member, bal:int, *args):
     data = await get_data()
@@ -1218,7 +1233,7 @@ async def add(ctx, person:discord.Member, bal:int, *args):
     await update_logs(f'{ctx.author}-!-add-!-[{person.id}; {await commait(bal)}]-!-{await current_time()}')
     await ctx.send(f'{ctx.author.mention} added `{await commait(bal)}` coins to {person.name}.')
 
-@bot.command() #DEV Only
+@bot.command()
 @commands.check(is_staff)
 async def clear(ctx, member:discord.Member):
     data = await get_data()
@@ -1252,7 +1267,8 @@ async def format(ctx, member:discord.Member):
     await update_logs(f'{ctx.author}-!-clear-!-[{member.id}]-!-{datetime.datetime.today().replace(microsecond=0)}')
     await ctx.send(f'{ctx.author.mention} Cleared data of `{member.name}#{member.discriminator}` successfully!')
 
-@bot.command() #DEV Only
+@bot.command()
+@commands.is_owner()
 async def release(ctx, title:str, link:str):
     if ctx.author.id != 771601176155783198: return
     with open('files/updates.json', 'r') as upd:
@@ -1308,6 +1324,7 @@ async def badge(ctx, member:discord.Member, badge:str):
     await ctx.message.add_reaction('✅')
 
 @bot.command(aliases=['bal'])
+@commands.check(general_checks_loop)
 async def balance(ctx, member:discord.Member = None):
     if member is None:
         userid = ctx.author.id
@@ -1333,6 +1350,7 @@ async def balance(ctx, member:discord.Member = None):
     await ctx.send(embed=embed)
 
 @bot.command(aliases=['dep'])
+@commands.check(general_checks_loop)
 async def deposit(ctx, amount:str = None):
     if amount is None:
         await ctx.reply('`e.dep <amount>`, idiot.')
@@ -1346,7 +1364,6 @@ async def deposit(ctx, amount:str = None):
         amount = int(wallet/2)
     else:
         amount = int(amount)
-    print(amount, wallet)
     if amount < 0:
         return await ctx.send(f'{ctx.author.mention} No over-smartness with me.')
     if amount == 0:
@@ -1365,6 +1382,7 @@ async def deposit(ctx, amount:str = None):
     await ctx.send(f'{ctx.author.mention} Successfully deposited `{await commait(amount)}` coins.')
 
 @bot.command(aliases=['with'])
+@commands.check(general_checks_loop)
 async def withdraw(ctx, amount: str = None):
     if amount is None:
         await ctx.reply('`e.with <amount>`, idiot.')
@@ -1397,6 +1415,7 @@ async def withdraw(ctx, amount: str = None):
     await ctx.send(f'{ctx.author.mention} Successfully withdrew `{await commait(amount)}` coins.')
 
 @bot.command()
+@commands.check(general_checks_loop)
 async def mybank(ctx, member:discord.Member = None):
     if member is None:
         userid = ctx.author.id
@@ -1428,6 +1447,7 @@ async def mybank(ctx, member:discord.Member = None):
     await ctx.send(embed=embed)
 
 @bot.command()
+@commands.check(general_checks_loop)
 async def daily(ctx):
     await avg_update()
 
@@ -1470,9 +1490,11 @@ async def daily(ctx):
     await ctx.send(embed=embed)
 
 @bot.command()
+@commands.check(general_checks_loop)
 async def give(ctx, member:discord.Member, amount:int):
     data = await get_data()
     await open_account(member.id)
+    await open_account(ctx.author.id)
     author = data.get(f'{ctx.author.id}')
     person = data.get(f'{member.id}')
 
@@ -1518,6 +1540,7 @@ async def give(ctx, member:discord.Member, amount:int):
     await ctx.send(embed=embed)
 
 @bot.command(aliases=['property'])
+@commands.check(general_checks_loop)
 async def estates(ctx, member:discord.Member=None):
     if member is None:
         userid = ctx.author.id
@@ -1566,6 +1589,7 @@ async def disregard(ctx, member:discord.Member):
     await ctx.message.add_reaction(economysuccess)
 
 @bot.command()
+@commands.check(general_checks_loop)
 async def revenue(ctx):
     userid = ctx.author.id
     await open_estates(userid)
@@ -1630,6 +1654,7 @@ async def revenue(ctx):
     await ctx.send(embed=embed)
 
 @bot.command()
+@commands.check(general_checks_loop)
 async def maintain(ctx):
     userid = ctx.author.id
     await open_estates(userid)
@@ -1690,6 +1715,7 @@ async def maintain(ctx):
     await ctx.send(embed=embed)
 
 @bot.command()
+@commands.check(general_checks_loop)
 async def upgrade(ctx):
     userid = ctx.author.id
     await open_estates(userid)
@@ -1779,13 +1805,14 @@ async def upgrade(ctx):
         pass
 
 @bot.command()
+@commands.check(general_checks_loop)
 async def alerts(ctx, state:str = None):
     if state is None:
         embed = discord.Embed(title='Alerts System',
                               description='Get Alerts on pending loans, hotel maintainance, robberies etc straight to your DMs\n'
                                           '```diff\n+ To turn on: e.alerts on\n- To turn off: e.alerts off\n```',
                               color=embedcolor)
-        aler = get_alert_info()
+        aler = await get_alert_info()
         if f'{ctx.author.id}' in aler:
             current = 'On'
         else:
@@ -1812,7 +1839,10 @@ async def alerts(ctx, state:str = None):
         await ctx.send(f'{ctx.author.mention} Incorrect Option. Use `e.alerts` to see help.')
 
 @bot.command()
+@commands.check(general_checks_loop)
 async def transfer(ctx, togive:discord.Member = None, amount = None, *, reason = None):
+    await open_account(togive.id)
+    await open_account(ctx.author.id)
     if togive is None or amount is None:
         return await ctx.send(f'{ctx.author.mention} The format for the command is: `e.transfer @user <amount> [reason]`')
     data = await get_data()
@@ -1869,6 +1899,7 @@ async def transfer(ctx, togive:discord.Member = None, amount = None, *, reason =
     await ctx.send(embed=embed)
 
 @bot.command(aliases=['transactions'])
+@commands.check(general_checks_loop)
 async def statement(ctx, *args):
     if '-u' not in args:
         member = ctx.author
@@ -1928,6 +1959,7 @@ async def statement(ctx, *args):
     await ctx.send(f'**Bank Statement of `{member.name}`:**\n```css\n{desc}```')
 
 @bot.command(aliases=['pf'])
+@commands.check(general_checks_loop)
 async def level(ctx, member:discord.Member = None):
     if member is None:
         member = ctx.author
@@ -1945,6 +1977,7 @@ async def level(ctx, member:discord.Member = None):
     await ctx.send(file=file)
 
 @bot.command()
+@commands.check(general_checks_loop)
 async def stocks(ctx):
     columns = ['Name', 'Highest   ', 'Lowest', 'Current', 'Volume']
     details = list(current_stock)
@@ -2008,6 +2041,7 @@ async def stocks(ctx):
     await ctx.send(embed=embed, file=discord.File("graph.png"))
 
 @bot.command()
+@commands.check(general_checks_loop)
 async def buystocks(ctx, amount):
     data = await get_data()
     stock_data = await get_stocks()
@@ -2024,7 +2058,8 @@ async def buystocks(ctx, amount):
         amount = int(dperson['bank']/2)
         amount = int(amount / stock_price)
     else:
-        amount = int(amount)
+        try: amount = int(amount)
+        except: return await ctx.send(f'{ctx.author.mention} Dude, the stocks can be bought and sold in integral values only. Provide a valid number.')
 
     if amount <= 0:
         return await ctx.send(f'{ctx.author.mention} No Fam.')
@@ -2057,6 +2092,7 @@ async def buystocks(ctx, amount):
     await ctx.send(embed=embed)
 
 @bot.command()
+@commands.check(general_checks_loop)
 async def sellstocks(ctx, amount):
     data = await get_data()
     stock_data = await get_stocks()
@@ -2070,7 +2106,9 @@ async def sellstocks(ctx, amount):
     elif amount == 'half':
         amount = int(sperson/2)
     else:
-        amount = int(amount)
+        try: amount = int(amount)
+        except: return await ctx.send(
+                f'{ctx.author.mention} Dude, the stocks can be bought and sold in integral values only. Provide a valid number.')
 
     if amount <= 0:
         return await ctx.send(f'{ctx.author.mention} No Fam.')
@@ -2098,11 +2136,12 @@ async def sellstocks(ctx, amount):
     await ctx.send(embed=embed)
 
 @bot.command()
+@commands.check(general_checks_loop)
 async def help(ctx, specify=None):
     embed = discord.Embed(color=embedcolor,
                           description=f'[Support Server]({support_server}) | [Invite Url]({invite_url}) | [Patreon Page]({patreon_page})\nTo get help on a command, use `e.help <command name>`')
     embed.set_author(name='Help', icon_url=bot_pfp)
-    embed.set_footer(text='Syntax: <> = required, [] = optional')
+    embed.set_footer(text='Bot developed by: AwesomeSam#7985 and BlackThunder#4007')
     if specify is None:
         for j in help_json:
             mylist = []
@@ -2124,6 +2163,10 @@ async def help(ctx, specify=None):
                 finallist.append(' '.join(splitted))
             content = '\n'.join(finallist)
             embed.add_field(name=f'**● __{j}__**', value=f'```less\n{content}```', inline=False)
+        embed.add_field(name='\u200b', value=f'[Support Server]({support_server}) | [Invite Url]({invite_url}) | [Patreon Page]({patreon_page})\n\n'
+                                             f'For more support, visit [Support Server]({support_server}) or use `e.server`\n'
+                                             f'`<>` and `[]` are **not** required while using commands\n\n'
+                                             f'Syntax: `<>` = Required `[]` = Optional')
         try:
             await ctx.author.send(embed=embed)
             embed = discord.Embed(title=f'{economysuccess} You received a mail!', color=success_embed)
@@ -2140,17 +2183,15 @@ async def help(ctx, specify=None):
             available = []
             available.append(j[2:])
             info = i[j]
-            #print(info)
+
             for k in info['aliases']:
                 available.append(k)
             if specify.lower() in available:
                 alias_list = [f'{q}' for q in info['aliases']]
-                print(alias_list)
+
                 for aliases in alias_list:
-                    print(aliases)
-                    if aliases == 'e.None':
-                        alias_list.remove(aliases)
-                    elif aliases[0:2] != 'e.':
+                    if aliases[0:2] != 'e.':
+                        if aliases == 'None': continue
                         alias_list.remove(aliases)
                         aliases = 'e.' + aliases
                         alias_list.insert(0, aliases)
@@ -2165,6 +2206,7 @@ async def help(ctx, specify=None):
         await ctx.send(embed=embed)
 
 @bot.command(aliases=['add_chl'])
+@commands.check(general_checks_loop)
 @commands.has_permissions(manage_channels=True)
 async def set_chl(ctx, channel:discord.TextChannel):
     a = await get_admin()
@@ -2181,6 +2223,7 @@ async def set_chl(ctx, channel:discord.TextChannel):
     await ctx.send(embed=embed)
 
 @bot.command(aliases=['rem_chl', 'remove_chl', 'delete_chl'])
+@commands.check(general_checks_loop)
 @commands.has_permissions(manage_channels=True)
 async def del_chl(ctx, channel:discord.TextChannel):
     a = await get_admin()
@@ -2195,6 +2238,7 @@ async def del_chl(ctx, channel:discord.TextChannel):
     await ctx.send(embed=embed)
 
 @bot.command(aliases=['show_chl'])
+@commands.check(general_checks_loop)
 @commands.has_permissions(manage_channels=True)
 async def list_chl(ctx):
     a = await get_admin()
@@ -2206,6 +2250,7 @@ async def list_chl(ctx):
     await ctx.send(embed=embed)
 
 @bot.command()
+@commands.check(general_checks_loop)
 @commands.has_permissions(manage_channels=True)
 async def reset_chl(ctx):
     a = await get_admin()
@@ -2216,7 +2261,12 @@ async def reset_chl(ctx):
     await ctx.send(embed=embed)
 
 @bot.command()
+@commands.check(general_checks_loop)
 async def rob(ctx, member:discord.Member):
+    await open_account(member.id)
+    await open_account(ctx.author.id)
+    if member == bot.user:
+        pass
     success = random.randint(0, 100)
     a = await get_data()
 
@@ -2225,9 +2275,9 @@ async def rob(ctx, member:discord.Member):
     user = inv.get(str(member.id), [])
     if len(user) == 0: pass
     else:
+        if 'Bronze Lock' in user: lock = 10
         if 'Silver Lock' in user: lock = 25
-        elif 'Gold Lock' in user: lock = 40
-        elif 'Bronze Lock' in user: lock = 10
+        if 'Gold Lock' in user: lock = 40
     wallet = a[str(ctx.author.id)]['wallet']
     if wallet < 100:
         return await ctx.send(f'{ctx.author.mention} You need `100` coins to start a robbery!')
@@ -2281,6 +2331,7 @@ async def rob(ctx, member:discord.Member):
     await ctx.send(embed=embed)
 
 @bot.command()
+@commands.check(general_checks_loop)
 async def find(ctx):
     chance = random.randint(1, 100)
     a = await get_data()
@@ -2301,18 +2352,42 @@ async def find(ctx):
     await ctx.send(embed=embed)
 
 @bot.command(aliases=['store'])
+@commands.check(general_checks_loop)
 async def shop(ctx, page:int=1):
     if page <= 0: page = 1
-    storeimg = await createstore((page-1)*8,page*8)
+    while True:
+        print(len(storeitems))
+        if page*8 > len(storeitems):
+            page -= 1
+        else:
+            break
+    print(page)
+    storeimg = await createstore((page)*8,(page+1)*8)
     await ctx.send(file=storeimg)
 
 @bot.command(aliases=['inv'])
+@commands.check(general_checks_loop)
 async def inventory(ctx):
     inv = await inventory_image(ctx.author.id)
     await ctx.send(file=inv)
 
 @bot.command(aliases=['purchase'])
-async def buy(ctx, *, item, qty=1):
+@commands.check(general_checks_loop)
+async def buy(ctx, *, item):
+    a = str(item).split(' ')
+    qty = 1
+    try:
+        fqty = a[-1]
+        item_name = a[0]
+        if fqty != item_name:
+            qty = int(fqty)
+            a.pop(-1)
+            item = ' '.join(a)
+    except: pass
+    if qty < 0:
+        return await ctx.send(f'{ctx.author.mention} Yeah! Lets buy items in negative!')
+    elif qty == 0:
+        return await ctx.send(f'{ctx.author.mention} Why bother typing when you want to buy nothing?')
     found = False
     store_item = ''
     for i in storeitems:
@@ -2342,7 +2417,10 @@ async def buy(ctx, *, item, qty=1):
         return await ctx.send(embed=embed)
     inv = await get_inv()
     memberinv = inv.get(str(ctx.author.id), [])
-    memberinv.append(store_item["name"])
+    appends = 0
+    while appends < qty:
+        memberinv.append(store_item["name"])
+        appends += 1
     inv[str(ctx.author.id)] = memberinv
     user["wallet"] = wallet - (price*qty)
     data[str(ctx.author.id)] = user
@@ -2352,9 +2430,46 @@ async def buy(ctx, *, item, qty=1):
     await update_inv(inv)
     await ctx.send(embed=embed)
 
+@bot.command()
+@commands.check(general_checks_loop)
+async def server(ctx):
+    embed = discord.Embed(description=f'**Discord Support Server:** [Join Here]({support_server})\n'
+                                      f'Server Members: `idk lol`', color=embedcolor)
+    embed.set_author(icon_url=bot_pfp, name=f'{bot.user.name}')
+    await ctx.send(embed=embed)
+
+@bot.command()
+@commands.check(general_checks_loop)
+async def invite(ctx):
+    guilds = bot.guilds
+    members = 0
+    for i in guilds:
+        members += len(i.members)
+    embed = discord.Embed(description=f'Invite the bot: [Invite URL]({invite_url})\n\n'
+                                      f'Support Server: [Join]({support_server})\n'
+                                      f'Support us on Patreon: [Support]({patreon_page})\n\n'
+                                      f'Servers: `{len(guilds)}`\n'
+                                      f'Users: `{members}`\n'
+                                      f'Shards: `{bot.shard_count}`',
+                          color=embedcolor)
+    embed.set_author(icon_url=bot_pfp, name=f'{bot.user.name}')
+    await ctx.send(embed=embed)
+
 @bot.event
 async def on_ready():
-    await create_stuff()
+    pass
 
-print("Entering on_ready()")
+bot.connected_ = False
+@bot.event
+async def on_connect():
+    if not bot.connected_:
+        print("Entering on_connect()")
+        bot.connected_ = True
+        await create_stuff()
+
+@bot.event
+async def on_guild_join(guild):
+    for i in guild.members:
+        await open_account(i.id)
+
 bot.run("ODMyMDgzNzE3NDE3MDc0Njg5.YHeoWQ._O5uoMS_I7abKdI_YzVb9BuEHzs")
