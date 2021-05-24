@@ -801,7 +801,8 @@ async def createstore(start, page):
     special = ImageFont.truetype("badges/font2.ttf", 25)
     description = ImageFont.truetype("badges/font2.ttf", 17)
     newimg = Image.new('RGBA', frame.size, (0, 0, 0, 0))
-    newdraw = ImageDraw.Draw(newimg)
+    newdraw = ImageDraw.Draw(newimg, mode="RGBA")
+    newdraw.fontmode = "1"
     special_item = {}
     left = datetime.timedelta(seconds=storetime)
     final = datetime.datetime.strptime(str(left), '%H:%M:%S.%f').replace(microsecond=0)
@@ -846,7 +847,8 @@ async def createstore(start, page):
     newimg = newimg.filter(ImageFilter.GaussianBlur(radius=4))
     #frame.paste(newimg, (0, 0), newimg)
     frame = Image.alpha_composite(frame, newimg)
-    draw = ImageDraw.Draw(frame)
+    draw = ImageDraw.Draw(frame, mode="RGBA")
+    draw.fontmode = "1"
     draw.text((210, 90), f'{special_item["name"]}', font=special)
     draw.text((210, 130), f'{special_item["desc"]}', font=description, fill=(189, 189, 189))
     draw.text((700, 90), price_sp, font=title, fill=(189, 189, 189))
@@ -884,8 +886,8 @@ async def createstore(start, page):
 async def inventory_image(userid):
     userid = str(userid)
     invdata = await get_inv()
-    userinv = invdata.get(userid, [])
-
+    userinv = invdata.get(userid, {"inv":[]})
+    userinv = userinv["inv"]
     heading = ImageFont.truetype("badges/font2.ttf", 32)
     inv_font = ImageFont.truetype("badges/font2.ttf", 18)
     bg = Image.open('store/bg.png')
@@ -965,10 +967,10 @@ async def if_allowed(ctx):
 async def on_command_error(ctx, error):
     if isinstance(error, CommandNotFound) or isinstance(error, CheckFailure): return
     if isinstance(error, MissingRequiredArgument):
-        embed = discord.Embed(description=f'{economyerror} Missing an argument! Use `e.help <command>` for syntax.', color=error_embed)
+        embed = discord.Embed(description=f'{economyerror} Missing an argument! Use `e.help {ctx.command}` for syntax.', color=error_embed)
         return await ctx.send(embed=embed)
     if isinstance(error, BadArgument):
-        embed = discord.Embed(description=f'{economyerror} Bad/Incorrect argument(s)! Use `e.help <command>` for syntax.', color=error_embed)
+        embed = discord.Embed(description=f'{economyerror} Bad/Incorrect argument(s)! Use `e.help {ctx.command}` for syntax.', color=error_embed)
         return await ctx.send(embed=embed)
     code = hex(random.randint(1000, 9999))
 
@@ -2180,7 +2182,8 @@ async def rob(ctx, member:discord.Member):
 
     lock = 0
     inv = await get_inv()
-    user = inv.get(str(member.id), [])
+    userinv = inv.get(str(member.id), {"inv":[]})
+    user = userinv["inv"]
     if len(user) == 0: pass
     else:
         if 'Bronze Lock' in user: lock = 10
@@ -2216,7 +2219,8 @@ async def rob(ctx, member:discord.Member):
                 if lock == 25: user.remove('Silver Lock')
                 elif lock == 10: user.remove('Bronze Lock')
                 elif lock == 40: user.remove('Gold Lock')
-            inv[str(member.id)] = user
+            userinv["inv"] = user
+            inv[str(member.id)] = userinv
             await update_inv(inv)
         embed = discord.Embed(title=f'{economysuccess} Robbery Successful!', description=desc, color=success_embed)
     else:
@@ -2324,12 +2328,14 @@ async def buy(ctx, *, item):
                               color=error_embed)
         return await ctx.send(embed=embed)
     inv = await get_inv()
-    memberinv = inv.get(str(ctx.author.id), [])
+    member_inv = inv.get(str(ctx.author.id), {"inv":[]})
+    memberinv = member_inv["inv"]
     appends = 0
     while appends < qty:
         memberinv.append(store_item["name"])
         appends += 1
-    inv[str(ctx.author.id)] = memberinv
+    member_inv["inv"] = memberinv
+    inv[str(ctx.author.id)] = member_inv
     user["wallet"] = wallet - (price*qty)
     data[str(ctx.author.id)] = user
     embed = discord.Embed(description=f'{economysuccess} Done! `{qty}` quantity of `{store_item["name"]}` purchased successfully!',
@@ -2365,7 +2371,13 @@ async def invite(ctx):
 
 @bot.command()
 async def use(ctx, item:str):
-    pass
+    inv = await get_inv()
+    user = inv.get(str(ctx.author.id), {"inv":[]})
+    user = user["inv"]
+    if item not in user:
+        embed = discord.Embed(description=f'{economyerror} The item `{item}` isn\'t found. {random.choice(bot.phrases["inv_noitem"])}', color=error_embed)
+        return await ctx.send(embed=embed)
+
 
 @bot.command()
 async def ping(ctx):

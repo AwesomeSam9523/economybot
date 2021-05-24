@@ -61,7 +61,12 @@
                    "Do I look your mum? Because I dont want to know your marks",
                    "You should go and take up a course for common sense.. wait is there even any??",
                    "Atleast enter a positive number bruh",
-                   "Did Aryabhatta invent `0` for this purpose?"]},
+                   "Did Aryabhatta invent `0` for this purpose?"],
+          "inv_noitem": ["Do you even own this??",
+                          "Damn, imagine trying to use thin air",
+                          "Well, what now?",
+                          "Dude why do you bother me with such useless things?",
+                          "Imagine trying to use what you don't own lmao"]},
   "help": {
     "Fun":{
         "category":"Fun",
