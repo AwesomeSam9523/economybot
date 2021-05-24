@@ -12,7 +12,7 @@ import datetime
 import csv
 from prettytable import PrettyTable
 import matplotlib.pyplot as plt
-from PIL import Image, ImageTk, ImageDraw, ImageFont, ImageEnhance, ImageFilter
+from PIL import Image, ImageDraw, ImageFont, ImageEnhance, ImageFilter
 from io import BytesIO
 from discord.ext.commands import *
 
@@ -32,25 +32,14 @@ devs = [669816890163724288, 771601176155783198]
 staff = [669816890163724288, 771601176155783198, 619377929951903754, 713056818972066140, 517402093066256404, 459350068877852683]
 disregarded = []
 embedcolor = 3407822
-links_channel = 832083121486037013
 
 support_server = 'https://discord.gg/aMqWWTunrJ'
 patreon_page = 'https://www.patreon.com/ThunderGameBot'
 invite_url = 'https://discord.com/api/oauth2/authorize?client_id=832083717417074689&permissions=392256&scope=bot'
-bank_names = {
-    1: 'Common Finance Bank Ltd.',
-    2: 'National Bank Pvt. Ltd.',
-    3: 'International Bank of Finance Ltd.'
-}
-rates = {
-    1: 3,
-    2: 5,
-    3: 7
-}
-bank_tier = {
-    1:'III',
-    2:'II',
-    3:'I'
+bank_details = {
+    1: {"name":'Common Finance Bank Ltd.', "rate":3, "tier":"III"},
+    2: {"name":'National Bank Pvt. Ltd.', "rate":5, "tier":"II"},
+    3: {"name":'International Bank of Finance Ltd.', "rate":7, "tier":"I"}
 }
 getestates_thumb = {
     1:'https://media.discordapp.net/attachments/837564505952747520/837681898700537866/1.png',
@@ -168,99 +157,11 @@ xp_levels = {
 850000:49,
 1000000:50
 }
-help_json = {
-    "Fun":{
-        "category":"Fun",
-        "e.rob":{"aliases":["None"], "usage":"e.rob <user>", "desc":"Rob your friend's wallet! Need minimum 100 coins to start"},
-        "e.find":{"aliases":["None"], "usage":"e.find", "desc":"Find coins or lose them!"},
-        "e.store":{"aliases":["shop"], "usage":"e.store [page]", "desc":"See items in shop, get to know about daily offers etc."},
-        "e.buy":{"aliases":["purchase"], "usage":"e.buy <item name> [quantity]", "desc":"Buy an item from shop"},
-        "e.inventory":{"aliases":["inv"], "usage":"e.inventory", "desc":"View your inventory"}
-    },
-    "Estates":{
-        "category":"Estates",
-      "e.estates": {"aliases":["None"], "usage":"e.estates", "desc":"Estates are a way to earn some coins for free. You have being provided with a hotel which will earn you revenue.\nDont forget, money never comes entirely for free, so you have to maintain your hotel too."},
-      "e.revenue": {"aliases":["None"], "usage":"e.revenue", "desc": "Use this command to earn revenue. The revenue will be added in your bank"},
-      "e.maintain": {"aliases": ["None"], "usage": "e.maintain", "desc": "Use this to maintain your hotel to look shining new! Not maintaining for a long time will lead to lesser revenue."},
-      "e.upgrade": {"aliases": ["None"], "usage": "e.upgrade", "desc": "Upgrading your hotel will lead to more revenue and less maintenance relatively. It also increases your net-worth"}
-    }, "Stocks": {
-    "category":"Stocks",
-      "e.stocks": {"aliases": ["None"], "usage": "e.stocks", "desc": "Invest in stock market which refreshes every 20-30 secs. New stock starts every day. Probably the best and fastest way to earn money?"},
-      "e.buystocks": {"aliases": ["None"], "usage": "e.buystocks <quantity>", "desc": "Buy stocks on current price"},
-      "e.sellstocks": {"aliases": ["None"], "usage": "e.sellstocks <quantity>", "desc": "Sell stocks on current price"}
-    }, "Bank": {
-        "category":"Bank",
-        "e.balance": {"aliases": ["bal"], "usage": "e.balance [user]", "desc": "View you balance: Bank, Wallet and Stocks"},
-        "e.mybank": {"aliases": ["None"], "usage": "e.mybank", "desc": "View interest rate, average balance, bank tier etc."},
-        "e.statement": {"aliases": ["transactions"], "usage":"e.statement [-a <amount>] [-t <c | d>] [-r <reason>]", "desc":"View your bank statement and filter records based on Type, Amount and/or Reason"},
-        "e.deposit": {"aliases": ["dep"], "usage":"e.deposit <amount>", "desc":"Deposit coins to bank"},
-        "e.withdraw": {"aliases": ["with"], "usage":"e.withdraw <amount>", "desc":"Withdraw coins from bank"}
-    }, "Admin":{
-        "category":"Admin",
-        "e.set_chl":{"aliases":["add_chl"], "usage":"e.set_chl <#channel>", "desc":"Allows the bot to respond in that channel"},
-        "e.del_chl":{"aliases":["delete_chl", "rem_chl", "remove_chl"], "usage":"e.del_chl <#channel>", "desc":"Disallows the bot to respond in that channel"},
-        "e.list_chl":{"aliases":["show_chl"], "usage":"e.list_chl", "desc":"Lists all the channels where the bot is allowed to respond"},
-        "e.reset_chl":{"aliases":["None"], "usage":"e.reset_chl", "desc":"Clears all the configuration and makes the bot to respond again in **all** the channels"}
-    }, "Misc":{
-        "category":"Misc",
-        "e.level": {"aliases":["pf"], "usage":"e.level [user]", "desc":"Shows you level, perks and other stats"},
-        "e.give": {"aliases": ["None"], "usage":"e.give <user> <amount>", "desc":"Send coins to a person from your wallet"},
-        "e.transfer": {"aliases": ["None"], "usage":"e.transfer <user> <amount> [Reason]", "desc":"Transfer coins from your bank to others\' bank. It costs interest if bank isn't same.\nThis action is recorded in bank statements"},
-        "e.alerts": {"aliases":["None"], "usage":"e.alerts <on | off>", "desc":"Receive DMs from bot upon stock ending, pending maintenance etc."},
-        "e.daily": {"aliases":["None"], "usage":"e.daily", "desc":"Gives you your daily interest. It is the product of interest rate and average bank balance"},
-        "e.report": {"aliases":["None"], "usage":"e.report <error-code>", "desc":"Report an error to developers"}
-    }
-}
-phrases = {"selfrob_success":['You tried robbing yourself and got {prize} coins. But surprisingly {prize} coins were missing from your wallet too!',
-                              'You robbed yourself of {prize} coins. WHat did ya achieve by this?',
-                              'You fought yourself and stole {prize} coins from your own wallet. Tiring day!',
-                              'You thought of robbing yourself. Even got hands on {prize} coins! But they were missing from your wallet. Mystery..?',
-                              'Your wallet was missing {prize} coins, know why? Because you robbed yourself of it!'],
-           "selfrob_failed":['You bonked your head to rob yourself, but you fainted right after it. Hospital costed {prize*2} coins',
-                             'You punched your own face because you thought of robbing youself. Medication costed {prize} coins',
-                             'You tried stealing money from your own wallet, but dropped the coins in drain. Lost {prize} coins!',
-                             'You gave yourself poison to rob, but ended up being in hospital. Spent {prize*5} coins for treatment'],
-           "rob_success":['You robbed {whom} and got {prize} coins. Shhh!',
-                          'You sneaked quitely from behind and robbed {whom} of {prize} coins',
-                          'You DDOSed {whom}\'s just to get {prize} coins. Quite big crime for it!',
-                          '{whom} was robbed of {prize} coins. Dont know who did it',
-                          'You robbed {whom} by punching him for mere {prize} coins. Got them, though.'],
-           "rob_failed":['You tried robbing {whom}, but he was alert and you got caught. Lost {prize} coins.',
-                         'You punched {whom} to rob, but he was stronger. You lost {prize} coins in medication',
-                         'You sneaked in your {whom}\'s house, but he caught you. Payed {prize} fine to cops to get off',
-                         'You missed the pick-pocket to {whom} and got caught. Payed {prize} to police to escape',
-                         'You tried to rob {whom} but he caught and complained about you. Payed {prize} as a fine'],
-           "find_success":['Yoo I found {c} coins in my sofa!',
-                           'I wonder who left {c} coins on the bus seat?',
-                           'Did anyone see me picking up {c} coins from footpath?',
-                           'Damn, imagine leaving {c} coins in the trash!',
-                           'Did my cat pooped out {c} coins? Must have eaten in dinner..',
-                           'Sheesh I found {c} coins in my coat pockets!',
-                           'Is sock a place to keep {c} coins? Nevermind I ll just take it',
-                           'Yeah! {c} coins on top of refrigerator ain\'t a joke'],
-           "find_failed":['Well I went to find coins, but lost {c} instead',
-                          'What a bad day, lost {c} coins due to greed',
-                          'I shouldn\'t be greedy, lost {c} coins to a theif. oof',
-                          'Well I searched the drain for coins, but lost {c} of my own!',
-                          'Noo! Lost {c} coins in search of more',
-                          'Did I just lose {c} coins? Oh yes, I did.',
-                          'I don\'t know how I ended up losing {c} coins today'],
-           "find_neutral":['Well I expected something this time',
-                           '0? R.I.P. my expectations',
-                           'Comeone I found nothing again!?',
-                           'How come I searched and searched but found absolutely nothing?',
-                           'And here I went to find coins, but came back empty handed'],
-           "shop_noitem":['Maybe you should wear spectacles?',
-                          'Did you even read the name properly?',
-                          'Time to send you back to 1st grade to learn how to read',
-                          'Why didn\'t you cross-check the item name before bothering me?',
-                          'Bro, just go and re-check the name!'],
-           "shop_nobal":['Aww my poor soul, you dont have coins to buy it',
-                         'Oh No! Not enough money? Go beg from our mum haha',
-                         'Imagine not having enough money to buy items',
-                         'Ew you poor, go and do something worthwhile!',
-                         'Bro, atleast check with your wallet before buying',
-                         'Why you bother me when you dont have enough coins?']}
+bot.help_json = {}
+bot.phrases = {}
+bot.current_stock = []
+bot.total_lines = 0
+bot.pfp = ''
 
 usercmds = {}
 stock_names = ['Ava', 'Neil', 'Ryan', 'Anthony', 'Bernadette', 'Lauren', 'Justin', 'Matt', 'Wanda', 'James', 'Emily', 'Vanessa', 'Carl', 'Fiona', 'Stephanie', 'Pippa', 'Phil', 'Carol', 'Liam', 'Michael', 'Ella', 'Amanda', 'Caroline', 'Nicola', 'Sean', 'Oliver', 'Kylie', 'Rachel', 'Leonard', 'Julian', 'Richard', 'Peter', 'Irene', 'Dominic', 'Connor', 'Dorothy', 'Gavin', 'Isaac', 'Karen', 'Kimberly', 'Abigail', 'Yvonne', 'Steven', 'Felicity', 'Evan', 'Bella', 'Alison', 'Diane', 'Joan', 'Jan', 'Wendy', 'Nathan', 'Molly', 'Charles', 'Victor', 'Sally', 'Rose', 'Robert', 'Claire', 'Theresa', 'Grace', 'Keith', 'Stewart', 'Andrea', 'Alexander', 'Chloe', 'Nicholas', 'Edward', 'Deirdre', 'Anne', 'Joseph', 'Alan', 'Rebecca', 'Jane', 'Natalie', 'Cameron', 'Owen', 'Eric', 'Gabrielle', 'Sonia', 'Tim', 'Sarah', 'Madeleine', 'Megan', 'Lucas', 'Joe', 'Brandon', 'Brian', 'Jennifer', 'Alexandra', 'Adrian', 'John', 'Mary', 'Tracey', 'Jasmine', 'Penelope', 'Hannah', 'Thomas', 'Angela', 'Warren', 'Blake', 'Simon', 'Audrey', 'Frank', 'Samantha', 'Dan', 'Victoria', 'Paul', 'Jacob', 'Heather', 'Una', 'Lily', 'Carolyn', 'Jonathan', 'Ian', 'Piers', 'William', 'Gordon', 'Dylan', 'Olivia', 'Jake', 'Leah', 'Jessica', 'David', 'Katherine', 'Amelia', 'Benjamin', 'Boris', 'Sebastian', 'Lisa', 'Diana', 'Michelle', 'Emma', 'Sam', 'Stephen', 'Faith', 'Kevin', 'Austin', 'Jack', 'Ruth', 'Colin', 'Trevor', 'Joanne', 'Virginia', 'Anna', 'Max', 'Adam', 'Maria', 'Sophie', 'Sue', 'Andrew', 'Harry', 'Amy', 'Christopher', 'Donna', 'Melanie', 'Elizabeth', 'Lillian', 'Julia', 'Christian', 'Luke', 'Zoe', 'Joshua', 'Jason']
@@ -472,7 +373,7 @@ async def clear_dues():
         value = stock_data[str(i)]
         if value == 0:
             continue
-        current_price = int(current_stock[-1][5])
+        current_price = int(bot.current_stock[-1][5])
 
         bulk = int(current_price*value)
         person['bank'] += bulk
@@ -484,7 +385,7 @@ async def clear_dues():
         embed = discord.Embed(title='Stock Ended', description=f'The current stock ended and `{await commait(bulk)}` coins have been added to your bank.')
         embed.timestamp = datetime.datetime.utcnow()
         embed.set_author(name=f'{user.name}', icon_url=user.avatar_url)
-        embed.set_footer(text='Economy Bot', icon_url=bot_pfp)
+        embed.set_footer(text='Economy Bot', icon_url=bot.pfp)
         await user.send(embed=embed)
         await create_statement(user, bot.user, bulk, f"Sold {value} Stocks", "Credit")
 
@@ -496,16 +397,15 @@ async def clear_dues():
         stc.write('{}')
 
 async def update_stocks():
-    global current_stock, total_lines
     stock = await get_todays_stock()
     with open(f'stocks/{stock}', 'r') as st:
         data = list(csv.reader(st))
-    total_lines = len(data)
+    bot.total_lines = len(data)
 
     config = await get_stockconfigs()
     line = config.setdefault("line", 1)
     name = config.setdefault("name", random.choice(stock_names))
-    if line == total_lines:
+    if line == bot.total_lines:
         os.rename(f'stocks/{stock}', f'stocks/{str(stock).replace("_today", "_done")}')
         config['line'] = line + 1
         await update_stockinfo(config)
@@ -515,9 +415,9 @@ async def update_stocks():
         config['line'] = line + 1
         await update_stockinfo(config)
 
-        current_stock = list(data[line])
-        current_stock.pop(0)
-        current_stock.pop(0)
+        bot.current_stock = list(data[line])
+        bot.current_stock.pop(0)
+        bot.current_stock.pop(0)
 
 async def est_update():
     est = await get_estates()
@@ -554,7 +454,7 @@ async def est_update():
                     continue
                 embed.timestamp = datetime.datetime.utcnow()
                 embed.set_author(name=f'{fetched.name}', icon_url=fetched.avatar_url)
-                embed.set_footer(text='Economy Bot', icon_url=bot_pfp)
+                embed.set_footer(text='Economy Bot', icon_url=bot.pfp)
 
                 persona['last'] = cur
                 aler[str(i)] = persona
@@ -593,8 +493,8 @@ async def avg_update():
 async def stock_update():
     while True:
         await update_stocks()
-        await perform_stuff(current_stock)
-        await asyncio.sleep(86400/total_lines)
+        await perform_stuff(bot.current_stock)
+        await asyncio.sleep(86400/bot.total_lines)
 
 async def check_storetime():
     with open('files/shopconfig.json', 'r') as c:
@@ -714,15 +614,15 @@ async def load_shop():
         storeitems.append(i)
 
 async def create_stuff():
-    global bot_pfp
     tnew = time.time()
     mybot = bot.get_user(832083717417074689)
-    bot_pfp = mybot.avatar_url
+    bot.pfp = mybot.avatar_url
     await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name="Thunder qt"))
     tnew = time.time()
     #await bot.change_presence(status=discord.Status.invisible)
     await load_shop()
-    print(f'Shop Loaded and Activity set in {float("{:.2f}".format(time.time() - tnew))} secs')
+    await refresh_data()
+    print(f'Data Loaded and Activity set in {float("{:.2f}".format(time.time() - tnew))} secs')
     asyncio.create_task(loops())
     asyncio.create_task(stock_update())
     print(f'Loops created! Boot Time: {float("{:.2f}".format(time.time()-t1))} secs')
@@ -1281,7 +1181,7 @@ async def release(ctx, title:str, link:str):
     embed = discord.Embed(title=f'Updated to v{title}', color=embedcolor, description=desc)
     embed.url = link
     embed.timestamp = datetime.datetime.utcnow()
-    embed.set_author(name=f'Bot Updated!', icon_url=bot_pfp)
+    embed.set_author(name=f'Bot Updated!', icon_url=bot.pfp)
 
     chl = bot.get_channel(838963496476606485)
     await chl.send('<@&839370096248881204> New Update Out!',embed = embed)
@@ -1302,6 +1202,14 @@ async def stockinfo(ctx):
     embed.add_field(name='Ending Time', value=f'`{str(final).split(" ")[1]}` (HH:MM:SS)')
 
     await ctx.send(embed=embed)
+    
+@bot.command(pass_context=True)
+@commands.check(is_staff)
+async def refresh_data(ctx=None):
+    with open('files/bot_data.json', 'r') as c:
+        data = json.load(c)
+    bot.phrases = data["phrases"]
+    bot.help_json = data["help"]
 
 @bot.command()
 @commands.check(is_staff)
@@ -1338,13 +1246,13 @@ async def balance(ctx, member:discord.Member = None):
     bank = person['bank']
     s = await get_stocks()
     stocks_num = s.get(str(userid), 0)
-    embed = discord.Embed(title=f'__{bank_names[bank_type]}__', colour=embedcolor)
+    embed = discord.Embed(title=f'__{bank_details[bank_type]["name"]}__', colour=embedcolor)
     embed.add_field(name=f'**<:wallet:836814969290358845> Wallet**', value=f'> `{await commait(wallet)}`', inline=False)
     embed.add_field(name=f'**🏦 Bank**', value=f'> `{await commait(bank)}`', inline=False)
     embed.add_field(name=f'**<:stocks:839162083324198942> Stocks**', value=f'> `{await commait(stocks_num)}`', inline=False)
     fetched = bot.get_user(userid)
     embed.timestamp = datetime.datetime.utcnow()
-    embed.set_footer(text='Economy Bot', icon_url=bot_pfp)
+    embed.set_footer(text='Economy Bot', icon_url=bot.pfp)
     embed.set_author(name=fetched.name, icon_url=fetched.avatar_url)
 
     await ctx.send(embed=embed)
@@ -1431,17 +1339,17 @@ async def mybank(ctx, member:discord.Member = None):
     btype = person['bank_type']
 
     embed = discord.Embed(description='Here are your bank details:\n\u200b', color=embedcolor)
-    embed.add_field(name='Bank Name', value=f'{bank_names[btype]}')
-    embed.add_field(name='Bank Tier', value=f'{bank_tier[btype]}')
+    embed.add_field(name='Bank Name', value=f'{bank_details[btype]["name"]}')
+    embed.add_field(name='Bank Tier', value=f'{bank_details[btype]["tier"]}')
     embed.add_field(name='\u200b', value='\u200b')
-    embed.add_field(name='Daily Interest', value=f'{rates[btype]}%')
+    embed.add_field(name='Daily Interest', value=f'{bank_details[btype]["rate"]}%')
     embed.add_field(name='Current Balance', value=f'{person["bank"]}')
     embed.add_field(name='Average Balance', value=f'{person2["avg"]}')
     embed.add_field(name='Note:', value='To claim interest, use `e.daily`.\n'
                                         'Your average balance in last 24 hours will be taken in account for that.')
     fetched = bot.get_user(userid)
     embed.timestamp = datetime.datetime.utcnow()
-    embed.set_footer(text='Economy Bot', icon_url=bot_pfp)
+    embed.set_footer(text='Economy Bot', icon_url=bot.pfp)
     embed.set_author(name=f'{fetched.name} | 🏦 Know Your Bank!', icon_url=fetched.avatar_url)
 
     await ctx.send(embed=embed)
@@ -1472,7 +1380,7 @@ async def daily(ctx):
     btype = data_p['bank_type']
     avgbal = avg_p['avg']
     bank_d = data_p['bank']
-    multiplier = (rates[btype])/100
+    multiplier = (bank_details[btype]["rate"])/100
 
     newbal = bank_d + int(avgbal * multiplier)
     data_p['bank'] = newbal
@@ -1535,7 +1443,7 @@ async def give(ctx, member:discord.Member, amount:int):
                           description=f'You gave `{await commait(amount)}` coin(s) to {member.mention}. What an act of generosity!')
     fetched = bot.get_user(ctx.author.id)
     embed.timestamp = datetime.datetime.utcnow()
-    embed.set_footer(text='Economy Bot', icon_url=bot_pfp)
+    embed.set_footer(text='Economy Bot', icon_url=bot.pfp)
 
     await ctx.send(embed=embed)
 
@@ -1568,7 +1476,7 @@ async def estates(ctx, member:discord.Member=None):
 
     fetched = bot.get_user(userid)
     embed.timestamp = datetime.datetime.utcnow()
-    embed.set_footer(text='Economy Bot', icon_url=bot_pfp)
+    embed.set_footer(text='Economy Bot', icon_url=bot.pfp)
     embed.set_author(name=f'{fetched.name} | {name} Hotel', icon_url=fetched.avatar_url)
     a = Image.open(BytesIO(await get_url(getestates_thumb[level])))
     h, w = a.size
@@ -1636,7 +1544,7 @@ async def revenue(ctx):
                           colour=success_embed)
     fetched = bot.get_user(ctx.author.id)
     embed.timestamp = datetime.datetime.utcnow()
-    embed.set_footer(text='Economy Bot', icon_url=bot_pfp)
+    embed.set_footer(text='Economy Bot', icon_url=bot.pfp)
     embed.set_author(name=f'{fetched.name} | {name} Hotel', icon_url=fetched.avatar_url)
 
     data = await get_data()
@@ -1709,7 +1617,7 @@ async def maintain(ctx):
 
     fetched = bot.get_user(ctx.author.id)
     embed.timestamp = datetime.datetime.utcnow()
-    embed.set_footer(text='Economy Bot', icon_url=bot_pfp)
+    embed.set_footer(text='Economy Bot', icon_url=bot.pfp)
     embed.set_author(name=f'{fetched.name} | {name} Hotel', icon_url=fetched.avatar_url)
 
     await ctx.send(embed=embed)
@@ -1729,7 +1637,7 @@ async def upgrade(ctx):
                               color=embedcolor)
         fetched = bot.get_user(ctx.author.id)
         embed.timestamp = datetime.datetime.utcnow()
-        embed.set_footer(text='Economy Bot', icon_url=bot_pfp)
+        embed.set_footer(text='Economy Bot', icon_url=bot.pfp)
         embed.set_author(name=f'{fetched.name} | {name} Hotel', icon_url=fetched.avatar_url)
 
         return await ctx.send(embed=embed)
@@ -1754,7 +1662,7 @@ async def upgrade(ctx):
     embed.set_image(url=getestates_thumb[level+1])
     fetched = bot.get_user(ctx.author.id)
     embed.timestamp = datetime.datetime.utcnow()
-    embed.set_footer(text='Economy Bot', icon_url=bot_pfp)
+    embed.set_footer(text='Economy Bot', icon_url=bot.pfp)
     embed.set_author(name=f'{fetched.name} | {name} Hotel', icon_url=fetched.avatar_url)
 
     msg = await ctx.send(embed=embed)
@@ -1766,8 +1674,7 @@ async def upgrade(ctx):
             return True
     try:
         reaction, user = await bot.wait_for('reaction_add', timeout=60.0, check=check)
-        await msg.clear_reaction(economyerror)
-        await msg.clear_reaction(economysuccess)
+        await msg.clear_reactions()
         if str(reaction) == economysuccess:
             data = await get_data()
             person = data[f'{ctx.author.id}']
@@ -1802,7 +1709,8 @@ async def upgrade(ctx):
             embed=discord.Embed(title=f'{economyerror} Cancelled!', color=error_embed)
             await msg.edit(embed=embed)
     except asyncio.TimeoutError:
-        pass
+        await msg.clear_reactions()
+        await msg.edit(embed=discord.Embed(description=f'{economyerror} Timed Out!', color=error_embed))
 
 @bot.command()
 @commands.check(general_checks_loop)
@@ -1822,7 +1730,7 @@ async def alerts(ctx, state:str = None):
         fetched = bot.get_user(ctx.author.id)
         embed.timestamp = datetime.datetime.utcnow()
         embed.set_author(name=f'{fetched.name}', icon_url=fetched.avatar_url)
-        embed.set_footer(text='Economy Bot', icon_url=bot_pfp)
+        embed.set_footer(text='Economy Bot', icon_url=bot.pfp)
         return await ctx.send(embed=embed)
 
     if state == 'on':
@@ -1893,7 +1801,7 @@ async def transfer(ctx, togive:discord.Member = None, amount = None, *, reason =
     embed.add_field(name='Your Balance', value=f'`{c_bank - amount}` coins')
     fetched = bot.get_user(ctx.author.id)
     embed.timestamp = datetime.datetime.utcnow()
-    embed.set_footer(text='Economy Bot', icon_url=bot_pfp)
+    embed.set_footer(text='Economy Bot', icon_url=bot.pfp)
     embed.set_author(name=f'{fetched.name}', icon_url=fetched.avatar_url)
 
     await ctx.send(embed=embed)
@@ -1980,7 +1888,7 @@ async def level(ctx, member:discord.Member = None):
 @commands.check(general_checks_loop)
 async def stocks(ctx):
     columns = ['Name', 'Highest   ', 'Lowest', 'Current', 'Volume']
-    details = list(current_stock)
+    details = list(bot.current_stock)
     mydata = await perform_stuff(details)
     config = await get_stockconfigs()
     x = PrettyTable()
@@ -2050,7 +1958,7 @@ async def buystocks(ctx, amount):
     sperson = stock_data.setdefault(userid, 0)
     if dperson['bank'] == 0:
         return await ctx.send(f'{ctx.author.mention} You have an empty bank bro..')
-    stock_price = float(current_stock[3])
+    stock_price = float(bot.current_stock[3])
     if amount == 'all':
         amount = dperson['bank']
         amount = int(amount/stock_price)
@@ -2086,7 +1994,7 @@ async def buystocks(ctx, amount):
                                       f'\nCoins Spent: `{await commait(bulk)}` coins', color=success_embed)
     fetched = bot.get_user(ctx.author.id)
     embed.timestamp = datetime.datetime.utcnow()
-    embed.set_footer(text='Economy Bot', icon_url=bot_pfp)
+    embed.set_footer(text='Economy Bot', icon_url=bot.pfp)
     embed.set_author(name=f'{fetched.name}', icon_url=fetched.avatar_url)
 
     await ctx.send(embed=embed)
@@ -2100,7 +2008,7 @@ async def sellstocks(ctx, amount):
     dperson = data[userid]
     sperson = stock_data.setdefault(userid, 0)
 
-    stock_price = float(current_stock[3])
+    stock_price = float(bot.current_stock[3])
     if amount == 'all':
         amount = sperson
     elif amount == 'half':
@@ -2130,7 +2038,7 @@ async def sellstocks(ctx, amount):
                                       f'\nCoins Earned: `{await commait(bulk)}` coins', color=success_embed)
     fetched = bot.get_user(ctx.author.id)
     embed.timestamp = datetime.datetime.utcnow()
-    embed.set_footer(text='Economy Bot', icon_url=bot_pfp)
+    embed.set_footer(text='Economy Bot', icon_url=bot.pfp)
     embed.set_author(name=f'{fetched.name}', icon_url=fetched.avatar_url)
 
     await ctx.send(embed=embed)
@@ -2140,15 +2048,15 @@ async def sellstocks(ctx, amount):
 async def help(ctx, specify=None):
     embed = discord.Embed(color=embedcolor,
                           description=f'[Support Server]({support_server}) | [Invite Url]({invite_url}) | [Patreon Page]({patreon_page})\nTo get help on a command, use `e.help <command name>`')
-    embed.set_author(name='Help', icon_url=bot_pfp)
+    embed.set_author(name='Help', icon_url=bot.pfp)
     embed.set_footer(text='Bot developed by: AwesomeSam#7985 and BlackThunder#4007')
     if specify is None:
-        for j in help_json:
+        for j in bot.help_json:
             mylist = []
             max_l = 0
-            for i in help_json[j].keys():
+            for i in bot.help_json[j].keys():
                 if i == "category": continue
-                info = help_json[j][i]['usage']
+                info = bot.help_json[j][i]['usage']
                 cmdl = len(info.split(' ')[0])
                 if cmdl > max_l:
                     max_l = cmdl
@@ -2174,7 +2082,7 @@ async def help(ctx, specify=None):
         except:
             await ctx.send(embed=embed)
         return
-    x = help_json.values()
+    x = bot.help_json.values()
     notfound = True
     for i in x:
         for j in i.keys():
@@ -2285,7 +2193,7 @@ async def rob(ctx, member:discord.Member):
         if member == ctx.author:
             walleta = a[str(ctx.author.id)]['wallet']
             prize = random.randint(int(walleta / 5), int(walleta / 2))
-            desc = random.choice(phrases['selfrob_success']).format(prize=f'`{await commait(prize)}`')
+            desc = random.choice(bot.phrases['selfrob_success']).format(prize=f'`{await commait(prize)}`')
         else:
             walletm = a[str(member.id)]['wallet']
             if walletm == 0:
@@ -2297,7 +2205,7 @@ async def rob(ctx, member:discord.Member):
             a[str(member.id)]['wallet'] = walletm
             a[str(ctx.author.id)]['wallet'] = walleta
             await update_data(a)
-            desc = random.choice(phrases['rob_success']).format(prize=f'`{await commait(prize)}`', whom=member.mention)
+            desc = random.choice(bot.phrases['rob_success']).format(prize=f'`{await commait(prize)}`', whom=member.mention)
             alert = await get_alert_info()
             if str(member.id) in alert:
                 if alert[str(member.id)]['state'] == 'on':
@@ -2315,7 +2223,7 @@ async def rob(ctx, member:discord.Member):
         if member == ctx.author:
             walleta = a[str(ctx.author.id)]['wallet']
             prize = random.randint(int(walleta / 5), int(walleta / 2))
-            desc = random.choice(phrases['selfrob_failed']).format(prize=f'`{await commait(prize)}`')
+            desc = random.choice(bot.phrases['selfrob_failed']).format(prize=f'`{await commait(prize)}`')
             walleta -= prize
             a[str(ctx.author.id)]['wallet'] = walleta
             await update_data(a)
@@ -2326,7 +2234,7 @@ async def rob(ctx, member:discord.Member):
             walleta -= prize
             a[str(ctx.author.id)]['wallet'] = walleta
             await update_data(a)
-            desc = random.choice(phrases['rob_failed']).format(prize=f'`{await commait(prize)}`', whom=member.mention)
+            desc = random.choice(bot.phrases['rob_failed']).format(prize=f'`{await commait(prize)}`', whom=member.mention)
         embed = discord.Embed(title=f'{economyerror} Robbery Failed!', description=desc, color=error_embed)
     await ctx.send(embed=embed)
 
@@ -2340,14 +2248,14 @@ async def find(ctx):
         chance = 1
     if 45 > chance > 0:
         c = random.randint(50, 400)
-        embed = discord.Embed(description=economysuccess+ ' ' +random.choice(phrases['find_success']).format(c=c), color=success_embed)
+        embed = discord.Embed(description=economysuccess+ ' ' +random.choice(bot.phrases['find_success']).format(c=c), color=success_embed)
         a[str(ctx.author.id)]['wallet'] = wallet + c
     elif 90 > chance >= 45:
         c = random.randint(int(wallet/5), int(wallet/2))
-        embed = discord.Embed(description=economyerror+ ' ' +random.choice(phrases['find_failed']).format(c=c), color=error_embed)
+        embed = discord.Embed(description=economyerror+ ' ' +random.choice(bot.phrases['find_failed']).format(c=c), color=error_embed)
         a[str(ctx.author.id)]['wallet'] = wallet - c
     else:
-        embed = discord.Embed(description=economyerror+ ' ' +random.choice(phrases['find_neutral']), color=error_embed)
+        embed = discord.Embed(description=economyerror+ ' ' +random.choice(bot.phrases['find_neutral']), color=error_embed)
     await update_data(a)
     await ctx.send(embed=embed)
 
@@ -2398,7 +2306,7 @@ async def buy(ctx, *, item):
 
     if not found:
         embed = discord.Embed(title=f'{economyerror} Item Not Found!',
-                              description=f'The item `{item}` wasn\'t found. {random.choice(phrases["shop_noitem"])}',
+                              description=f'The item `{item}` wasn\'t found. {random.choice(bot.phrases["shop_noitem"])}',
                               color=error_embed)
         return await ctx.send(embed=embed)
 
@@ -2412,7 +2320,7 @@ async def buy(ctx, *, item):
     price = int(price.replace(',', ''))
     if price*qty > wallet:
         embed = discord.Embed(title=f'{economyerror} Insufficient Funds',
-                              description=f'{random.choice(phrases["shop_nobal"])}',
+                              description=f'{random.choice(bot.phrases["less_bal"])}',
                               color=error_embed)
         return await ctx.send(embed=embed)
     inv = await get_inv()
@@ -2435,7 +2343,7 @@ async def buy(ctx, *, item):
 async def server(ctx):
     embed = discord.Embed(description=f'**Discord Support Server:** [Join Here]({support_server})\n'
                                       f'Server Members: `idk lol`', color=embedcolor)
-    embed.set_author(icon_url=bot_pfp, name=f'{bot.user.name}')
+    embed.set_author(icon_url=bot.pfp, name=f'{bot.user.name}')
     await ctx.send(embed=embed)
 
 @bot.command()
@@ -2452,12 +2360,99 @@ async def invite(ctx):
                                       f'Users: `{members}`\n'
                                       f'Shards: `{bot.shard_count}`',
                           color=embedcolor)
-    embed.set_author(icon_url=bot_pfp, name=f'{bot.user.name}')
+    embed.set_author(icon_url=bot.pfp, name=f'{bot.user.name}')
     await ctx.send(embed=embed)
 
-@bot.event
-async def on_ready():
+@bot.command()
+async def use(ctx, item:str):
     pass
+
+@bot.command()
+async def ping(ctx):
+    msg = await ctx.send('Pong!')
+    ping = "{:.2f}".format(bot.latency*1000)
+    await msg.edit(content=f'Pong! `{ping} ms`')
+
+@bot.command()
+@commands.check(general_checks_loop)
+async def banks(ctx):
+    await open_account(ctx.author.id)
+    x = PrettyTable()
+    x.field_names = ["Bank Name", "Tier", "Interest"]
+    for i in bank_details.values():
+        x.add_row([i["name"], i["tier"], f'{i["rate"]}%'])
+    embed = discord.Embed(title='List of Banks',
+                          description=f'Choose your bank to get higher interest rate, loans and more benefits!\n```\n{x}```\n'
+                                      f'To change your bank: `e.bank <tier>`',
+                          color=embedcolor)
+    fetched = bot.get_user(ctx.author.id)
+    embed.timestamp = datetime.datetime.utcnow()
+    embed.set_footer(text='Economy Bot', icon_url=bot.pfp)
+    embed.set_author(name=fetched.name, icon_url=fetched.avatar_url)
+    await ctx.send(embed=embed)
+
+@bot.command()
+@commands.check(general_checks_loop)
+async def bank(ctx, tier:int):
+    data = await get_data()
+    user = data[str(ctx.author.id)]
+
+    if tier <= 0 or tier > 3:
+        return await ctx.send('Invalid Tier')
+    if user['bank_type'] == 3:
+        return await ctx.send('You are at maximum tier')
+
+    if user['bank_type'] == tier:
+        return await ctx.send('You already own a account in this bank')
+    elif user['bank_type'] > tier:
+        return await ctx.send('You cannot downgrade your bank tier')
+
+    bal = user['wallet'] + user['bank']
+    price = 5000 if tier == 2 else 10000
+    total = int(bal*0.01 + price)
+
+    x = PrettyTable()
+    x.field_names = ['Name', '      ', 'Cost']
+    x.align["Cost"] = "l"
+    x.add_row(['Account Opening', '      ', price])
+    x.add_row(['Transfering', '      ', bal*0.01])
+    x.add_row(['      ', '      ', '      '])
+    x.add_row(['Grand Total', '      ', total])
+
+    embed = discord.Embed(title='Upgrade your bank',
+                          description=f'Here is the cost for upgrading your bank: \n```\n{x}```\n'
+                                      f'Confirm: {economysuccess}\n'
+                                      f'Decline: {economyerror}\n'
+                                      f'**React below, you have 60 secs until timeout**',
+                          color=embedcolor)
+    msg = await ctx.send(embed=embed)
+    await msg.add_reaction(economysuccess)
+    await msg.add_reaction(economyerror)
+
+    def check(reaction, member):
+        if member == ctx.author and str(reaction.emoji) in [economyerror, economysuccess]:
+            return True
+    try:
+        reaction, member = await bot.wait_for('reaction_add', timeout=60.0, check=check)
+        await msg.clear_reactions()
+        if str(reaction) == economysuccess:
+            if total > user["bank"]:
+                embed = discord.Embed(title=f'{economyerror} Insufficient Funds in bank!',
+                                      description=f'You do not have enough balance to upgrade tier. {bot.phrases["less_bal"]}',
+                                      color=error_embed)
+            else:
+                user["bank"] = user["bank"] - total
+                user["bank_type"] = tier
+                data[str(ctx.author.id)] = user
+                await update_data(data)
+                embed = discord.Embed(title=f'{economysuccess} Success!', description=f'Bank upgraded to `Tier {tier}` successfully!', color=success_embed)
+            await msg.edit(embed=embed)
+        else:
+            embed=discord.Embed(title=f'{economyerror} Cancelled!', color=error_embed)
+            await msg.edit(embed=embed)
+    except asyncio.TimeoutError:
+        await msg.clear_reactions()
+        await msg.edit(embed=discord.Embed(description=f'{economyerror} Timed Out!', color=error_embed))
 
 bot.connected_ = False
 @bot.event
@@ -2466,10 +2461,5 @@ async def on_connect():
         print("Entering on_connect()")
         bot.connected_ = True
         await create_stuff()
-
-@bot.event
-async def on_guild_join(guild):
-    for i in guild.members:
-        await open_account(i.id)
 
 bot.run("ODMyMDgzNzE3NDE3MDc0Njg5.YHeoWQ._O5uoMS_I7abKdI_YzVb9BuEHzs")
