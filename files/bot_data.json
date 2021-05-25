@@ -1,4 +1,5 @@
-{"phrases": {"selfrob_success":["You tried robbing yourself and got {prize} coins. But surprisingly {prize} coins were missing from your wallet too!",
+{
+  "phrases": {"selfrob_success":["You tried robbing yourself and got {prize} coins. But surprisingly {prize} coins were missing from your wallet too!",
                               "You robbed yourself of {prize} coins. WHat did ya achieve by this?",
                               "You fought yourself and stole {prize} coins from your own wallet. Tiring day!",
                               "You thought of robbing yourself. Even got hands on {prize} coins! But they were missing from your wallet. Mystery..?",
@@ -109,5 +110,9 @@
         "e.daily": {"aliases":["None"], "usage":"e.daily", "desc":"Gives you your daily interest. It is the product of interest rate and average bank balance"},
         "e.report": {"aliases":["None"], "usage":"e.report <error-code>", "desc":"Report an error to developers"}
     }
-}
+},
+  "shopcategory": {"chest": ["Common Chest", "Rare Chest", "Legendary Chest"],
+  "boost": [],
+  "lock": ["Bronze Lock", "Silver Lock", "Gold Lock"]
+  }
 }

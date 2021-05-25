@@ -162,6 +162,7 @@ bot.phrases = {}
 bot.current_stock = []
 bot.total_lines = 0
 bot.pfp = ''
+bot.shopc = {}
 
 usercmds = {}
 stock_names = ['Ava', 'Neil', 'Ryan', 'Anthony', 'Bernadette', 'Lauren', 'Justin', 'Matt', 'Wanda', 'James', 'Emily', 'Vanessa', 'Carl', 'Fiona', 'Stephanie', 'Pippa', 'Phil', 'Carol', 'Liam', 'Michael', 'Ella', 'Amanda', 'Caroline', 'Nicola', 'Sean', 'Oliver', 'Kylie', 'Rachel', 'Leonard', 'Julian', 'Richard', 'Peter', 'Irene', 'Dominic', 'Connor', 'Dorothy', 'Gavin', 'Isaac', 'Karen', 'Kimberly', 'Abigail', 'Yvonne', 'Steven', 'Felicity', 'Evan', 'Bella', 'Alison', 'Diane', 'Joan', 'Jan', 'Wendy', 'Nathan', 'Molly', 'Charles', 'Victor', 'Sally', 'Rose', 'Robert', 'Claire', 'Theresa', 'Grace', 'Keith', 'Stewart', 'Andrea', 'Alexander', 'Chloe', 'Nicholas', 'Edward', 'Deirdre', 'Anne', 'Joseph', 'Alan', 'Rebecca', 'Jane', 'Natalie', 'Cameron', 'Owen', 'Eric', 'Gabrielle', 'Sonia', 'Tim', 'Sarah', 'Madeleine', 'Megan', 'Lucas', 'Joe', 'Brandon', 'Brian', 'Jennifer', 'Alexandra', 'Adrian', 'John', 'Mary', 'Tracey', 'Jasmine', 'Penelope', 'Hannah', 'Thomas', 'Angela', 'Warren', 'Blake', 'Simon', 'Audrey', 'Frank', 'Samantha', 'Dan', 'Victoria', 'Paul', 'Jacob', 'Heather', 'Una', 'Lily', 'Carolyn', 'Jonathan', 'Ian', 'Piers', 'William', 'Gordon', 'Dylan', 'Olivia', 'Jake', 'Leah', 'Jessica', 'David', 'Katherine', 'Amelia', 'Benjamin', 'Boris', 'Sebastian', 'Lisa', 'Diana', 'Michelle', 'Emma', 'Sam', 'Stephen', 'Faith', 'Kevin', 'Austin', 'Jack', 'Ruth', 'Colin', 'Trevor', 'Joanne', 'Virginia', 'Anna', 'Max', 'Adam', 'Maria', 'Sophie', 'Sue', 'Andrew', 'Harry', 'Amy', 'Christopher', 'Donna', 'Melanie', 'Elizabeth', 'Lillian', 'Julia', 'Christian', 'Luke', 'Zoe', 'Joshua', 'Jason']
@@ -710,11 +711,13 @@ async def make_lvl_img(member, level, xp, total_xp, guildid):
                 pixdata[x, y] = tuple(list(member_colour) + [pixdata[x, y][-1]])
         staff_icon = staff_icon.resize((37, 37))
         img.paste(staff_icon, (location, 55), staff_icon)
+        staff_icon.close()
         location -= 45
     if patron:
         patron_icon = Image.open('badges/patron.png')
         patron_icon = patron_icon.resize((37, 37))
         img.paste(patron_icon, (location, 55), patron_icon)
+        patron_icon.close()
         location -= 45
     server_r, global_r = await xp_ranks(member.id, guildid)
     if global_r > 1000:
@@ -749,6 +752,11 @@ async def make_lvl_img(member, level, xp, total_xp, guildid):
     img = enhancer.enhance(2)
     image_bytes = BytesIO()
     img.save(image_bytes, 'PNG')
+    img.close()
+    ava_mask.close()
+    ava_mask2.close()
+    status.close()
+    xpbar.close()
     image_bytes.seek(0)
     return discord.File(fp=image_bytes, filename='level.png')
 
@@ -857,7 +865,7 @@ async def createstore(start, page):
     draw.text((700, 139), f'{special_item["percent"]}% DISCOUNT!', font=ImageFont.truetype("badges/font2.ttf", 20), fill=(255,100,69))
     icon = Image.open(f'store/{special_item["icon"]}').resize((50, 50))
     frame.paste(icon, (140, 100), icon.convert('RGBA'))
-
+    icon.close()
     text_loc=267
     icon_loc=258
     desc_loc=270
@@ -870,7 +878,7 @@ async def createstore(start, page):
         draw.text((135, text_loc), text=item['name'], fill=(255, 255, 255), font=title)
         draw.text((145+title.getsize(item["name"])[0], desc_loc), text=item['desc'], fill=(189, 189, 189), font=description)
         draw.text((800, text_loc), text=item['price'], fill=(255, 255, 255), font=title)
-
+        icon.close()
         text_loc += 62
         desc_loc += 62
         icon_loc += 61
@@ -881,6 +889,7 @@ async def createstore(start, page):
     image_bytes = BytesIO()
     frame.save(image_bytes, 'PNG')
     image_bytes.seek(0)
+    frame.close()
     return discord.File(fp=image_bytes, filename='store.png')
 
 async def inventory_image(userid):
@@ -944,6 +953,7 @@ async def inventory_image(userid):
 
             draw.text((120, item_loc), i, font=inv_font)
             draw.text((558+(int(194-inv_font.getsize(f'{inv[i]}')[0])/2), item_loc), f'{inv[i]}', font=inv_font)
+            icon.close()
             item_loc += 43
             line_loc += 43
         draw.line((46, line_loc+5, 753, line_loc+5), (149, 149, 149), width=5)
@@ -953,6 +963,7 @@ async def inventory_image(userid):
     image_bytes = BytesIO()
     bg.save(image_bytes, 'PNG')
     image_bytes.seek(0)
+    bg.close()
     return discord.File(fp=image_bytes, filename='inventory.png')
 
 @bot.check
@@ -1006,13 +1017,15 @@ async def on_raw_reaction_add(payload):
 async def on_message(message):
     if message.author.bot:
         return
+    if bot.dev == 1 and message.author.id not in devs: return
+    if message.author.id in disregarded:
+        if message.author.id not in devs: return
+    if message.content == 'e.' or message.content == f'{bot.user.mention}':
+        await message.channel.send('Do you need my help?\nGet started using `e.help`')
     await open_account(message.author.id)
     await bot.process_commands(message)
 
 async def general_checks_loop(ctx):
-    if bot.dev == 1 and ctx.author.id not in devs: return False
-    if ctx.author.id in disregarded:
-        if ctx.author.id not in devs: return False
     state = await spam_protect(ctx.author.id)
     toreturn = True
     if state == 'warn':
@@ -1212,6 +1225,7 @@ async def refresh_data(ctx=None):
         data = json.load(c)
     bot.phrases = data["phrases"]
     bot.help_json = data["help"]
+    bot.shopc = data["shopcategory"]
 
 @bot.command()
 @commands.check(is_staff)
@@ -2184,11 +2198,12 @@ async def rob(ctx, member:discord.Member):
     inv = await get_inv()
     userinv = inv.get(str(member.id), {"inv":[]})
     user = userinv["inv"]
+    eq = userinv['eq_lock']
     if len(user) == 0: pass
     else:
-        if 'Bronze Lock' in user: lock = 10
-        if 'Silver Lock' in user: lock = 25
-        if 'Gold Lock' in user: lock = 40
+        if eq == 'Bronze Lock': lock = 10
+        if eq == 'Silver Lock': lock = 25
+        if eq == 'Gold Lock': lock = 40
     wallet = a[str(ctx.author.id)]['wallet']
     if wallet < 100:
         return await ctx.send(f'{ctx.author.mention} You need `100` coins to start a robbery!')
@@ -2220,6 +2235,7 @@ async def rob(ctx, member:discord.Member):
                 elif lock == 10: user.remove('Bronze Lock')
                 elif lock == 40: user.remove('Gold Lock')
             userinv["inv"] = user
+            userinv["eq_lock"] = ''
             inv[str(member.id)] = userinv
             await update_inv(inv)
         embed = discord.Embed(title=f'{economysuccess} Robbery Successful!', description=desc, color=success_embed)
@@ -2370,14 +2386,36 @@ async def invite(ctx):
     await ctx.send(embed=embed)
 
 @bot.command()
-async def use(ctx, item:str):
+async def use(ctx, *, item:str):
+    async def lock(shopitem):
+        eq = userinv.setdefault('eq_lock', '')
+        if eq != shopitem:
+            eq = shopitem
+            embed = discord.Embed(description=f'{economysuccess} `{shopitem}` equiped successfully!', color=success_embed)
+        else:
+            eq = ''
+            embed = discord.Embed(description=f'{economysuccess} `{shopitem}` **unequiped** successfully!', color=success_embed)
+        userinv['eq_lock'] = eq
+        inv[str(ctx.author.id)] = userinv
+        await update_inv(inv)
+        await ctx.send(embed=embed)
+
+    def chest():
+        pass
+
+    def boost():
+        pass
+
     inv = await get_inv()
-    user = inv.get(str(ctx.author.id), {"inv":[]})
-    user = user["inv"]
-    if item not in user:
+    userinv = inv.get(str(ctx.author.id), {"inv":[]})
+    user = [x.lower() for x in userinv["inv"]]
+    if item.lower() not in user:
         embed = discord.Embed(description=f'{economyerror} The item `{item}` isn\'t found. {random.choice(bot.phrases["inv_noitem"])}', color=error_embed)
         return await ctx.send(embed=embed)
-
+    for i in bot.shopc.keys():
+        for k in [j for j in bot.shopc[i]]:
+            if item.lower() == k.lower():
+                await lock(k)
 
 @bot.command()
 async def ping(ctx):
