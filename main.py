@@ -380,7 +380,7 @@ async def clear_dues():
         person['bank'] += bulk
         data[str(i)] = person
         stock_data[str(i)] = 0
-        user = await bot.fetch_user(i)
+        user = bot.get_user(i)
         if user is None:
             continue
         embed = discord.Embed(title='Stock Ended', description=f'The current stock ended and `{await commait(bulk)}` coins have been added to your bank.')
@@ -544,7 +544,7 @@ async def open_account(userid):
 async def open_estates(userid):
     data = await get_estates()
     if data.get(str(userid)) is None:
-        user = await bot.fetch_user(userid)
+        user = bot.get_user(userid)
         data[f'{userid}'] = {'level':1, 'name':f'{user.name}', 'lm':time.time(), 'lr':time.time(), 'p':0, 'c':0}
 
     await update_est(data)
@@ -1028,7 +1028,7 @@ async def on_raw_reaction_add(payload):
     if payload.user_id not in devs: return
     a = await get_errorfile()
     if str(payload.emoji) == economysuccess:
-        chl = await bot.fetch_channel(payload.channel_id)
+        chl = bot.get_channel(payload.channel_id)
         msg = await chl.fetch_message(payload.message_id)
         cont = str(msg.content)
         errorcode = cont.split(' ')[3].replace('`', '')
@@ -1085,7 +1085,7 @@ async def report(ctx, code):
     already.append(code)
     a['reported'] = already
     await update_errorfile(a)
-    errors_chl = await bot.fetch_channel(844184710678577193)
+    errors_chl = bot.get_channel(844184710678577193)
     e = await errors_chl.send(f'New error reported: `{code}` by {ctx.author} ({ctx.author.id})')
     await e.add_reaction(economysuccess)
     await ctx.message.add_reaction(economysuccess)
@@ -1111,6 +1111,12 @@ async def dvm(ctx):
     else:
         await ctx.reply('Changed Dev Mode state to: **`On`**')
         bot.dev = 1
+
+@bot.command(aliases=["exit"])
+@commands.check(is_dev)
+async def _exit(ctx):
+    await bot.wait_until_ready()
+    await bot.close()
 
 @bot.command()
 @commands.check(is_dev)
@@ -1864,7 +1870,7 @@ async def statement(ctx, *args):
             for i in args:
                 if i == '-u': break
                 index += 1
-            member = await bot.fetch_user(int(args[index]))
+            member = bot.get_user(int(args[index]))
 
     stats = await get_statements()
     all_s = stats.get(str(member.id))
@@ -2429,8 +2435,48 @@ async def use(ctx, *, item:str):
         await update_inv(inv)
         await ctx.send(embed=embed)
 
-    def chest():
-        pass
+    async def chest(chest, item_name):
+        bg = Image.open(f'items/{chest.split(" ")[0].lower()}_unbox.png')
+        item_m = Image.open(f'items/{item_name}').resize((225, 225))
+        x = 300
+        y = 60
+        degree = 5
+        frames = []
+
+        for i in range(20):
+            frame = Image.new('RGBA', bg.size)
+            frame.paste(bg, (0, 0), bg.convert('RGBA'))
+            item = item_m.rotate(degree, Image.BICUBIC)
+            frame.paste(item, (int(x), int(y)), item.convert('RGBA'))
+            obj = BytesIO()
+            frame.save(obj, 'PNG')
+            frame = Image.open(obj)
+            frames.append(frame)
+            y -= 1.5
+            degree -= 0.5
+
+        for i in range(20):
+            frame = Image.new('RGBA', bg.size)
+            frame.paste(bg, (0, 0), bg.convert('RGBA'))
+            item = item_m.rotate(degree, Image.BICUBIC)
+            frame.paste(item, (int(x), int(y)), item.convert('RGBA'))
+            obj = BytesIO()
+            frame.save(obj, 'PNG')
+            frame = Image.open(obj)
+            frames.append(frame)
+            y += 1.5
+            degree += 0.5
+
+        unbox_gif = BytesIO()
+        frames[0].save(unbox_gif,
+                       format='GIF',
+                       save_all=True,
+                       append_images=frames[1:],
+                       duration=75,
+                       loop=0)
+        unbox_gif.seek(0)
+        file = discord.File(fp=unbox_gif, filename='unbox.gif')
+        await ctx.send(file=file)
 
     def boost():
         pass
@@ -2526,6 +2572,57 @@ async def bank(ctx, tier:int=None):
     except asyncio.TimeoutError:
         await msg.clear_reactions()
         await msg.edit(embed=discord.Embed(description=f'{economyerror} Timed Out!', color=error_embed))
+
+@bot.command()
+@commands.check(is_dev)
+async def test(ctx):
+    bg = Image.open('items/legendary_unbox.PNG')
+    item_m = Image.open('items/Coffee Mug.png').resize((225, 225))
+    x = 300
+    y = 60
+    degree = 5
+    frames = []
+    font = ImageFont.truetype('badges/font2.ttf', 35)
+    print(bg.size[0]/2)
+    text_x = (bg.size[0]/2 - 20) - (font.getsize('Coffee Mug')[0]/2)
+    for i in range(20):
+        frame = Image.new('RGBA', bg.size)
+        frame.paste(bg, (0,0), bg.convert('RGBA'))
+        item = item_m.rotate(degree, Image.BICUBIC)
+        frame.paste(item, (int(x), int(y)), item.convert('RGBA'))
+        draw = ImageDraw.Draw(frame)
+        draw.text((text_x, 300), 'Coffee Mug', font=font)
+        obj = BytesIO()
+        frame.save(obj, 'PNG')
+        frame = Image.open(obj)
+        frames.append(frame)
+        y -= 1.5
+        degree -= 0.5
+
+    for i in range(20):
+        frame = Image.new('RGBA', bg.size)
+        frame.paste(bg, (0, 0), bg.convert('RGBA'))
+        item = item_m.rotate(degree, Image.BICUBIC)
+        frame.paste(item, (int(x), int(y)), item.convert('RGBA'))
+        draw = ImageDraw.Draw(frame)
+        draw.text((text_x, 300), 'Coffee Mug', font=font)
+        obj = BytesIO()
+        frame.save(obj, 'PNG')
+        frame = Image.open(obj)
+        frames.append(frame)
+        y += 1.5
+        degree += 0.5
+
+    unbox_gif = BytesIO()
+    frames[0].save(unbox_gif,
+                   format='GIF',
+                   save_all=True,
+                   append_images=frames[1:],
+                   duration=75,
+                   loop=0)
+    unbox_gif.seek(0)
+    file = discord.File(fp=unbox_gif, filename='unbox.gif')
+    await ctx.send(file=file)
 
 bot.connected_ = False
 @bot.event

@@ -383,41 +383,114 @@
                "name": "Rotten Tomato",
                "value": [100, 100],
                "desc": "A yellow rotten tomato. Ew it smells"
-            },
-            {
+            }, {
                "name": "Cloth Piece",
                "value": [75, 75],
                "desc": "A torn cloth piece from a pirate's flag"
-            },
-            {
+            }, {
                "name": "Office Bag",
                "value": [100, 250],
                "desc": "A useless bag covered with dust. Maybe you can find some coins in it?"
-            },
-            {
+            }, {
                "name": "Spray Can",
                "value": [100, 100],
                "desc": "An empty spray can, not much worth tbh"
-            },
-            {
+            }, {
                "name": "Black Pen",
                "value": [150, 150],
                "desc": "A regular black pen with full ink. Maybe you should sell it"
-            },
-            {
+            }, {
                "name": "Broken Mouse",
                "value": [200, 350],
                "desc": "What once used to be an expensive mouse, is now broken. Isn't worth much imo"
-            },
-            {
+            }, {
                "name": "N-95 Mask",
                "value": [200, 300],
                "desc": "A mask to protect from COVID-19. Are you thinking to sell it, greedy man?"
-            },
-            {
+            }, {
                "name": "Dead Calculator",
                "value": [500, 750],
                "desc": "Its just a calculator that no longer works. Time to mine gold out of PCIs"
+            }, {
+               "name": "Leather Shoes",
+               "value": [350, 500],
+               "desc": "A simple shoe made out of leather"
+            }, {
+               "name": "Wooden Stick",
+               "value": [300, 500],
+               "desc": "Just a wooden stick lol. What did you expect?"
+            }, {
+               "name": "Broken String",
+               "value": [250, 500],
+               "desc": "A small piece of string. Where did it even come from?"
+            }, {
+               "name": "Mouse Pad",
+               "value": [500, 700],
+               "desc": "Some pro gamer's mouse pad"
+            }, {
+               "name": "Bronze Spoon",
+               "value": [500, 600],
+               "desc": "What? How can someone eat with it.."
+            }, {
+               "name": "Flower Vase",
+               "value": [700, 1000],
+               "desc": "A not-so-old antique vase, but not worthless"
+            }, {
+               "name": "Maths Book",
+               "value": [300, 500],
+               "desc": "Ew, who likes math? Nevermind, just sell it for coins"
+            }, {
+               "name": "Charger",
+               "value": [300, 500],
+               "desc": "A laptop charger, very useful ngl"
+            }, {
+               "name": "Wall Clock",
+               "value": [500, 700],
+               "desc": "An ugly looking wall clock. I would have got rid of it"
+            }, {
+               "name": "Pen Stand",
+               "value": [200, 350],
+               "desc": "A regular stand to keep your pens"
+            }, {
+               "name": "Book Stand",
+               "value": [500, 1000],
+               "desc": ""
+            }, {
+               "name": "Magnifying Glass",
+               "value": [500, 700],
+               "desc": "A hand-help magnifying glass"
+            }, {
+               "name": "Lollipop",
+               "value": [200, 400],
+               "desc": "A sugery lollipop"
+            }, {
+               "name": "Eaten Chocolate",
+               "value": [300, 500],
+               "desc": "Who does even leave a half-eaten chocolate on street?"
+            }, {
+               "name": "Lighter",
+               "value": [500, 700],
+               "desc": "No smoking here, please!"
+            }, {
+               "name": "Tennis Ball",
+               "value": [400, 600],
+               "desc": "A brand new tennis ball. Goos stuff to sell"
+            }, {
+               "name": "Rubics Cude",
+               "value": [500, 800],
+               "desc": "Just a 3x3x3 rubics cube"
+            }, {
+               "name": "Hourglass",
+               "value": [500, 1000],
+               "desc": "A hourglass to keep watch on time. Pretty Ancient"
+            }, {
+               "name": "Coffee Mug",
+               "value": [800, 1000],
+               "desc": "This very dirty cup is stolen straight from Thunder's kitchen. Dont snitch please"
+            }, {
+               "name": "Broken CD",
+               "value": [500, 700],
+               "desc": "Did it have any data? Sadly it will always be a mystery.."
             }
          ],
          "boost": [
@@ -426,8 +499,7 @@
                "desc": "Activate it to see a 'Gold Coin' badge on your profile!",
                "duration": 3600,
                "value": 1000
-            },
-            {
+            }, {
                "name": "XP Multiplier",
                "desc": "Get double XP when activated",
                "duration": 360,
@@ -455,9 +527,65 @@
                "name": "Gold Chain",
                "value": [2500, 3500],
                "desc": "Yes, a gold chain. Not too heavy, but enough for your needs"
+            }, {
+               "name": "Headphones",
+               "value": [2000, 3000],
+               "desc": "Bass-boosted headphones for serious music lovers"
+            }, {
+               "name": "Party Speakers",
+               "value": [2500, 3000],
+               "desc": "Top notch sound quality speakers, mainly for beach parties"
+            }, {
+               "name": "Mobile Phone",
+               "value": [2500, 3500],
+               "desc": "A regular mobile phone for daily usage. Sells for good amount"
+            }, {
+               "name": "Electric Guitar",
+               "value": [2500, 3000],
+               "desc": "A rockstar's best friend. Well, its all yours now"
+            }, {
+               "name": "Travel Bag",
+               "value": [2000, 3000],
+               "desc": "A good quality travel bag with strong synthetic material"
+            }, {
+               "name": "Mini Boom Box",
+               "value": [2000, 3000],
+               "desc": "A portable boom box for people who love music"
+            }, {
+               "name": "Broken Television",
+               "value": [3000, 4000],
+               "desc": "Who knows what much a broken T.V. is worth?"
+            }, {
+               "name": "Gaming Chair",
+               "value": [2000, 3000],
+               "desc": "Yeah, it will make you a pro gamer"
+            }, {
+               "name": "Antique Painting",
+               "value": [3000, 3500],
+               "desc": "A very antique chinese painting. Worth a lot bro"
+            }, {
+               "name": "WIFI Router",
+               "value": [2500, 3000],
+               "desc": "A very expensive gaming router with high speed and almost 0 ping"
+            }, {
+               "name": "Gold Spectacles",
+               "value": [2500, 3000],
+               "desc": "A quite good looking spectacles. Wonder who owned them earlier.."
+            }, {
+               "name": "Piano",
+               "value": [3000, 4000],
+               "desc": "A large piano which was used in a very popular song. Nice luck ngl"
+            }, {
+               "name": "Electric Drums",
+               "value": [2500, 3500],
+               "desc": "Brand new drums, lets go rock and roll!"
             }
          ],
-         "boost": [],
+         "boost": [
+            {
+               "name": ""
+            }
+         ],
          "collect": []
       },
       "epic": {
