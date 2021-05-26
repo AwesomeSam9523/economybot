@@ -1,23 +1,123 @@
 {
-  "1.1": ["- New command: evaluate", "- New command: execute", "- New command: daily"],
-  "1.2": ["- New command: give", "- Removed \"Bot is ready to use\" from on_ready"],
-  "1.2.1": ["- Changed \"weekly\" to \"daily\" in embeds", "- All Dev commands have \"#DEV ONLY\" in front of them"],
-  "1.2.2": ["- New command e.estates", "- New command e.upgrade", "- Estates made", "- New important function: commait() to add commas to number\n"],
-  "1.3": ["- New command e.revenue", "- New command e.alerts", "- Estates revenue collection done"],
-  "1.4": ["- New command e.maintain", "", "Estates Command 100% Done!!", "-> e.estates", "-> e.upgrade", "-> e.revenue", "-> e.maintain"],
-  "1.4.1": ["- Few bug fixes"],
-  "1.4.2": ["- Improved e.logs command", "- Made commands case-insensitive"],
-  "1.5": ["- New DEV Command: e.clear", "Clears Users wallet and bank", "- e.estates Bug Fixes", "- e.upgrade level 30 custom message", "- Added search by command feature to e.logs", "- Improved Logs via PrettyTable"],
-  "1.5.1": ["- Fixed e.give"],
-  "1.6": ["- New Command: e.transfer", "- New Command: e.statement", "- Max e.give amount changed to 5000"],
-  "1.6.1": ["- Fixed a small type in e.bank"],
-  "1.6.2": ["- New Command: e.release", "- Renamed e.bank to e.mybank", "- Added CarrySheriff to devs"],
-  "1.6.3": ["- e.level half done: Imageing left (to be done by rish)"],
-  "1.7": ["- Added all fake stock files to ./stocks/", "- Added XP: 10-25 XP on any command (cooldown: 50 secs)"],
-  "1.8": ["- New command: e.stocks", "- New command: e.buy <amount> to buy stocks", "- New command: e.sell <amount> to sell stocks", "- Fixed e.clear bug", "- Fixed e.dep and e.with -ve bug", "- Added stocks to e.bal", "- Changed e.bal look"],
-  "1.8.1": ["- The bot now autosells your stocks on current price when the stock time ends", "- Fixed double line chart issue"],
-  "1.9": ["- Added e.level command to check your level in a image card form", "- Removed e.bank renamed to e.mybank message", "- Done some code optimizations told by Thunder"],
-  "2.0": ["**Alpha build complete! Ready to be tested**", "- Fixed g.mybank not working", "- Disabled bot working in DMs", "- New command: e.help", "- Added anti-spam mechanism. You will be disregarded for 10 mins for spamming commands!"],
-  "2.1": ["- New command: e.rob", "- New command: e.find", "- New command: e.report"],
-  "2.2": ["- New commad: `e.store`", "- New command: `e.buy`", "- New command: `e.inventory`", "- Updated spam protection mechanism", "- Fixed `e.daily` not working sometimes", "- Improved visuals of `e.upgrade` command", "- Buy command for stocks is now renamed to `e.buystocks`", "- Sell command for stocks is now renamed to `e.sellstocks`", "- Improved overall performance"]
+  "1.1": [
+    "- New command: evaluate",
+    "- New command: execute",
+    "- New command: daily"
+  ],
+  "1.2": [
+    "- New command: give",
+    "- Removed \"Bot is ready to use\" from on_ready"
+  ],
+  "1.2.1": [
+    "- Changed \"weekly\" to \"daily\" in embeds",
+    "- All Dev commands have \"#DEV ONLY\" in front of them"
+  ],
+  "1.2.2": [
+    "- New command e.estates",
+    "- New command e.upgrade",
+    "- Estates made",
+    "- New important function: commait() to add commas to number\n"
+  ],
+  "1.3": [
+    "- New command e.revenue",
+    "- New command e.alerts",
+    "- Estates revenue collection done"
+  ],
+  "1.4": [
+    "- New command e.maintain",
+    "",
+    "Estates Command 100% Done!!",
+    "-> e.estates",
+    "-> e.upgrade",
+    "-> e.revenue",
+    "-> e.maintain"
+  ],
+  "1.4.1": [
+    "- Few bug fixes"
+  ],
+  "1.4.2": [
+    "- Improved e.logs command",
+    "- Made commands case-insensitive"
+  ],
+  "1.5": [
+    "- New DEV Command: e.clear",
+    "Clears Users wallet and bank",
+    "- e.estates Bug Fixes",
+    "- e.upgrade level 30 custom message",
+    "- Added search by command feature to e.logs",
+    "- Improved Logs via PrettyTable"
+  ],
+  "1.5.1": [
+    "- Fixed e.give"
+  ],
+  "1.6": [
+    "- New Command: e.transfer",
+    "- New Command: e.statement",
+    "- Max e.give amount changed to 5000"
+  ],
+  "1.6.1": [
+    "- Fixed a small type in e.bank"
+  ],
+  "1.6.2": [
+    "- New Command: e.release",
+    "- Renamed e.bank to e.mybank",
+    "- Added CarrySheriff to devs"
+  ],
+  "1.6.3": [
+    "- e.level half done: Imageing left (to be done by rish)"
+  ],
+  "1.7": [
+    "- Added all fake stock files to ./stocks/",
+    "- Added XP: 10-25 XP on any command (cooldown: 50 secs)"
+  ],
+  "1.8": [
+    "- New command: e.stocks",
+    "- New command: e.buy <amount> to buy stocks",
+    "- New command: e.sell <amount> to sell stocks",
+    "- Fixed e.clear bug",
+    "- Fixed e.dep and e.with -ve bug",
+    "- Added stocks to e.bal",
+    "- Changed e.bal look"
+  ],
+  "1.8.1": [
+    "- The bot now autosells your stocks on current price when the stock time ends",
+    "- Fixed double line chart issue"
+  ],
+  "1.9": [
+    "- Added e.level command to check your level in a image card form",
+    "- Removed e.bank renamed to e.mybank message",
+    "- Done some code optimizations told by Thunder"
+  ],
+  "2.0": [
+    "**Alpha build complete! Ready to be tested**",
+    "- Fixed g.mybank not working",
+    "- Disabled bot working in DMs",
+    "- New command: e.help",
+    "- Added anti-spam mechanism. You will be disregarded for 10 mins for spamming commands!"
+  ],
+  "2.1": [
+    "- New command: e.rob",
+    "- New command: e.find",
+    "- New command: e.report"
+  ],
+  "2.2": [
+    "- New command: `e.store`",
+    "- New command: `e.buy`",
+    "- New command: `e.inventory`",
+    "- Updated spam protection mechanism",
+    "- Fixed `e.daily` not working sometimes",
+    "- Improved visuals of `e.upgrade` command",
+    "- Buy command for stocks is now renamed to `e.buystocks`",
+    "- Sell command for stocks is now renamed to `e.sellstocks`",
+    "- Improved overall performance"
+  ],
+  "2.3": [
+    "- New command: `e.bank`: Upgrade your bank tier",
+    "- New command: `e.ping`: Check the bot's ping",
+    "- New command: `e.use`: Equip/unequip locks, open chests and activate/deactivate boosts",
+    "- New command: `e.server`: Get link to GameBot Hub",
+    "- New command: `e.invite`: Invite the bot to your server",
+    "- Updated `e.level` image to include active items (lock and boost)",
+    "- Fixed typos in bot phrases"
+  ]
 }

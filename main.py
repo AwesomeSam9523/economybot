@@ -226,7 +226,7 @@ async def get_admin():
 
 async def close_admin(a):
     with open('files/admin.json', 'w') as f:
-        f.write(json.dumps(a))
+        f.write(json.dumps(a, indent=2))
 
 async def get_estates():
     with open('files/estates.json', 'r') as f:
@@ -323,31 +323,31 @@ async def get_inv():
 
 async def update_inv(a):
     with open('files/inventory.json', 'w') as e:
-        e.write(json.dumps(a))
+        e.write(json.dumps(a, indent=2))
 
 async def update_stockinfo(data):
     with open('files/stock_config.json', 'w') as stc:
-        stc.write(json.dumps(data))
+        stc.write(json.dumps(data, indent=2))
 
 async def update_stock_data(data):
     with open('files/stocks.json', 'w') as avgbal:
-        avgbal.write(json.dumps(data))
+        avgbal.write(json.dumps(data, indent=2))
 
 async def update_badges(data):
     with open('files/badges.json', 'w') as b:
-        b.write(json.dumps(data))
+        b.write(json.dumps(data, indent=2))
 
 async def update_avg(avg):
     with open('files/average.json', 'w') as avgbal:
-        avgbal.write(json.dumps(avg))
+        avgbal.write(json.dumps(avg, indent=2))
 
 async def update_est(data):
     with open('files/estates.json', 'w') as f:
-        f.write(json.dumps(data))
+        f.write(json.dumps(data, indent=2))
 
 async def update_alerts(data):
     with open('files/alerts.json', 'w') as f:
-        f.write(json.dumps(data))
+        f.write(json.dumps(data, indent=2))
 
 async def update_logs(stuff: str):
     with open('files/logs.txt', 'a') as logs:
@@ -355,15 +355,15 @@ async def update_logs(stuff: str):
 
 async def update_data(data):
     with open('files/accounts.json', 'w') as f:
-        f.write(str(json.dumps(data)))
+        f.write(str(json.dumps(data, indent=2)))
 
 async def update_statements(stat):
     with open('files/statements.json', 'w') as w:
-        w.write(json.dumps(stat))
+        w.write(json.dumps(stat, indent=2))
 
 async def update_xp(data):
     with open('files/xp.json', 'w') as w:
-        w.write(json.dumps(data))
+        w.write(json.dumps(data, indent=2))
 
 async def clear_dues():
     data = await get_data()
@@ -498,13 +498,14 @@ async def stock_update():
         await asyncio.sleep(86400/bot.total_lines)
 
 async def check_storetime():
-    with open('files/shopconfig.json', 'r') as c:
+    with open('files/bot_data.json', 'r') as c:
         config = json.load(c)
-    return config["updated"]
+    return config["shop"]["updated"]
 
 async def shop_update():
-    with open('files/shopconfig.json', 'r') as c:
-        config = json.load(c)
+    with open('files/bot_data.json', 'r') as c:
+        alldata = json.load(c)
+    config = alldata["shop"]
     ct = time.time()
     if ct - config["updated"] < 86400: return
     for i in range(len(storeitems)):
@@ -523,9 +524,9 @@ async def shop_update():
     storeitems.append(newitem)
     config['updated'] = ct
     config['value'] = storeitems
-
-    with open('files/shopconfig.json', 'w') as c:
-        c.write(json.dumps(config))
+    alldata["shop"] = config
+    with open('files/bot_data.json', 'w') as c:
+        c.write(json.dumps(alldata, indent=2))
 
 async def loops():
     while True:
@@ -564,17 +565,15 @@ async def add_timeout(userid, event):
     with open('files/timeouts.json', 'r') as f:
         data = json.load(f)
 
-    person = data.get(f'{userid}')
-    if person is None:
-        person = {}
+    person = data.get(f'{userid}', {})
     person[event] = time.time()
 
-    data[userid] = person
+    data[str(userid)] = person
     with open('files/timeouts.json', 'w') as f:
-        f.write(json.dumps(data))
+        f.write(json.dumps(data, indent=2))
 
 async def alerts_state(userid, state:str):
-    aler = get_alert_info()
+    aler = await get_alert_info()
     userid = str(userid)
     person = aler.get(userid)
     if person is None:
@@ -609,9 +608,9 @@ async def create_statement(user, person, amount, reason, type):
     await update_statements(states)
 
 async def load_shop():
-    with open('files/shopconfig.json', 'r') as s:
+    with open('files/bot_data.json', 'r') as s:
         config = json.load(s)
-    for i in config["value"]:
+    for i in config["shop"]["value"]:
         storeitems.append(i)
 
 async def create_stuff():
@@ -748,6 +747,29 @@ async def make_lvl_img(member, level, xp, total_xp, guildid):
 
     twidth, theight = draw.textsize(f"{await commait(xp)}/{await commait(total_xp)}", fonts)
     draw.text((468 - (twidth / 2), 121 - (theight / 2)), f"{await commait(xp)}/{await commait(total_xp)}", (255, 255, 255), font=fonts, stroke_width=1, stroke_fill=(0, 0, 0))
+
+    invdata = await get_inv()
+    userinv = invdata.get(str(member.id), [])
+    if len(userinv) != 0:
+        eq_lock = userinv.get('eq_lock')
+        eq_boost = userinv.get('eq_boost')
+        paste_loc = 302
+        if eq_lock is not None:
+            for i in storeitems:
+                if eq_lock == i["name"]:
+                    lock = Image.open(f'store/{i["icon"]}').resize((30, 30))
+                    img.paste(lock, (paste_loc, 140), lock.convert('RGBA'))
+                    lock.close()
+        if eq_boost is not None:
+            for i in storeitems:
+                if eq_lock == i["name"]:
+                    lock = Image.open(i["icon"]).resize((40, 40))
+                    img.paste(lock, (260, 135), lock.convert('RGBA'))
+                    lock.close()
+        if eq_lock is None and eq_boost is None:
+            draw.text((306, 150), 'None', font=ImageFont.truetype("badges/font2.ttf", 16))
+    else:
+        draw.text((306, 150), 'None', font=ImageFont.truetype("badges/font2.ttf", 16))
     enhancer = ImageEnhance.Sharpness(img)
     img = enhancer.enhance(2)
     image_bytes = BytesIO()
@@ -791,7 +813,7 @@ async def get_errorfile():
 
 async def update_errorfile(a):
     with open('files/errors.json', 'w') as f:
-        f.write(json.dumps(a))
+        f.write(json.dumps(a, indent=2))
 
 async def debugcode(code, error):
     a = await get_errorfile()
@@ -1184,22 +1206,32 @@ async def format(ctx, member:discord.Member):
 
 @bot.command()
 @commands.is_owner()
-async def release(ctx, title:str, link:str):
+async def release(ctx, title:str):
     if ctx.author.id != 771601176155783198: return
     with open('files/updates.json', 'r') as upd:
         updates = json.load(upd)
 
     update = updates[title]
-    desc = ''
-    for i in update:
-        desc += f'{i}\n'
-    embed = discord.Embed(title=f'Updated to v{title}', color=embedcolor, description=desc)
-    embed.url = link
+    embed = discord.Embed(title=f'Whats New:', color=embedcolor)
+    i = 0
+    while True:
+        print(i)
+        try: name = update[i]
+        except: break
+
+        try: value = update[i + 1]
+        except: value = '\u200b'
+
+        embed.add_field(name=name, value=value, inline=False)
+        i += 2
     embed.timestamp = datetime.datetime.utcnow()
-    embed.set_author(name=f'Bot Updated!', icon_url=bot.pfp)
+    embed.set_author(name=f'Version {title}', icon_url=bot.pfp)
+
+    with open('files/updates.json', 'w') as n:
+        n.write(json.dumps(updates, indent=2))
 
     chl = bot.get_channel(838963496476606485)
-    await chl.send('<@&839370096248881204> New Update Out!',embed = embed)
+    await chl.send('<@&839370096248881204>',embed = embed)
 
 @bot.command()
 @commands.check(is_staff)
@@ -1225,7 +1257,7 @@ async def refresh_data(ctx=None):
         data = json.load(c)
     bot.phrases = data["phrases"]
     bot.help_json = data["help"]
-    bot.shopc = data["shopcategory"]
+    bot.shopc = data["shop"]["category"]
 
 @bot.command()
 @commands.check(is_staff)
@@ -1384,9 +1416,6 @@ async def daily(ctx):
         i = avg_p['i']
     else:
         i = 0
-    if data_p is None:
-        return await ctx.send(f'{ctx.author.mention} Looks like you dont have a bank account. Use `e.bal` to open one.' )
-
     check = await checktimeout(ctx.author.id, 'daily')
     time_gap = 86400 - check
     if time_gap > 0 and check != 0:
@@ -2425,37 +2454,31 @@ async def ping(ctx):
 
 @bot.command()
 @commands.check(general_checks_loop)
-async def banks(ctx):
-    await open_account(ctx.author.id)
-    x = PrettyTable()
-    x.field_names = ["Bank Name", "Tier", "Interest"]
-    for i in bank_details.values():
-        x.add_row([i["name"], i["tier"], f'{i["rate"]}%'])
-    embed = discord.Embed(title='List of Banks',
-                          description=f'Choose your bank to get higher interest rate, loans and more benefits!\n```\n{x}```\n'
-                                      f'To change your bank: `e.bank <tier>`',
-                          color=embedcolor)
-    fetched = bot.get_user(ctx.author.id)
-    embed.timestamp = datetime.datetime.utcnow()
-    embed.set_footer(text='Economy Bot', icon_url=bot.pfp)
-    embed.set_author(name=fetched.name, icon_url=fetched.avatar_url)
-    await ctx.send(embed=embed)
-
-@bot.command()
-@commands.check(general_checks_loop)
-async def bank(ctx, tier:int):
+async def bank(ctx, tier:int=None):
+    if tier is None:
+        await open_account(ctx.author.id)
+        x = PrettyTable()
+        x.field_names = ["Bank Name", "Tier", "Interest"]
+        for i in bank_details.values():
+            x.add_row([i["name"], i["tier"], f'{i["rate"]}%'])
+        embed = discord.Embed(title='List of Banks',
+                              description=f'Choose your bank to get higher interest rate, loans and more benefits!\n```\n{x}```\n'
+                                          f'To change your bank: `e.bank <tier>`',
+                              color=embedcolor)
+        fetched = bot.get_user(ctx.author.id)
+        embed.timestamp = datetime.datetime.utcnow()
+        embed.set_footer(text='Economy Bot', icon_url=bot.pfp)
+        embed.set_author(name=fetched.name, icon_url=fetched.avatar_url)
+        return await ctx.send(embed=embed)
     data = await get_data()
     user = data[str(ctx.author.id)]
 
     if tier <= 0 or tier > 3:
-        return await ctx.send('Invalid Tier')
-    if user['bank_type'] == 3:
-        return await ctx.send('You are at maximum tier')
-
+        return await ctx.send(f'{ctx.author.mention} Invalid Tier')
     if user['bank_type'] == tier:
-        return await ctx.send('You already own a account in this bank')
+        return await ctx.send(f'{ctx.author.mention} You already own a account in this bank')
     elif user['bank_type'] > tier:
-        return await ctx.send('You cannot downgrade your bank tier')
+        return await ctx.send(f'{ctx.author.mention} You cannot downgrade your bank tier')
 
     bal = user['wallet'] + user['bank']
     price = 5000 if tier == 2 else 10000

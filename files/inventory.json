@@ -1,1 +1,9 @@
-{"771601176155783198": {"inv": ["Silver Lock"], "eq_lock": "Silver Lock"}}
+{
+  "771601176155783198": {
+    "inv": [
+      "Silver Lock",
+      "Bronze Lock"
+    ],
+    "eq_lock": "Silver Lock"
+  }
+}
