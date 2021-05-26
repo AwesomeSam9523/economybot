@@ -1,596 +1,862 @@
 {
-   "phrases": {
-      "selfrob_success": [
-         "You tried robbing yourself and got {prize} coins. But surprisingly {prize} coins were missing from your wallet too!",
-         "You robbed yourself of {prize} coins. WHat did ya achieve by this?",
-         "You fought yourself and stole {prize} coins from your own wallet. Tiring day!",
-         "You thought of robbing yourself. Even got hands on {prize} coins! But they were missing from your wallet. Mystery..?",
-         "Your wallet was missing {prize} coins, know why? Because you robbed yourself of it!"
+  "phrases": {
+    "selfrob_success": [
+      "You tried robbing yourself and got {prize} coins. But surprisingly {prize} coins were missing from your wallet too!",
+      "You robbed yourself of {prize} coins. WHat did ya achieve by this?",
+      "You fought yourself and stole {prize} coins from your own wallet. Tiring day!",
+      "You thought of robbing yourself. Even got hands on {prize} coins! But they were missing from your wallet. Mystery..?",
+      "Your wallet was missing {prize} coins, know why? Because you robbed yourself of it!"
+    ],
+    "selfrob_failed": [
+      "You bonked your head to rob yourself, but you fainted right after it. Hospital cost {prize*2} coins",
+      "You punched your own face because you thought of robbing yourself. Medication cost {prize} coins",
+      "You tried stealing money from your own wallet, but dropped the coins in drain. Lost {prize} coins!",
+      "You gave yourself poison to rob, but ended up being in hospital. Spent {prize*5} coins for treatment"
+    ],
+    "rob_success": [
+      "You robbed {whom} and got {prize} coins. Shhh!",
+      "You sneaked quietly from behind and robbed {whom} of {prize} coins",
+      "You DDOSed {whom}'s just to get {prize} coins. Quite big crime for it!",
+      "{whom} was robbed of {prize} coins. Don't know who did it",
+      "You robbed {whom} by punching him for mere {prize} coins. Got them, though."
+    ],
+    "rob_failed": [
+      "You tried robbing {whom}, but he was alert and you got caught. Lost {prize} coins.",
+      "You punched {whom} to rob, but he was stronger. You lost {prize} coins in medication",
+      "You sneaked in your {whom}'s house, but he caught you. Payed {prize} fine to cops to get off",
+      "You missed the pick-pocket to {whom} and got caught. Payed {prize} to police to escape",
+      "You tried to rob {whom} but he caught and complained about you. Payed {prize} as a fine"
+    ],
+    "find_success": [
+      "Yoo I found {c} coins in my sofa!",
+      "I wonder who left {c} coins on the bus seat?",
+      "Did anyone see me picking up {c} coins from footpath?",
+      "Damn, imagine leaving {c} coins in the trash!",
+      "Did my cat pooped out {c} coins? Must have eaten in dinner..",
+      "Sheesh I found {c} coins in my coat pockets!",
+      "Is sock a place to keep {c} coins? Nevermind I ll just take it",
+      "Yeah! {c} coins on top of refrigerator ain't a joke"
+    ],
+    "find_failed": [
+      "Well I went to find coins, but lost {c} instead",
+      "What a bad day, lost {c} coins due to greed",
+      "I shouldn't be greedy, lost {c} coins to a thief. oof",
+      "Well I searched the drain for coins, but lost {c} of my own!",
+      "Noo! Lost {c} coins in search of more",
+      "Did I just lose {c} coins? Oh yes, I did.",
+      "I don't know how I ended up losing {c} coins today"
+    ],
+    "find_neutral": [
+      "Well I expected something this time",
+      "0? R.I.P. my expectations",
+      "Comeon I found nothing again!?",
+      "How come I searched and searched but found absolutely nothing?",
+      "And here I went to find coins, but came back empty handed"
+    ],
+    "shop_noitem": [
+      "Maybe you should wear spectacles?",
+      "Did you even read the name properly?",
+      "Time to send you back to 1st grade to learn how to read",
+      "Why didn't you cross-check the item name before bothering me?",
+      "Bro, just go and re-check the name!"
+    ],
+    "less_bal": [
+      "Aww my poor soul, you don't have coins lmao",
+      "Oh No! Not enough money? Go beg from our mum haha",
+      "Imagine not having enough money but still trying lmfao",
+      "Ew you poor, go and do something worthwhile!",
+      "Bro, atleast check with your wallet before buying",
+      "Why you bother me when you don't have enough coins?"
+    ],
+    "negative": [
+      "Ah, so the counting is 0, -1, -2... Don't mind but you should learn basic stuff first",
+      "No man, we count from 0 in positive direction",
+      "Negative? Are you drunk or what lmao",
+      "Wow. I am amazed how 1st graders are playing with me, don't even know counting!",
+      "Time to send you back to 1st grade so you learn counting lol",
+      "Dude, have you ever tried to mess but failed? Yes, now!",
+      "Lmfao, its 0, 1, 2, 3... Go and learn it first"
+    ],
+    "zero": [
+      "0? Did I ask your math test marks?",
+      "No man, 0 isn't the way to mess with me",
+      "Lmao 0. I accept positive number only, take it or leave it",
+      "Do I look your mum? Because I dont want to know your marks",
+      "You should go and take up a course for common sense.. wait is there even any??",
+      "Atleast enter a positive number bruh",
+      "Did Aryabhatta invent `0` for this purpose?"
+    ],
+    "inv_noitem": [
+      "Do you even own this??",
+      "Damn, imagine trying to use thin air",
+      "Well, what now?",
+      "Dude why do you bother me with such useless things?",
+      "Imagine trying to use what you don't own lmao"
+    ]
+  },
+  "help": {
+    "Fun": {
+      "category": "Fun",
+      "e.level": {
+        "aliases": [
+          "pf"
+        ],
+        "usage": "e.level [user]",
+        "desc": "Shows you level, perks and other stats"
+      },
+      "e.rob": {
+        "aliases": [
+          "None"
+        ],
+        "usage": "e.rob <user>",
+        "desc": "Rob your friend's wallet! Need minimum 100 coins to start"
+      },
+      "e.find": {
+        "aliases": [
+          "None"
+        ],
+        "usage": "e.find",
+        "desc": "Find coins or lose them!"
+      }
+    },
+    "Market": {
+      "category": "Market",
+      "e.store": {
+        "aliases": [
+          "shop"
+        ],
+        "usage": "e.store [page]",
+        "desc": "See items in shop, get to know about daily offers etc."
+      },
+      "e.buy": {
+        "aliases": [
+          "purchase"
+        ],
+        "usage": "e.buy <item name> [quantity]",
+        "desc": "Buy an item from shop"
+      },
+      "e.use": {
+        "usage": "e.use <item name>",
+        "aliases": ["None"],
+        "desc": "Use an item.\nLocks: Equip/Unequip\nChest: Unbox for items\nBoosts: Activate/Deactivate"
+      },
+      "e.sell": {
+        "usage": "e.sell <item name>",
+        "aliases": ["None"],
+        "desc": "Sell an item for coins"
+      },
+      "e.items": {
+        "usage": "e.items",
+        "aliases": ["itemsinv", "iteminv"],
+        "desc": "View the inventory for all your owned items"
+      },
+      "e.inventory": {
+        "aliases": [
+          "inv"
+        ],
+        "usage": "e.inventory",
+        "desc": "View your inventory"
+      }
+    },
+    "Estates": {
+      "category": "Estates",
+      "e.estates": {
+        "aliases": [
+          "None"
+        ],
+        "usage": "e.estates",
+        "desc": "Estates are a way to earn some coins for free. You have being provided with a hotel which will earn you revenue.\nDont forget, money never comes entirely for free, so you have to maintain your hotel too."
+      },
+      "e.revenue": {
+        "aliases": [
+          "None"
+        ],
+        "usage": "e.revenue",
+        "desc": "Use this command to earn revenue. The revenue will be added in your bank"
+      },
+      "e.maintain": {
+        "aliases": [
+          "None"
+        ],
+        "usage": "e.maintain",
+        "desc": "Use this to maintain your hotel to look shining new! Not maintaining for a long time will lead to lesser revenue."
+      },
+      "e.upgrade": {
+        "aliases": [
+          "None"
+        ],
+        "usage": "e.upgrade",
+        "desc": "Upgrading your hotel will lead to more revenue and less maintenance relatively. It also increases your net-worth"
+      }
+    },
+    "Stocks": {
+      "category": "Stocks",
+      "e.stocks": {
+        "aliases": [
+          "None"
+        ],
+        "usage": "e.stocks",
+        "desc": "Invest in stock market which refreshes every 20-30 secs. New stock starts every day. Probably the best and fastest way to earn money?"
+      },
+      "e.buystocks": {
+        "aliases": [
+          "None"
+        ],
+        "usage": "e.buystocks <quantity>",
+        "desc": "Buy stocks on current price"
+      },
+      "e.sellstocks": {
+        "aliases": [
+          "None"
+        ],
+        "usage": "e.sellstocks <quantity>",
+        "desc": "Sell stocks on current price"
+      }
+    },
+    "Bank": {
+      "category": "Bank",
+      "e.balance": {
+        "aliases": [
+          "bal"
+        ],
+        "usage": "e.balance [user]",
+        "desc": "View you balance: Bank, Wallet and Stocks"
+      },
+      "e.mybank": {
+        "aliases": [
+          "None"
+        ],
+        "usage": "e.mybank",
+        "desc": "View interest rate, average balance, bank tier etc."
+      },
+      "e.bank": {
+        "usage": "e.bank [tier]",
+        "aliases": ["None"],
+        "desc": "View all the bank tiers and upgrade your bank for more interest and loan"
+      },
+      "e.statement": {
+        "aliases": [
+          "transactions"
+        ],
+        "usage": "e.statement [-a <amount>] [-t <c | d>] [-r <reason>]",
+        "desc": "View your bank statement and filter records based on Type, Amount and/or Reason"
+      },
+      "e.deposit": {
+        "aliases": [
+          "dep"
+        ],
+        "usage": "e.deposit <amount>",
+        "desc": "Deposit coins to bank"
+      },
+      "e.withdraw": {
+        "aliases": [
+          "with"
+        ],
+        "usage": "e.withdraw <amount>",
+        "desc": "Withdraw coins from bank"
+      }
+    },
+    "Admin": {
+      "category": "Admin",
+      "e.set_chl": {
+        "aliases": [
+          "add_chl"
+        ],
+        "usage": "e.set_chl <#channel>",
+        "desc": "Allows the bot to respond in that channel"
+      },
+      "e.del_chl": {
+        "aliases": [
+          "delete_chl",
+          "rem_chl",
+          "remove_chl"
+        ],
+        "usage": "e.del_chl <#channel>",
+        "desc": "Disallows the bot to respond in that channel"
+      },
+      "e.list_chl": {
+        "aliases": [
+          "show_chl"
+        ],
+        "usage": "e.list_chl",
+        "desc": "Lists all the channels where the bot is allowed to respond"
+      },
+      "e.reset_chl": {
+        "aliases": [
+          "None"
+        ],
+        "usage": "e.reset_chl",
+        "desc": "Clears all the configuration and makes the bot to respond again in **all** the channels"
+      }
+    },
+    "Misc": {
+      "category": "Misc",
+      "e.give": {
+        "aliases": [
+          "None"
+        ],
+        "usage": "e.give <user> <amount>",
+        "desc": "Send coins to a person from your wallet"
+      },
+      "e.transfer": {
+        "aliases": [
+          "None"
+        ],
+        "usage": "e.transfer <user> <amount> [Reason]",
+        "desc": "Transfer coins from your bank to others' bank. It costs interest if bank isn't same.\nThis action is recorded in bank statements"
+      },
+      "e.alerts": {
+        "aliases": [
+          "None"
+        ],
+        "usage": "e.alerts <on | off>",
+        "desc": "Receive DMs from bot upon stock ending, pending maintenance etc."
+      },
+      "e.daily": {
+        "aliases": [
+          "None"
+        ],
+        "usage": "e.daily",
+        "desc": "Gives you your daily interest. It is the product of interest rate and average bank balance"
+      },
+      "e.report": {
+        "aliases": [
+          "None"
+        ],
+        "usage": "e.report <error-code>",
+        "desc": "Report an error to developers"
+      }
+    }
+  },
+  "shop": {
+    "value": [
+      {
+        "icon": "silver_lock.png",
+        "name": "Silver Lock",
+        "desc": "Increases rob protection by 25%",
+        "price": "6,000",
+        "special": false,
+        "disc": "4,800",
+        "percent": 20
+      },
+      {
+        "icon": "gold_lock.png",
+        "name": "Gold Lock",
+        "desc": "Increases rob protection by 40%",
+        "price": "15,000",
+        "special": false,
+        "disc": "9,450",
+        "percent": 37
+      },
+      {
+        "icon": "common_chest.png",
+        "name": "Common Chest",
+        "desc": "1 Common Item + coins",
+        "price": "1,000",
+        "special": false,
+        "disc": "720",
+        "percent": 28
+      },
+      {
+        "icon": "legendary_chest.png",
+        "name": "Legendary Chest",
+        "desc": "2 Rares & 0.1% for Epic + coins",
+        "price": "10,000",
+        "special": false,
+        "disc": "5,500",
+        "percent": 45
+      },
+      {
+        "icon": "rare_chest.png",
+        "name": "Rare Chest",
+        "desc": "1 Rare Item + coins",
+        "price": "3,500",
+        "special": false,
+        "disc": "1,750",
+        "percent": 50
+      },
+      {
+        "icon": "bronze_lock.png",
+        "name": "Bronze Lock",
+        "desc": "Increases rob protection by 10%",
+        "price": "2,500",
+        "special": true,
+        "disc": "2,250",
+        "percent": 10
+      }
+    ],
+    "category": {
+      "chest": [
+        "Common Chest",
+        "Rare Chest",
+        "Legendary Chest"
       ],
-      "selfrob_failed": [
-         "You bonked your head to rob yourself, but you fainted right after it. Hospital cost {prize*2} coins",
-         "You punched your own face because you thought of robbing yourself. Medication cost {prize} coins",
-         "You tried stealing money from your own wallet, but dropped the coins in drain. Lost {prize} coins!",
-         "You gave yourself poison to rob, but ended up being in hospital. Spent {prize*5} coins for treatment"
-      ],
-      "rob_success": [
-         "You robbed {whom} and got {prize} coins. Shhh!",
-         "You sneaked quietly from behind and robbed {whom} of {prize} coins",
-         "You DDOSed {whom}'s just to get {prize} coins. Quite big crime for it!",
-         "{whom} was robbed of {prize} coins. Don't know who did it",
-         "You robbed {whom} by punching him for mere {prize} coins. Got them, though."
-      ],
-      "rob_failed": [
-         "You tried robbing {whom}, but he was alert and you got caught. Lost {prize} coins.",
-         "You punched {whom} to rob, but he was stronger. You lost {prize} coins in medication",
-         "You sneaked in your {whom}'s house, but he caught you. Payed {prize} fine to cops to get off",
-         "You missed the pick-pocket to {whom} and got caught. Payed {prize} to police to escape",
-         "You tried to rob {whom} but he caught and complained about you. Payed {prize} as a fine"
-      ],
-      "find_success": [
-         "Yoo I found {c} coins in my sofa!",
-         "I wonder who left {c} coins on the bus seat?",
-         "Did anyone see me picking up {c} coins from footpath?",
-         "Damn, imagine leaving {c} coins in the trash!",
-         "Did my cat pooped out {c} coins? Must have eaten in dinner..",
-         "Sheesh I found {c} coins in my coat pockets!",
-         "Is sock a place to keep {c} coins? Nevermind I ll just take it",
-         "Yeah! {c} coins on top of refrigerator ain't a joke"
-      ],
-      "find_failed": [
-         "Well I went to find coins, but lost {c} instead",
-         "What a bad day, lost {c} coins due to greed",
-         "I shouldn't be greedy, lost {c} coins to a thief. oof",
-         "Well I searched the drain for coins, but lost {c} of my own!",
-         "Noo! Lost {c} coins in search of more",
-         "Did I just lose {c} coins? Oh yes, I did.",
-         "I don't know how I ended up losing {c} coins today"
-      ],
-      "find_neutral": [
-         "Well I expected something this time",
-         "0? R.I.P. my expectations",
-         "Comeon I found nothing again!?",
-         "How come I searched and searched but found absolutely nothing?",
-         "And here I went to find coins, but came back empty handed"
-      ],
-      "shop_noitem": [
-         "Maybe you should wear spectacles?",
-         "Did you even read the name properly?",
-         "Time to send you back to 1st grade to learn how to read",
-         "Why didn't you cross-check the item name before bothering me?",
-         "Bro, just go and re-check the name!"
-      ],
-      "less_bal": [
-         "Aww my poor soul, you don't have coins lmao",
-         "Oh No! Not enough money? Go beg from our mum haha",
-         "Imagine not having enough money but still trying lmfao",
-         "Ew you poor, go and do something worthwhile!",
-         "Bro, atleast check with your wallet before buying",
-         "Why you bother me when you don't have enough coins?"
-      ],
-      "negative": [
-         "Ah, so the counting is 0, -1, -2... Don't mind but you should learn basic stuff first",
-         "No man, we count from 0 in positive direction",
-         "Negative? Are you drunk or what lmao",
-         "Wow. I am amazed how 1st graders are playing with me, don't even know counting!",
-         "Time to send you back to 1st grade so you learn counting lol",
-         "Dude, have you ever tried to mess but failed? Yes, now!",
-         "Lmfao, its 0, 1, 2, 3... Go and learn it first"
-      ],
-      "zero": [
-         "0? Did I ask your math test marks?",
-         "No man, 0 isn't the way to mess with me",
-         "Lmao 0. I accept positive number only, take it or leave it",
-         "Do I look your mum? Because I dont want to know your marks",
-         "You should go and take up a course for common sense.. wait is there even any??",
-         "Atleast enter a positive number bruh",
-         "Did Aryabhatta invent `0` for this purpose?"
-      ],
-      "inv_noitem": [
-         "Do you even own this??",
-         "Damn, imagine trying to use thin air",
-         "Well, what now?",
-         "Dude why do you bother me with such useless things?",
-         "Imagine trying to use what you don't own lmao"
+      "boost": [],
+      "lock": [
+        "Bronze Lock",
+        "Silver Lock",
+        "Gold Lock"
       ]
-   },
-   "help": {
-      "Fun": {
-         "category": "Fun",
-         "e.level": {
-            "aliases": [
-               "pf"
-            ],
-            "usage": "e.level [user]",
-            "desc": "Shows you level, perks and other stats"
-         },
-         "e.rob": {
-            "aliases": [
-               "None"
-            ],
-            "usage": "e.rob <user>",
-            "desc": "Rob your friend's wallet! Need minimum 100 coins to start"
-         },
-         "e.find": {
-            "aliases": [
-               "None"
-            ],
-            "usage": "e.find",
-            "desc": "Find coins or lose them!"
-         },
-         "e.store": {
-            "aliases": [
-               "shop"
-            ],
-            "usage": "e.store [page]",
-            "desc": "See items in shop, get to know about daily offers etc."
-         },
-         "e.buy": {
-            "aliases": [
-               "purchase"
-            ],
-            "usage": "e.buy <item name> [quantity]",
-            "desc": "Buy an item from shop"
-         },
-         "e.inventory": {
-            "aliases": [
-               "inv"
-            ],
-            "usage": "e.inventory",
-            "desc": "View your inventory"
-         }
-      },
-      "Estates": {
-         "category": "Estates",
-         "e.estates": {
-            "aliases": [
-               "None"
-            ],
-            "usage": "e.estates",
-            "desc": "Estates are a way to earn some coins for free. You have being provided with a hotel which will earn you revenue.\nDont forget, money never comes entirely for free, so you have to maintain your hotel too."
-         },
-         "e.revenue": {
-            "aliases": [
-               "None"
-            ],
-            "usage": "e.revenue",
-            "desc": "Use this command to earn revenue. The revenue will be added in your bank"
-         },
-         "e.maintain": {
-            "aliases": [
-               "None"
-            ],
-            "usage": "e.maintain",
-            "desc": "Use this to maintain your hotel to look shining new! Not maintaining for a long time will lead to lesser revenue."
-         },
-         "e.upgrade": {
-            "aliases": [
-               "None"
-            ],
-            "usage": "e.upgrade",
-            "desc": "Upgrading your hotel will lead to more revenue and less maintenance relatively. It also increases your net-worth"
-         }
-      },
-      "Stocks": {
-         "category": "Stocks",
-         "e.stocks": {
-            "aliases": [
-               "None"
-            ],
-            "usage": "e.stocks",
-            "desc": "Invest in stock market which refreshes every 20-30 secs. New stock starts every day. Probably the best and fastest way to earn money?"
-         },
-         "e.buystocks": {
-            "aliases": [
-               "None"
-            ],
-            "usage": "e.buystocks <quantity>",
-            "desc": "Buy stocks on current price"
-         },
-         "e.sellstocks": {
-            "aliases": [
-               "None"
-            ],
-            "usage": "e.sellstocks <quantity>",
-            "desc": "Sell stocks on current price"
-         }
-      },
-      "Bank": {
-         "category": "Bank",
-         "e.balance": {
-            "aliases": [
-               "bal"
-            ],
-            "usage": "e.balance [user]",
-            "desc": "View you balance: Bank, Wallet and Stocks"
-         },
-         "e.mybank": {
-            "aliases": [
-               "None"
-            ],
-            "usage": "e.mybank",
-            "desc": "View interest rate, average balance, bank tier etc."
-         },
-         "e.statement": {
-            "aliases": [
-               "transactions"
-            ],
-            "usage": "e.statement [-a <amount>] [-t <c | d>] [-r <reason>]",
-            "desc": "View your bank statement and filter records based on Type, Amount and/or Reason"
-         },
-         "e.deposit": {
-            "aliases": [
-               "dep"
-            ],
-            "usage": "e.deposit <amount>",
-            "desc": "Deposit coins to bank"
-         },
-         "e.withdraw": {
-            "aliases": [
-               "with"
-            ],
-            "usage": "e.withdraw <amount>",
-            "desc": "Withdraw coins from bank"
-         }
-      },
-      "Admin": {
-         "category": "Admin",
-         "e.set_chl": {
-            "aliases": [
-               "add_chl"
-            ],
-            "usage": "e.set_chl <#channel>",
-            "desc": "Allows the bot to respond in that channel"
-         },
-         "e.del_chl": {
-            "aliases": [
-               "delete_chl",
-               "rem_chl",
-               "remove_chl"
-            ],
-            "usage": "e.del_chl <#channel>",
-            "desc": "Disallows the bot to respond in that channel"
-         },
-         "e.list_chl": {
-            "aliases": [
-               "show_chl"
-            ],
-            "usage": "e.list_chl",
-            "desc": "Lists all the channels where the bot is allowed to respond"
-         },
-         "e.reset_chl": {
-            "aliases": [
-               "None"
-            ],
-            "usage": "e.reset_chl",
-            "desc": "Clears all the configuration and makes the bot to respond again in **all** the channels"
-         }
-      },
-      "Misc": {
-         "category": "Misc",
-         "e.give": {
-            "aliases": [
-               "None"
-            ],
-            "usage": "e.give <user> <amount>",
-            "desc": "Send coins to a person from your wallet"
-         },
-         "e.transfer": {
-            "aliases": [
-               "None"
-            ],
-            "usage": "e.transfer <user> <amount> [Reason]",
-            "desc": "Transfer coins from your bank to others' bank. It costs interest if bank isn't same.\nThis action is recorded in bank statements"
-         },
-         "e.alerts": {
-            "aliases": [
-               "None"
-            ],
-            "usage": "e.alerts <on | off>",
-            "desc": "Receive DMs from bot upon stock ending, pending maintenance etc."
-         },
-         "e.daily": {
-            "aliases": [
-               "None"
-            ],
-            "usage": "e.daily",
-            "desc": "Gives you your daily interest. It is the product of interest rate and average bank balance"
-         },
-         "e.report": {
-            "aliases": [
-               "None"
-            ],
-            "usage": "e.report <error-code>",
-            "desc": "Report an error to developers"
-         }
-      }
-   },
-   "shop": {
-      "value": [
-         {
-            "icon": "bronze_lock.png",
-            "name": "Bronze Lock",
-            "desc": "Increases rob protection by 10%",
-            "price": "2,500",
-            "special": false,
-            "disc": "725"
-         },
-         {
-            "icon": "silver_lock.png",
-            "name": "Silver Lock",
-            "desc": "Increases rob protection by 25%",
-            "price": "6,000",
-            "special": false,
-            "disc": "4,800",
-            "percent": 20
-         },
-         {
-            "icon": "gold_lock.png",
-            "name": "Gold Lock",
-            "desc": "Increases rob protection by 40%",
-            "price": "15,000",
-            "special": false,
-            "disc": "9,450",
-            "percent": 37
-         },
-         {
-            "icon": "common_chest.png",
-            "name": "Common Chest",
-            "desc": "1 Common Item + coins",
-            "price": "1,000",
-            "special": false,
-            "disc": "720",
-            "percent": 28
-         },
-         {
-            "icon": "legendary_chest.png",
-            "name": "Legendary Chest",
-            "desc": "2 Rares & 0.1% for Epic + coins",
-            "price": "10,000",
-            "special": false,
-            "disc": "5,500",
-            "percent": 45
-         },
-         {
-            "icon": "rare_chest.png",
-            "name": "Rare Chest",
-            "desc": "1 Rare Item + coins",
-            "price": "3,500",
-            "special": true,
-            "disc": "1,750",
-            "percent": 50
-         }
+    },
+    "updated": 1622030158.5539665
+  },
+  "items": {
+    "common": {
+      "items": [
+        {
+          "name": "Rotten Tomato",
+          "value": [
+            100,
+            100
+          ],
+          "desc": "A yellow rotten tomato. Ew it smells"
+        },
+        {
+          "name": "Cloth Piece",
+          "value": [
+            75,
+            75
+          ],
+          "desc": "A torn cloth piece from a pirate's flag"
+        },
+        {
+          "name": "Office Bag",
+          "value": [
+            100,
+            250
+          ],
+          "desc": "A useless bag covered with dust. Maybe you can find some coins in it?"
+        },
+        {
+          "name": "Spray Can",
+          "value": [
+            100,
+            100
+          ],
+          "desc": "An empty spray can, not much worth tbh"
+        },
+        {
+          "name": "Black Pen",
+          "value": [
+            150,
+            150
+          ],
+          "desc": "A regular black pen with full ink. Maybe you should sell it"
+        },
+        {
+          "name": "Broken Mouse",
+          "value": [
+            200,
+            350
+          ],
+          "desc": "What once used to be an expensive mouse, is now broken. Isn't worth much imo"
+        },
+        {
+          "name": "N-95 Mask",
+          "value": [
+            200,
+            300
+          ],
+          "desc": "A mask to protect from COVID-19. Are you thinking to sell it, greedy man?"
+        },
+        {
+          "name": "Dead Calculator",
+          "value": [
+            500,
+            750
+          ],
+          "desc": "Its just a calculator that no longer works. Time to mine gold out of PCIs"
+        },
+        {
+          "name": "Leather Shoes",
+          "value": [
+            350,
+            500
+          ],
+          "desc": "A simple shoe made out of leather"
+        },
+        {
+          "name": "Wooden Stick",
+          "value": [
+            300,
+            500
+          ],
+          "desc": "Just a wooden stick lol. What did you expect?"
+        },
+        {
+          "name": "Broken String",
+          "value": [
+            250,
+            500
+          ],
+          "desc": "A small piece of string. Where did it even come from?"
+        },
+        {
+          "name": "Mouse Pad",
+          "value": [
+            500,
+            700
+          ],
+          "desc": "Some pro gamer's mouse pad"
+        },
+        {
+          "name": "Bronze Spoon",
+          "value": [
+            500,
+            600
+          ],
+          "desc": "What? How can someone eat with it.."
+        },
+        {
+          "name": "Flower Vase",
+          "value": [
+            700,
+            1000
+          ],
+          "desc": "A not-so-old antique vase, but not worthless"
+        },
+        {
+          "name": "Maths Book",
+          "value": [
+            300,
+            500
+          ],
+          "desc": "Ew, who likes math? Nevermind, just sell it for coins"
+        },
+        {
+          "name": "Charger",
+          "value": [
+            300,
+            500
+          ],
+          "desc": "A laptop charger, very useful ngl"
+        },
+        {
+          "name": "Wall Clock",
+          "value": [
+            500,
+            700
+          ],
+          "desc": "An ugly looking wall clock. I would have got rid of it"
+        },
+        {
+          "name": "Pen Stand",
+          "value": [
+            200,
+            350
+          ],
+          "desc": "A regular stand to keep your pens"
+        },
+        {
+          "name": "Book Stand",
+          "value": [
+            500,
+            1000
+          ],
+          "desc": ""
+        },
+        {
+          "name": "Magnifying Glass",
+          "value": [
+            500,
+            700
+          ],
+          "desc": "A hand-help magnifying glass"
+        },
+        {
+          "name": "Lollipop",
+          "value": [
+            200,
+            400
+          ],
+          "desc": "A sugery lollipop"
+        },
+        {
+          "name": "Eaten Chocolate",
+          "value": [
+            300,
+            500
+          ],
+          "desc": "Who does even leave a half-eaten chocolate on street?"
+        },
+        {
+          "name": "Lighter",
+          "value": [
+            500,
+            700
+          ],
+          "desc": "No smoking here, please!"
+        },
+        {
+          "name": "Tennis Ball",
+          "value": [
+            400,
+            600
+          ],
+          "desc": "A brand new tennis ball. Goos stuff to sell"
+        },
+        {
+          "name": "Rubics Cube",
+          "value": [
+            500,
+            800
+          ],
+          "desc": "Just a 3x3x3 rubics cube"
+        },
+        {
+          "name": "Hourglass",
+          "value": [
+            500,
+            1000
+          ],
+          "desc": "A hourglass to keep watch on time. Pretty Ancient"
+        },
+        {
+          "name": "Coffee Mug",
+          "value": [
+            800,
+            1000
+          ],
+          "desc": "This very dirty cup is stolen straight from Thunder's kitchen. Dont snitch please"
+        },
+        {
+          "name": "Broken CD",
+          "value": [
+            500,
+            700
+          ],
+          "desc": "Did it have any data? Sadly it will always be a mystery.."
+        }
       ],
-      "category": {
-         "chest": [
-            "Common Chest",
-            "Rare Chest",
-            "Legendary Chest"
-         ],
-         "boost": [],
-         "lock": [
-            "Bronze Lock",
-            "Silver Lock",
-            "Gold Lock"
-         ]
-      },
-      "updated": 1621941612.9111476
-   },
-   "items": {
-      "common": {
-         "items": [
-            {
-               "name": "Rotten Tomato",
-               "value": [100, 100],
-               "desc": "A yellow rotten tomato. Ew it smells"
-            }, {
-               "name": "Cloth Piece",
-               "value": [75, 75],
-               "desc": "A torn cloth piece from a pirate's flag"
-            }, {
-               "name": "Office Bag",
-               "value": [100, 250],
-               "desc": "A useless bag covered with dust. Maybe you can find some coins in it?"
-            }, {
-               "name": "Spray Can",
-               "value": [100, 100],
-               "desc": "An empty spray can, not much worth tbh"
-            }, {
-               "name": "Black Pen",
-               "value": [150, 150],
-               "desc": "A regular black pen with full ink. Maybe you should sell it"
-            }, {
-               "name": "Broken Mouse",
-               "value": [200, 350],
-               "desc": "What once used to be an expensive mouse, is now broken. Isn't worth much imo"
-            }, {
-               "name": "N-95 Mask",
-               "value": [200, 300],
-               "desc": "A mask to protect from COVID-19. Are you thinking to sell it, greedy man?"
-            }, {
-               "name": "Dead Calculator",
-               "value": [500, 750],
-               "desc": "Its just a calculator that no longer works. Time to mine gold out of PCIs"
-            }, {
-               "name": "Leather Shoes",
-               "value": [350, 500],
-               "desc": "A simple shoe made out of leather"
-            }, {
-               "name": "Wooden Stick",
-               "value": [300, 500],
-               "desc": "Just a wooden stick lol. What did you expect?"
-            }, {
-               "name": "Broken String",
-               "value": [250, 500],
-               "desc": "A small piece of string. Where did it even come from?"
-            }, {
-               "name": "Mouse Pad",
-               "value": [500, 700],
-               "desc": "Some pro gamer's mouse pad"
-            }, {
-               "name": "Bronze Spoon",
-               "value": [500, 600],
-               "desc": "What? How can someone eat with it.."
-            }, {
-               "name": "Flower Vase",
-               "value": [700, 1000],
-               "desc": "A not-so-old antique vase, but not worthless"
-            }, {
-               "name": "Maths Book",
-               "value": [300, 500],
-               "desc": "Ew, who likes math? Nevermind, just sell it for coins"
-            }, {
-               "name": "Charger",
-               "value": [300, 500],
-               "desc": "A laptop charger, very useful ngl"
-            }, {
-               "name": "Wall Clock",
-               "value": [500, 700],
-               "desc": "An ugly looking wall clock. I would have got rid of it"
-            }, {
-               "name": "Pen Stand",
-               "value": [200, 350],
-               "desc": "A regular stand to keep your pens"
-            }, {
-               "name": "Book Stand",
-               "value": [500, 1000],
-               "desc": ""
-            }, {
-               "name": "Magnifying Glass",
-               "value": [500, 700],
-               "desc": "A hand-help magnifying glass"
-            }, {
-               "name": "Lollipop",
-               "value": [200, 400],
-               "desc": "A sugery lollipop"
-            }, {
-               "name": "Eaten Chocolate",
-               "value": [300, 500],
-               "desc": "Who does even leave a half-eaten chocolate on street?"
-            }, {
-               "name": "Lighter",
-               "value": [500, 700],
-               "desc": "No smoking here, please!"
-            }, {
-               "name": "Tennis Ball",
-               "value": [400, 600],
-               "desc": "A brand new tennis ball. Goos stuff to sell"
-            }, {
-               "name": "Rubics Cude",
-               "value": [500, 800],
-               "desc": "Just a 3x3x3 rubics cube"
-            }, {
-               "name": "Hourglass",
-               "value": [500, 1000],
-               "desc": "A hourglass to keep watch on time. Pretty Ancient"
-            }, {
-               "name": "Coffee Mug",
-               "value": [800, 1000],
-               "desc": "This very dirty cup is stolen straight from Thunder's kitchen. Dont snitch please"
-            }, {
-               "name": "Broken CD",
-               "value": [500, 700],
-               "desc": "Did it have any data? Sadly it will always be a mystery.."
-            }
-         ],
-         "boost": [
-            {
-               "name": "Fancy Badge",
-               "desc": "Activate it to see a 'Gold Coin' badge on your profile!",
-               "duration": 3600,
-               "value": 1000
-            }, {
-               "name": "XP Multiplier",
-               "desc": "Get double XP when activated",
-               "duration": 360,
-               "value": 1000
-            }
-         ],
-         "collect": []
-      }
-      },
-      "rare": {
-         "items": [
-            {
-               "name": "A wallet",
-               "value": [1500, 2500],
-               "desc": "Just a wallet found lying on the street. Ain't empty bro"
-            }, {
-               "name": "RC Drone",
-               "value": [2000, 3000],
-               "desc": "A remote controlled drone. Play with it? Nah, just sell it lmao"
-            }, {
-               "name": "Copper Wires",
-               "value": [1500, 2250],
-               "desc": "A bundle of copper wires. Worth some good amount of coins"
-            }, {
-               "name": "Gold Chain",
-               "value": [2500, 3500],
-               "desc": "Yes, a gold chain. Not too heavy, but enough for your needs"
-            }, {
-               "name": "Headphones",
-               "value": [2000, 3000],
-               "desc": "Bass-boosted headphones for serious music lovers"
-            }, {
-               "name": "Party Speakers",
-               "value": [2500, 3000],
-               "desc": "Top notch sound quality speakers, mainly for beach parties"
-            }, {
-               "name": "Mobile Phone",
-               "value": [2500, 3500],
-               "desc": "A regular mobile phone for daily usage. Sells for good amount"
-            }, {
-               "name": "Electric Guitar",
-               "value": [2500, 3000],
-               "desc": "A rockstar's best friend. Well, its all yours now"
-            }, {
-               "name": "Travel Bag",
-               "value": [2000, 3000],
-               "desc": "A good quality travel bag with strong synthetic material"
-            }, {
-               "name": "Mini Boom Box",
-               "value": [2000, 3000],
-               "desc": "A portable boom box for people who love music"
-            }, {
-               "name": "Broken Television",
-               "value": [3000, 4000],
-               "desc": "Who knows what much a broken T.V. is worth?"
-            }, {
-               "name": "Gaming Chair",
-               "value": [2000, 3000],
-               "desc": "Yeah, it will make you a pro gamer"
-            }, {
-               "name": "Antique Painting",
-               "value": [3000, 3500],
-               "desc": "A very antique chinese painting. Worth a lot bro"
-            }, {
-               "name": "WIFI Router",
-               "value": [2500, 3000],
-               "desc": "A very expensive gaming router with high speed and almost 0 ping"
-            }, {
-               "name": "Gold Spectacles",
-               "value": [2500, 3000],
-               "desc": "A quite good looking spectacles. Wonder who owned them earlier.."
-            }, {
-               "name": "Piano",
-               "value": [3000, 4000],
-               "desc": "A large piano which was used in a very popular song. Nice luck ngl"
-            }, {
-               "name": "Electric Drums",
-               "value": [2500, 3500],
-               "desc": "Brand new drums, lets go rock and roll!"
-            }
-         ],
-         "boost": [
-            {
-               "name": ""
-            }
-         ],
-         "collect": []
-      },
-      "epic": {
-         "items": [],
-         "boost": [],
-         "collect": []
-      }
+      "boost": [
+        {
+          "name": "Fancy Badge",
+          "desc": "Activate it to see a 'Gold Coin' badge on your profile!",
+          "duration": 3600,
+          "value": 1000
+        },
+        {
+          "name": "XP Multiplier",
+          "desc": "Get double XP when activated",
+          "duration": 360,
+          "value": 1000
+        }
+      ],
+      "collect": []
+    },
+    "rare": {
+      "items": [
+        {
+          "name": "A wallet",
+          "value": [
+            1500,
+            2500
+          ],
+          "desc": "Just a wallet found lying on the street. Ain't empty bro"
+        },
+        {
+          "name": "RC Drone",
+          "value": [
+            2000,
+            3000
+          ],
+          "desc": "A remote controlled drone. Play with it? Nah, just sell it lmao"
+        },
+        {
+          "name": "Copper Wire",
+          "value": [
+            1500,
+            2250
+          ],
+          "desc": "A bundle of copper wires. Worth some good amount of coins"
+        },
+        {
+          "name": "Gold Chain",
+          "value": [
+            2500,
+            3500
+          ],
+          "desc": "Yes, a gold chain. Not too heavy, but enough for your needs"
+        },
+        {
+          "name": "Headphones",
+          "value": [
+            2000,
+            3000
+          ],
+          "desc": "Bass-boosted headphones for serious music lovers"
+        },
+        {
+          "name": "Party Speakers",
+          "value": [
+            2500,
+            3000
+          ],
+          "desc": "Top notch sound quality speakers, mainly for beach parties"
+        },
+        {
+          "name": "Mobile Phone",
+          "value": [
+            2500,
+            3500
+          ],
+          "desc": "A regular mobile phone for daily usage. Sells for good amount"
+        },
+        {
+          "name": "Electric Guitar",
+          "value": [
+            2500,
+            3000
+          ],
+          "desc": "A rockstar's best friend. Well, its all yours now"
+        },
+        {
+          "name": "Travel Bag",
+          "value": [
+            2000,
+            3000
+          ],
+          "desc": "A good quality travel bag with strong synthetic material"
+        },
+        {
+          "name": "Mini Boom Box",
+          "value": [
+            2000,
+            3000
+          ],
+          "desc": "A portable boom box for people who love music"
+        },
+        {
+          "name": "Broken Television",
+          "value": [
+            3000,
+            4000
+          ],
+          "desc": "Who knows what much a broken T.V. is worth?"
+        },
+        {
+          "name": "Gaming Chair",
+          "value": [
+            2000,
+            3000
+          ],
+          "desc": "Yeah, it will make you a pro gamer"
+        },
+        {
+          "name": "Antique Painting",
+          "value": [
+            3000,
+            3500
+          ],
+          "desc": "A very antique chinese painting. Worth a lot bro"
+        },
+        {
+          "name": "WIFI Router",
+          "value": [
+            2500,
+            3000
+          ],
+          "desc": "A very expensive gaming router with high speed and almost 0 ping"
+        },
+        {
+          "name": "Gold Spectacles",
+          "value": [
+            2500,
+            3000
+          ],
+          "desc": "A quite good looking spectacles. Wonder who owned them earlier.."
+        },
+        {
+          "name": "Piano",
+          "value": [
+            3000,
+            4000
+          ],
+          "desc": "A large piano which was used in a very popular song. Nice luck ngl"
+        },
+        {
+          "name": "Electric Drums",
+          "value": [
+            2500,
+            3500
+          ],
+          "desc": "Brand new drums, lets go rock and roll!"
+        }
+      ],
+      "boost": [
+        {
+          "name": "Coins Multiplier",
+          "value": 5000,
+          "duration": 1440,
+          "desc": "Get 1.5x coins in rob, find and sell commands!"
+        },
+        {
+          "name": "Half Price Item",
+          "value": 5000,
+          "duration": 0,
+          "desc": "Buy next item from shop at 50% of the listed price!"
+        }
+      ],
+      "collect": []
+    },
+    "legendary": {
+      "items": [
+        {
+          "name": "Laptop",
+          "value": [
+            25000,
+            30000
+          ],
+          "desc": "A brand new laptop!"
+        },
+        {
+          "name": "Laser Printer",
+          "value": [
+            25000,
+            30000
+          ],
+          "desc": "A high tech printer for ultra fast printing"
+        },
+        {
+          "name": "Money Bag",
+          "value": [
+            30000,
+            50000
+          ],
+          "desc": "A bag full of money! Damn looks really heave man"
+        },
+        {
+          "name": "Gold Brick",
+          "value": [
+            30000,
+            40000
+          ],
+          "desc": "A heavy gold brick. Worth really good amount"
+        },
+        {
+          "name": "War Sword",
+          "value": [
+            40000,
+            60000
+          ],
+          "desc": "A warrior's sword used in a historic battle"
+        }
+      ],
+      "boost": [
+        {
+          "name": "Level Booster",
+          "desc": "Adds XP to skip to the next level",
+          "duration": 0,
+          "value": 15000
+        },
+        {
+          "name": "Best Thief",
+          "desc": "Break any lock and get a guaranteed successful robbery (valid once)",
+          "duration": 0,
+          "value": 15000
+        }
+      ],
+      "collect": []
+    }
+  }
 }

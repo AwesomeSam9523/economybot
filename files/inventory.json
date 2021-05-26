@@ -2,8 +2,27 @@
   "771601176155783198": {
     "inv": [
       "Silver Lock",
-      "Bronze Lock"
+      "Bronze Lock",
+      "Common Chest",
+      "Common Chest",
+      "Common Chest",
+      "Common Chest",
+      "Common Chest",
+      "Common Chest",
+      "Rare Chest",
+      "Rare Chest",
+      "Rare Chest",
+      "Rare Chest"
     ],
-    "eq_lock": "Silver Lock"
+    "eq_lock": "Silver Lock",
+    "items": [
+      "Hourglass",
+      "Party Speakers",
+      "Money Bag",
+      "Black Pen",
+      "Money Bag",
+      "Copper Wire",
+      "Pen Stand"
+    ]
   }
 }
