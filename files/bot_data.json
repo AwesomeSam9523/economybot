@@ -151,8 +151,11 @@
       },
       "e.iteminfo": {
         "usage": "e.iteminfo <item name>",
-        "aliases": ["item"],
-        "desc": "Shows the info like rarity, name, estimated sell value etc. about the item"},
+        "aliases": [
+          "item"
+        ],
+        "desc": "Shows the info like rarity, name, estimated sell value etc. about the item"
+      },
       "e.items": {
         "usage": "e.items",
         "aliases": [
@@ -344,15 +347,6 @@
   "shop": {
     "value": [
       {
-        "icon": "silver_lock.png",
-        "name": "Silver Lock",
-        "desc": "Increases rob protection by 25%",
-        "price": "6,000",
-        "special": false,
-        "disc": "4,800",
-        "percent": 20
-      },
-      {
         "icon": "gold_lock.png",
         "name": "Gold Lock",
         "desc": "Increases rob protection by 40%",
@@ -393,9 +387,18 @@
         "name": "Bronze Lock",
         "desc": "Increases rob protection by 10%",
         "price": "2,500",
-        "special": true,
+        "special": false,
         "disc": "2,250",
         "percent": 10
+      },
+      {
+        "icon": "silver_lock.png",
+        "name": "Silver Lock",
+        "desc": "Increases rob protection by 25%",
+        "price": "6,000",
+        "special": true,
+        "disc": "3,540",
+        "percent": 41
       }
     ],
     "category": {
@@ -411,7 +414,7 @@
         "Gold Lock"
       ]
     },
-    "updated": 1622030158.5539665
+    "updated": 1622123692.4442368
   },
   "items": {
     "common": {

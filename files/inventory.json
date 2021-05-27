@@ -31,7 +31,6 @@
       "Common Chest",
       "Common Chest",
       "Common Chest",
-      "Common Chest",
       "Common Chest"
     ],
     "eq_lock": "Silver Lock",
@@ -45,7 +44,7 @@
       "Pen Stand",
       "Gaming Chair",
       "RC Drone",
-      "N-95 Mask",
+      "N95 Mask",
       "Wall Clock",
       "Mouse Pad",
       "Lighter",
@@ -59,7 +58,7 @@
       "Hourglass",
       "Flower Vase",
       "Rotten Tomato",
-      "N-95 Mask",
+      "N95 Mask",
       "WIFI Router",
       "Magnifying Glass",
       "Book Stand",
@@ -85,6 +84,38 @@
     "inv": [],
     "items": [
       "Broken Television"
+    ]
+  },
+  "732826772944715856": {
+    "inv": [
+      "Rare Chest",
+      "Rare Chest",
+      "Legendary Chest",
+      "Legendary Chest",
+      "Legendary Chest",
+      "Legendary Chest",
+      "Legendary Chest",
+      "Legendary Chest",
+      "Legendary Chest",
+      "Legendary Chest",
+      "Legendary Chest",
+      "Legendary Chest"
+    ],
+    "items": [
+      "Party Speakers",
+      "Broken String",
+      "Leather Shoes",
+      "Maths Book",
+      "Rotten Tomato",
+      "Money Bag",
+      "Office Bag",
+      "Lollipop",
+      "Broken Television",
+      "Wall Clock",
+      "Broken String",
+      "WIFI Router",
+      "Office Bag",
+      "Leather Shoes"
     ]
   }
 }
