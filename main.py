@@ -171,6 +171,7 @@ bot.items = {}
 bot.emotes = {}
 bot.unboxbgs = {}
 bot.allitems = {}
+bot.cachedinv = {}
 
 usercmds = {}
 stock_names = ['Ava', 'Neil', 'Ryan', 'Anthony', 'Bernadette', 'Lauren', 'Justin', 'Matt', 'Wanda', 'James', 'Emily', 'Vanessa', 'Carl', 'Fiona', 'Stephanie', 'Pippa', 'Phil', 'Carol', 'Liam', 'Michael', 'Ella', 'Amanda', 'Caroline', 'Nicola', 'Sean', 'Oliver', 'Kylie', 'Rachel', 'Leonard', 'Julian', 'Richard', 'Peter', 'Irene', 'Dominic', 'Connor', 'Dorothy', 'Gavin', 'Isaac', 'Karen', 'Kimberly', 'Abigail', 'Yvonne', 'Steven', 'Felicity', 'Evan', 'Bella', 'Alison', 'Diane', 'Joan', 'Jan', 'Wendy', 'Nathan', 'Molly', 'Charles', 'Victor', 'Sally', 'Rose', 'Robert', 'Claire', 'Theresa', 'Grace', 'Keith', 'Stewart', 'Andrea', 'Alexander', 'Chloe', 'Nicholas', 'Edward', 'Deirdre', 'Anne', 'Joseph', 'Alan', 'Rebecca', 'Jane', 'Natalie', 'Cameron', 'Owen', 'Eric', 'Gabrielle', 'Sonia', 'Tim', 'Sarah', 'Madeleine', 'Megan', 'Lucas', 'Joe', 'Brandon', 'Brian', 'Jennifer', 'Alexandra', 'Adrian', 'John', 'Mary', 'Tracey', 'Jasmine', 'Penelope', 'Hannah', 'Thomas', 'Angela', 'Warren', 'Blake', 'Simon', 'Audrey', 'Frank', 'Samantha', 'Dan', 'Victoria', 'Paul', 'Jacob', 'Heather', 'Una', 'Lily', 'Carolyn', 'Jonathan', 'Ian', 'Piers', 'William', 'Gordon', 'Dylan', 'Olivia', 'Jake', 'Leah', 'Jessica', 'David', 'Katherine', 'Amelia', 'Benjamin', 'Boris', 'Sebastian', 'Lisa', 'Diana', 'Michelle', 'Emma', 'Sam', 'Stephen', 'Faith', 'Kevin', 'Austin', 'Jack', 'Ruth', 'Colin', 'Trevor', 'Joanne', 'Virginia', 'Anna', 'Max', 'Adam', 'Maria', 'Sophie', 'Sue', 'Andrew', 'Harry', 'Amy', 'Christopher', 'Donna', 'Melanie', 'Elizabeth', 'Lillian', 'Julia', 'Christian', 'Luke', 'Zoe', 'Joshua', 'Jason']
@@ -2573,7 +2574,7 @@ async def use(ctx, *, item:str):
         embed = discord.Embed(color=chestcol)
         fetched = bot.get_user(ctx.author.id)
         embed.set_footer(text='Type e.sell <item-name> to sell an item for coins\nType e.iteminfo <item-name> for info!', icon_url=bot.pfp)
-        embed.set_author(name=f'{fetched.name} Unboxed:', icon_url=fetched.avatar_url)
+        embed.set_author(name=f'{fetched.name} Unboxed: {item}', icon_url=fetched.avatar_url)
         embed.set_image(url="attachment://unboxing.gif")
         await ctx.send(embed=embed, file=file)
 
@@ -2687,11 +2688,11 @@ async def bank(ctx, tier:int=None):
 async def iteminfo(ctx, *, name:str):
     found = False
     for i in bot.items.keys():
-        mychest = i
         for j in bot.items[i]["items"]:
             if name.lower() == j["name"].lower():
                 found = True
                 item = j
+                mychest = i
                 break
     if not found:
         embed = discord.Embed(description=f'{economyerror} The item `{name}` doesn\'t exist.', color=error_embed)
@@ -2715,10 +2716,8 @@ async def iteminfo(ctx, *, name:str):
 
 @bot.command(aliases=['items'])
 @commands.check(general_checks_loop)
-async def itemsinv(ctx, user:discord.Member=None):
-    if user is None: userid = str(ctx.author.id)
-    else: userid = str(user.id)
-
+async def itemsinv(ctx, user_page_orignal:int=1):
+    userid = str(ctx.author.id)
     inv = await get_inv()
     userinv = inv.get(userid)
     if userinv is None:
@@ -2727,19 +2726,46 @@ async def itemsinv(ctx, user:discord.Member=None):
     embed = discord.Embed(color=embedcolor)
     if itemsinv is None:
         return await ctx.reply('You don\'t own any items yet. Why not go and unbox?')
-    print(userinv)
+
     done = []
-    final_inv = {}
-    allitems = userinv["items"]
-    for items in allitems:
+    for items in userinv["items"]:
+        done.append(items)
+    invdict = {}
+    for i in set(done):
+        invdict[i] = done.count(i)
+    sorted_inv = sorted(invdict.items(), key=lambda x: x[1], reverse=True)
+
+    if len(set(bot.cachedinv.get(userid, ()))) != len(set(done)):
+        bot.cachedinv[userid] = sorted_inv
+    else:
+        sorted_inv = bot.cachedinv[userid]
+    item_count = 0
+    max_pages = 0
+    while True:
+        if max_pages < len(sorted_inv)/6:
+            max_pages += 1
+        else:
+            break
+    if user_page_orignal <= 0: user_page_orignal = 1
+    if user_page_orignal > max_pages: user_page_orignal = max_pages
+    user_page = (user_page_orignal-1)*6
+    if user_page != 0: user_page += user_page_orignal
+    print(user_page, user_page_orignal, len(sorted_inv), len(sorted_inv)/6)
+
+    while True:
+        try: current_item = sorted_inv[user_page][0]
+        except: break
         for i in bot.items.keys():
             for j in bot.items[i]["items"]:
-                if items == j["name"]:
-                    if j["name"] in done: continue
-                    done.append(j["name"])
-                    final_inv[j["name"]] = {"qty": allitems.count(items), "emoji":j["emoji"]}
-
+                if j["name"] == current_item:
+                    if item_count > 6: break
+                    embed.add_field(name=f"{j['emoji']} {j['name']}", value=f'Qty: `{sorted_inv[user_page][1]}`', inline=False)
+                    item_count += 1
+                    user_page += 1
+            if item_count > 6: break
+        if item_count > 6: break
     embed.set_author(name=ctx.author.name, icon_url=ctx.author.avatar_url)
+    embed.set_footer(text=f'Page: {user_page_orignal} of {max_pages}')
     await ctx.send(embed=embed)
 
 @bot.command()
@@ -2757,20 +2783,19 @@ async def test(ctx, a:str):
 @bot.command()
 @commands.check(is_dev)
 async def braincell(ctx):
-    for emoji in ctx.guild.emojis:
-        for i in bot.items.keys():
-            for j in bot.items[i]["items"]:
-                name = j["name"].replace(' ', '')
-                if name == emoji.name:
-                    j["emoji"] = str(emoji)
+    async def chest(item):
+        file = discord.File(fp=bot.allitems[item], filename='unboxing.gif')
+        embed = discord.Embed()
+        fetched = bot.get_user(ctx.author.id)
+        embed.set_footer(
+            text='Type e.sell <item-name> to sell an item for coins\nType e.iteminfo <item-name> for info!',
+            icon_url=bot.pfp)
+        embed.set_author(name=f'{fetched.name} Unboxed: {item}', icon_url=fetched.avatar_url)
+        embed.set_image(url="attachment://unboxing.gif")
+        await ctx.send(embed=embed, file=file)
 
-    with open('files/bot_data.json', 'r') as f:
-        data = json.load(f)
-
-    data["items"] = bot.items
-
-    with open('files/bot_data.json', 'w') as k:
-        k.write(json.dumps(data, indent=2))
+    for i in bot.allitems.keys():
+        await chest(i)
 
 bot.connected_ = False
 @bot.event
