@@ -164,6 +164,7 @@ bot.total_lines = 0
 bot.pfp = ''
 bot.shopc = {}
 bot.items = {}
+bot.emotes = {}
 
 usercmds = {}
 stock_names = ['Ava', 'Neil', 'Ryan', 'Anthony', 'Bernadette', 'Lauren', 'Justin', 'Matt', 'Wanda', 'James', 'Emily', 'Vanessa', 'Carl', 'Fiona', 'Stephanie', 'Pippa', 'Phil', 'Carol', 'Liam', 'Michael', 'Ella', 'Amanda', 'Caroline', 'Nicola', 'Sean', 'Oliver', 'Kylie', 'Rachel', 'Leonard', 'Julian', 'Richard', 'Peter', 'Irene', 'Dominic', 'Connor', 'Dorothy', 'Gavin', 'Isaac', 'Karen', 'Kimberly', 'Abigail', 'Yvonne', 'Steven', 'Felicity', 'Evan', 'Bella', 'Alison', 'Diane', 'Joan', 'Jan', 'Wendy', 'Nathan', 'Molly', 'Charles', 'Victor', 'Sally', 'Rose', 'Robert', 'Claire', 'Theresa', 'Grace', 'Keith', 'Stewart', 'Andrea', 'Alexander', 'Chloe', 'Nicholas', 'Edward', 'Deirdre', 'Anne', 'Joseph', 'Alan', 'Rebecca', 'Jane', 'Natalie', 'Cameron', 'Owen', 'Eric', 'Gabrielle', 'Sonia', 'Tim', 'Sarah', 'Madeleine', 'Megan', 'Lucas', 'Joe', 'Brandon', 'Brian', 'Jennifer', 'Alexandra', 'Adrian', 'John', 'Mary', 'Tracey', 'Jasmine', 'Penelope', 'Hannah', 'Thomas', 'Angela', 'Warren', 'Blake', 'Simon', 'Audrey', 'Frank', 'Samantha', 'Dan', 'Victoria', 'Paul', 'Jacob', 'Heather', 'Una', 'Lily', 'Carolyn', 'Jonathan', 'Ian', 'Piers', 'William', 'Gordon', 'Dylan', 'Olivia', 'Jake', 'Leah', 'Jessica', 'David', 'Katherine', 'Amelia', 'Benjamin', 'Boris', 'Sebastian', 'Lisa', 'Diana', 'Michelle', 'Emma', 'Sam', 'Stephen', 'Faith', 'Kevin', 'Austin', 'Jack', 'Ruth', 'Colin', 'Trevor', 'Joanne', 'Virginia', 'Anna', 'Max', 'Adam', 'Maria', 'Sophie', 'Sue', 'Andrew', 'Harry', 'Amy', 'Christopher', 'Donna', 'Melanie', 'Elizabeth', 'Lillian', 'Julia', 'Christian', 'Luke', 'Zoe', 'Joshua', 'Jason']
@@ -175,6 +176,7 @@ error_embed = 16290332
 success_embed = 2293571
 economysuccess = '<a:EconomySuccess:843499891522797568>'
 economyerror = '<a:EconomyError:843499981695746098>'
+
 
 def is_dev(ctx):
     return ctx.author.id in devs
@@ -1271,6 +1273,7 @@ async def refresh(ctx=None):
     bot.help_json = data["help"]
     bot.shopc = data["shop"]["category"]
     bot.items = data["items"]
+    bot.emotes = data["emojis"]
     if ctx is not None: await ctx.message.add_reaction(economysuccess)
 
 @bot.command()
@@ -2622,8 +2625,9 @@ async def test(ctx, a:str):
         string += f'\n{i}:\n'
         for j in bot.items[a][i]:
             string += f'{j["name"]}\n'
-
-    await ctx.send(f'```\n{string[1:]}```')
+    for i in ctx.guild.emojis:
+        print(i)
+    #await ctx.send(f'```\n{string[1:]}```')
 
 @bot.command()
 @commands.check(is_dev)
