@@ -71,5 +71,15 @@
   "0xc57": "AwesomeSam#7985 (771601176155783198) =>\n**Command:** `use`\n**Message:** `e.use common chest`\n**Error:** `Command raised an exception: KeyError: 1`",
   "0x2697": "AwesomeSam#7985 (771601176155783198) =>\n**Command:** `use`\n**Message:** `e.use common chest`\n**Error:** `Command raised an exception: KeyError: 1`",
   "0x6df": "AwesomeSam#7985 (771601176155783198) =>\n**Command:** `use`\n**Message:** `e.use common chest`\n**Error:** `Command raised an exception: OSError: [Errno 22] Invalid argument: \"items/{'name': 'Black Pen', 'value': [150, 150], 'desc': 'A regular black pen with full ink. Maybe you should sell it'}.png\"`",
-  "0x20a5": "AwesomeSam#7985 (771601176155783198) =>\n**Command:** `test`\n**Message:** `e.test legendary`\n**Error:** `Command raised an exception: KeyError: 'legendary'`"
+  "0x20a5": "AwesomeSam#7985 (771601176155783198) =>\n**Command:** `test`\n**Message:** `e.test legendary`\n**Error:** `Command raised an exception: KeyError: 'legendary'`",
+  "0x2111": "AwesomeSam#7985 (771601176155783198) =>\n**Command:** `test`\n**Message:** `e.test rare2`\n**Error:** `Command raised an exception: KeyError: 'rare2'`",
+  "0x178a": "AwesomeSam#7985 (771601176155783198) =>\n**Command:** `use`\n**Message:** `e.use common chest`\n**Error:** `Command raised an exception: KeyError: 32`",
+  "0x13ba": "AwesomeSam#7985 (771601176155783198) =>\n**Command:** `cache_allitems`\n**Message:** `e.cache_allitems`\n**Error:** `Command raised an exception: UnboundLocalError: local variable 'y' referenced before assignment`",
+  "0xdfc": "AwesomeSam#7985 (771601176155783198) =>\n**Command:** `cache_allitems`\n**Message:** `e.cache_allitems`\n**Error:** `Command raised an exception: KeyError: 0`",
+  "0x150e": "AwesomeSam#7985 (771601176155783198) =>\n**Command:** `cache_allitems`\n**Message:** `e.cache_allitems`\n**Error:** `Command raised an exception: KeyError: 0`",
+  "0x14aa": "AwesomeSam#7985 (771601176155783198) =>\n**Command:** `cache_allitems`\n**Message:** `e.cache_allitems`\n**Error:** `Command raised an exception: KeyError: 0`",
+  "0xe0e": "AwesomeSam#7985 (771601176155783198) =>\n**Command:** `use`\n**Message:** `e.use rare chest`\n**Error:** `Command raised an exception: TypeError: object of type 'builtin_function_or_method' has no len()`",
+  "0xabd": "AwesomeSam#7985 (771601176155783198) =>\n**Command:** `uptime`\n**Message:** `e.uptime`\n**Error:** `Command raised an exception: AttributeError: module 'datetime' has no attribute 'utcnow'`",
+  "0x107e": "AwesomeSam#7985 (771601176155783198) =>\n**Command:** `delemoji`\n**Message:** `e.delemoji`\n**Error:** `Command raised an exception: NameError: name 'emoji' is not defined`",
+  "0x56f": "AwesomeSam#7985 (771601176155783198) =>\n**Command:** `delemoji`\n**Message:** `e.delemoji`\n**Error:** `Command raised an exception: Forbidden: 403 Forbidden (error code: 50013): Missing Permissions`"
 }

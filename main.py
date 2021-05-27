@@ -15,6 +15,9 @@ import matplotlib.pyplot as plt
 from PIL import Image, ImageDraw, ImageFont, ImageEnhance, ImageFilter
 from io import BytesIO
 from discord.ext.commands import *
+import threading
+from concurrent.futures import ThreadPoolExecutor
+import functools
 
 print(f"Imports Complete in {float('{:.2f}'.format(time.time()-t1))} secs")
 tnew = time.time()
@@ -22,6 +25,7 @@ intents = discord.Intents.default()
 intents.members = True
 intents.presences = True
 bot = commands.Bot(command_prefix=["e.", "E."], intents=intents, case_insensitive=True)
+bot.launch_time = datetime.datetime.utcnow()
 bot.dev = 1
 bot.remove_command('help')
 bot.loop.set_debug(True)
@@ -165,6 +169,8 @@ bot.pfp = ''
 bot.shopc = {}
 bot.items = {}
 bot.emotes = {}
+bot.unboxbgs = {}
+bot.allitems = {}
 
 usercmds = {}
 stock_names = ['Ava', 'Neil', 'Ryan', 'Anthony', 'Bernadette', 'Lauren', 'Justin', 'Matt', 'Wanda', 'James', 'Emily', 'Vanessa', 'Carl', 'Fiona', 'Stephanie', 'Pippa', 'Phil', 'Carol', 'Liam', 'Michael', 'Ella', 'Amanda', 'Caroline', 'Nicola', 'Sean', 'Oliver', 'Kylie', 'Rachel', 'Leonard', 'Julian', 'Richard', 'Peter', 'Irene', 'Dominic', 'Connor', 'Dorothy', 'Gavin', 'Isaac', 'Karen', 'Kimberly', 'Abigail', 'Yvonne', 'Steven', 'Felicity', 'Evan', 'Bella', 'Alison', 'Diane', 'Joan', 'Jan', 'Wendy', 'Nathan', 'Molly', 'Charles', 'Victor', 'Sally', 'Rose', 'Robert', 'Claire', 'Theresa', 'Grace', 'Keith', 'Stewart', 'Andrea', 'Alexander', 'Chloe', 'Nicholas', 'Edward', 'Deirdre', 'Anne', 'Joseph', 'Alan', 'Rebecca', 'Jane', 'Natalie', 'Cameron', 'Owen', 'Eric', 'Gabrielle', 'Sonia', 'Tim', 'Sarah', 'Madeleine', 'Megan', 'Lucas', 'Joe', 'Brandon', 'Brian', 'Jennifer', 'Alexandra', 'Adrian', 'John', 'Mary', 'Tracey', 'Jasmine', 'Penelope', 'Hannah', 'Thomas', 'Angela', 'Warren', 'Blake', 'Simon', 'Audrey', 'Frank', 'Samantha', 'Dan', 'Victoria', 'Paul', 'Jacob', 'Heather', 'Una', 'Lily', 'Carolyn', 'Jonathan', 'Ian', 'Piers', 'William', 'Gordon', 'Dylan', 'Olivia', 'Jake', 'Leah', 'Jessica', 'David', 'Katherine', 'Amelia', 'Benjamin', 'Boris', 'Sebastian', 'Lisa', 'Diana', 'Michelle', 'Emma', 'Sam', 'Stephen', 'Faith', 'Kevin', 'Austin', 'Jack', 'Ruth', 'Colin', 'Trevor', 'Joanne', 'Virginia', 'Anna', 'Max', 'Adam', 'Maria', 'Sophie', 'Sue', 'Andrew', 'Harry', 'Amy', 'Christopher', 'Donna', 'Melanie', 'Elizabeth', 'Lillian', 'Julia', 'Christian', 'Luke', 'Zoe', 'Joshua', 'Jason']
@@ -1243,9 +1249,9 @@ async def release(ctx, title:str):
 
     with open('files/updates.json', 'w') as n:
         n.write(json.dumps(updates, indent=2))
-
+    await ctx.send(embed=embed)
     chl = bot.get_channel(838963496476606485)
-    await chl.send('<@&839370096248881204>',embed = embed)
+    #await chl.send('<@&839370096248881204>',embed = embed)
 
 @bot.command()
 @commands.check(is_staff)
@@ -1263,7 +1269,16 @@ async def stockinfo(ctx):
     embed.add_field(name='Ending Time', value=f'`{str(final).split(" ")[1]}` (HH:MM:SS)')
 
     await ctx.send(embed=embed)
-    
+
+@bot.command()
+@commands.check(general_checks_loop)
+async def uptime(ctx):
+    delta_uptime = datetime.datetime.utcnow() - bot.launch_time
+    hours, remainder = divmod(int(delta_uptime.total_seconds()), 3600)
+    minutes, seconds = divmod(remainder, 60)
+    days, hours = divmod(hours, 24)
+    await ctx.send(f"I have been working for `{days}d, {hours}h, {minutes}m, {seconds}s`")
+
 @bot.command(pass_context=True)
 @commands.check(is_staff)
 async def refresh(ctx=None):
@@ -1274,6 +1289,25 @@ async def refresh(ctx=None):
     bot.shopc = data["shop"]["category"]
     bot.items = data["items"]
     bot.emotes = data["emojis"]
+    common_bgs = []
+    rare_bgs = []
+    legendary_bgs = []
+    for i in range(40):
+        img = Image.open(f'items/bgs/common_bg{i}.png')
+        common_bgs.append(img)
+    for i in range(40):
+        img = Image.open(f'items/bgs/rare_bg{i}.png')
+        rare_bgs.append(img)
+    for i in range(40):
+        img = Image.open(f'items/bgs/legendary_bg{i}.png')
+        legendary_bgs.append(img)
+    bot.unboxbgs["common"] = common_bgs
+    bot.unboxbgs["rare"] = rare_bgs
+    bot.unboxbgs["legendary"] = legendary_bgs
+    print('Caching Items')
+    with ThreadPoolExecutor(max_workers=1) as executor:
+        await bot.loop.run_in_executor(executor, functools.partial(cache_allitems))
+    #asyncio.create_task(cache_allitems())
     if ctx is not None: await ctx.message.add_reaction(economysuccess)
 
 @bot.command()
@@ -2456,51 +2490,11 @@ async def use(ctx, *, item:str):
         elif mychance['e'][0] <= rng < mychance['e'][1]: rarity = 'legendary'
         else: rarity = 'common'
         item_name = random.choice(bot.items[rarity]["items"])["name"]
-        bg = Image.open(f'items/{rarity}_unbox.png')
-        item_m = Image.open(f'items/{item_name}.png').resize((225, 225))
-        y = 60
-        degree = 5
-        frames = []
-        font = ImageFont.truetype('badges/font2.ttf', 35)
-        for i in range(20):
-            frame = Image.new('RGBA', bg.size)
-            frame.paste(bg, (0, 0), bg.convert('RGBA'))
-            item = item_m.rotate(degree, Image.BILINEAR)
-            frame.paste(item, (330, int(y)), item.convert('RGBA'))
-            draw = ImageDraw.Draw(frame)
-            draw.text((455 - (font.getsize(item_name)[0] / 2), 300), item_name, font=font, stroke_width=5,
-                      stroke_fill=(0, 0, 0))
-            obj = BytesIO()
-            frame.save(obj, 'PNG')
-            frame = Image.open(obj)
-            frames.append(frame)
-            y -= 1.5
-            degree -= 0.5
-
-        for i in range(20):
-            frame = Image.new('RGBA', bg.size)
-            frame.paste(bg, (0, 0), bg.convert('RGBA'))
-            item = item_m.rotate(degree, Image.BILINEAR)
-            frame.paste(item, (330, int(y)), item.convert('RGBA'))
-            draw = ImageDraw.Draw(frame)
-            draw.text((455 - (font.getsize(item_name)[0] / 2), 300), item_name, font=font, stroke_width=5,
-                      stroke_fill=(0, 0, 0))
-            obj = BytesIO()
-            frame.save(obj, 'PNG')
-            frame = Image.open(obj)
-            frames.append(frame)
-            y += 1.5
-            degree += 0.5
-
-        unbox_gif = BytesIO()
-        frames[0].save(unbox_gif,
-                       format='GIF',
-                       save_all=True,
-                       append_images=frames[1:],
-                       duration=75,
-                       loop=0)
-        unbox_gif.seek(0)
-        file = discord.File(fp=unbox_gif, filename='unboxing.gif')
+        if len(bot.allitems.keys()) != 50:
+            embed = discord.Embed(description=f'{economyerror} Please Wait! The bot is caching all the items', color=error_embed)
+            embed.set_footer(text=f'Approx Time Left: {(50-len(bot.allitems.keys()))*8} secs')
+            return await ctx.send(embed=embed)
+        file = discord.File(fp=bot.allitems[item_name], filename='unboxing.gif')
         if mychest == 'common': chestcol = 183398
         elif mychest == 'rare': chestcol = 5164244
         elif mychest == 'legendary': chestcol = 16475796
@@ -2631,61 +2625,64 @@ async def test(ctx, a:str):
 
 @bot.command()
 @commands.check(is_dev)
-async def test2(ctx, a:str):
-    async def chest(chest, item_name):
-        #850 450
-        bg = Image.open(f'items/{chest.split(" ")[0].lower()}_unbox.png')
-        item_m = Image.open(f'items/{item_name}.png').resize((225, 225))
-        y = 60
-        degree = 5
-        frames = []
-        font = ImageFont.truetype('badges/font2.ttf', 35)
-        for i in range(20):
-            frame = Image.new('RGBA', bg.size)
-            frame.paste(bg, (0, 0), bg.convert('RGBA'))
-            item = item_m.rotate(degree, Image.BILINEAR)
-            frame.paste(item, (330, int(y)), item.convert('RGBA'))
-            draw = ImageDraw.Draw(frame)
-            draw.text((455 - (font.getsize(item_name)[0] / 2), 300), item_name, font=font, stroke_width=5,
-                      stroke_fill=(0, 0, 0))
-            obj = BytesIO()
-            frame.save(obj, 'PNG')
-            frame = Image.open(obj)
-            frames.append(frame)
-            y -= 1.5
-            degree -= 0.5
+async def addemojis(ctx):
+    for i in os.listdir('emojis'):
+        print(i)
 
-        for i in range(20):
-            frame = Image.new('RGBA', bg.size)
-            frame.paste(bg, (0, 0), bg.convert('RGBA'))
-            item = item_m.rotate(degree, Image.BILINEAR)
-            frame.paste(item, (330, int(y)), item.convert('RGBA'))
-            draw = ImageDraw.Draw(frame)
-            draw.text((455 - (font.getsize(item_name)[0] / 2), 300), item_name, font=font, stroke_width=5,
-                      stroke_fill=(0, 0, 0))
-            obj = BytesIO()
-            frame.save(obj, 'PNG')
-            frame = Image.open(obj)
-            frames.append(frame)
-            y += 1.5
-            degree += 0.5
+def cache_allitems():
+    t = time.time()
+    for i in bot.items.keys():
+        mychest = i
+        for j in bot.items[i]["items"]:
+            item_name = j["name"]
+            item = Image.open(f'items/{item_name}.png').resize((225, 225))
+            y = 60
+            degree = 5
+            bgdegree = 0
+            frames = {}
+            font = ImageFont.truetype('badges/font2.ttf', 35)
 
-        unbox_gif = BytesIO()
-        frames[0].save(unbox_gif,
-                       format='GIF',
-                       save_all=True,
-                       append_images=frames[1:],
-                       duration=75,
-                       loop=0)
-        unbox_gif.seek(0)
-        file = discord.File(fp=unbox_gif, filename='unboxing.gif')
-        await ctx.send(file=file)
+            def addframe(i, y, bgdegree):
+                bg = bot.unboxbgs[mychest][i]
+                frame = Image.new('RGBA', (850, 450))
+                frame.paste(bg, (0, 0), bg.convert('RGBA'))
+                frame.paste(item, (300, int(y)), item.convert('RGBA'))
+                draw = ImageDraw.Draw(frame)
+                draw.text((425 - (font.getsize(item_name)[0] / 2), 300), item_name, font=font, stroke_width=5,
+                          stroke_fill=(0, 0, 0))
+                obj = BytesIO()
+                frame.save(obj, 'PNG')
+                frame = Image.open(obj)
+                frames[i] = frame
 
-    for i in bot.items[a].keys():
-        if i != "items": continue
-        for j in bot.items[a][i]:
-            await chest('Common Chest', j["name"])
-            await asyncio.sleep(2)
+            for i in range(20):
+                first = threading.Thread(target=addframe, args=(i, y, bgdegree,))
+                first.start()
+                y -= 1.5
+                bgdegree -= 2.3077
+
+            for i in range(20, 40):
+                second = threading.Thread(target=addframe, args=(i, y, bgdegree,))
+                second.start()
+                y += 1.5
+                bgdegree -= 2.3077
+
+            second.join()
+            allframes = []
+            for i in range(40):
+                allframes.append(frames[i])
+            unbox_gif = BytesIO()
+            allframes[0].save(unbox_gif,
+                              format='GIF',
+                              save_all=True,
+                              append_images=allframes[1:],
+                              duration=75,
+                              loop=0)
+            unbox_gif.seek(0)
+            file = discord.File(fp=unbox_gif, filename='unboxing.gif')
+            bot.allitems[item_name] = unbox_gif
+            print(f'{item_name} cached successfully!')
+    print(f'All {len(bot.allitems.keys())} items cached successfully in {time.time() - t} secs')
 
 bot.connected_ = False
 @bot.event

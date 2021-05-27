@@ -115,6 +115,8 @@
     "- New command: `e.bank`: Upgrade your bank tier",
     "- New command: `e.ping`: Check the bot's ping",
     "- New command: `e.use`: Equip/unequip locks, open chests and activate/deactivate boosts",
+    "- New command: `e.sell`: Sell items for coins",
+    "- New command: `e.items`: View all the items you own",
     "- New command: `e.server`: Get link to GameBot Hub",
     "- New command: `e.invite`: Invite the bot to your server",
     "- Updated `e.level` image to include active items (lock and boost)",
