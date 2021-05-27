@@ -11,7 +11,6 @@
       "Common Chest",
       "Rare Chest",
       "Rare Chest",
-      "Rare Chest",
       "Rare Chest"
     ],
     "eq_lock": "Silver Lock",
@@ -22,7 +21,8 @@
       "Black Pen",
       "Money Bag",
       "Copper Wire",
-      "Pen Stand"
+      "Pen Stand",
+      "Gaming Chair"
     ]
   }
 }

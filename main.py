@@ -2629,6 +2629,7 @@ async def test(ctx, a:str):
 @commands.check(is_dev)
 async def test2(ctx, a:str):
     async def chest(chest, item_name):
+        #850 450
         bg = Image.open(f'items/{chest.split(" ")[0].lower()}_unbox.png')
         item_m = Image.open(f'items/{item_name}.png').resize((225, 225))
         y = 60
