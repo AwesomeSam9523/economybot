@@ -95,5 +95,7 @@
   "0x994": "AwesomeSam#7985 (771601176155783198) =>\n**Command:** `addemojis`\n**Message:** `e.addemojis`\n**Error:** `Command raised an exception: UnicodeDecodeError: 'charmap' codec can't decode byte 0x9d in position 87: character maps to <undefined>`",
   "0x5cd": "AwesomeSam#7985 (771601176155783198) =>\n**Command:** `addemojis`\n**Message:** `e.addemojis`\n**Error:** `Command raised an exception: HTTPException: 400 Bad Request (error code: 50035): Invalid Form Body\nIn name: String value did not match validation regex.`",
   "0x2059": "AwesomeSam#7985 (771601176155783198) =>\n**Command:** `addemojis`\n**Message:** `e.addemojis`\n**Error:** `Command raised an exception: HTTPException: 400 Bad Request (error code: 50035): Invalid Form Body\nIn name: String value did not match validation regex.`",
-  "0x2316": "AwesomeSam#7985 (771601176155783198) =>\n**Command:** `iteminfo`\n**Message:** `e.iteminfo cloth piece`\n**Error:** `Command raised an exception: TypeError: send() got an unexpected keyword argument 'mebed'`"
+  "0x2316": "AwesomeSam#7985 (771601176155783198) =>\n**Command:** `iteminfo`\n**Message:** `e.iteminfo cloth piece`\n**Error:** `Command raised an exception: TypeError: send() got an unexpected keyword argument 'mebed'`",
+  "0x66b": "AwesomeSam#7985 (771601176155783198) =>\n**Command:** `itemsinv`\n**Message:** `e.itemsinv`\n**Error:** `Command raised an exception: AttributeError: 'Member' object has no attribute 'icon_url'`",
+  "0x14ba": "AwesomeSam#7985 (771601176155783198) =>\n**Command:** `itemsinv`\n**Message:** `e.items`\n**Error:** `Command raised an exception: AttributeError: 'dict' object has no attribute 'count'`"
 }

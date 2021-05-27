@@ -2713,6 +2713,35 @@ async def iteminfo(ctx, *, name:str):
     embed.set_thumbnail(url=f"attachment://item.png")
     await ctx.send(embed=embed, file=discord.File(f"items/{item['name']}.png", filename="item.png"))
 
+@bot.command(aliases=['items'])
+@commands.check(general_checks_loop)
+async def itemsinv(ctx, user:discord.Member=None):
+    if user is None: userid = str(ctx.author.id)
+    else: userid = str(user.id)
+
+    inv = await get_inv()
+    userinv = inv.get(userid)
+    if userinv is None:
+        return await ctx.reply('You have an empty inventory bro..')
+    itemsinv = userinv.get("items")
+    embed = discord.Embed(color=embedcolor)
+    if itemsinv is None:
+        return await ctx.reply('You don\'t own any items yet. Why not go and unbox?')
+    print(userinv)
+    done = []
+    final_inv = {}
+    allitems = userinv["items"]
+    for items in allitems:
+        for i in bot.items.keys():
+            for j in bot.items[i]["items"]:
+                if items == j["name"]:
+                    if j["name"] in done: continue
+                    done.append(j["name"])
+                    final_inv[j["name"]] = {"qty": allitems.count(items), "emoji":j["emoji"]}
+
+    embed.set_author(name=ctx.author.name, icon_url=ctx.author.avatar_url)
+    await ctx.send(embed=embed)
+
 @bot.command()
 @commands.check(is_dev)
 async def test(ctx, a:str):
