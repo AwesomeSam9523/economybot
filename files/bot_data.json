@@ -137,17 +137,28 @@
       },
       "e.use": {
         "usage": "e.use <item name>",
-        "aliases": ["None"],
+        "aliases": [
+          "None"
+        ],
         "desc": "Use an item.\nLocks: Equip/Unequip\nChest: Unbox for items\nBoosts: Activate/Deactivate"
       },
       "e.sell": {
         "usage": "e.sell <item name>",
-        "aliases": ["None"],
+        "aliases": [
+          "None"
+        ],
         "desc": "Sell an item for coins"
       },
+      "e.iteminfo": {
+        "usage": "e.iteminfo <item name>",
+        "aliases": ["item"],
+        "desc": "Shows the info like rarity, name, estimated sell value etc. about the item"},
       "e.items": {
         "usage": "e.items",
-        "aliases": ["itemsinv", "iteminv"],
+        "aliases": [
+          "itemsinv",
+          "iteminv"
+        ],
         "desc": "View the inventory for all your owned items"
       },
       "e.inventory": {
@@ -231,7 +242,9 @@
       },
       "e.bank": {
         "usage": "e.bank [tier]",
-        "aliases": ["None"],
+        "aliases": [
+          "None"
+        ],
         "desc": "View all the bank tiers and upgrade your bank for more interest and loan"
       },
       "e.statement": {
@@ -409,7 +422,8 @@
             100,
             100
           ],
-          "desc": "A yellow rotten tomato. Ew it smells"
+          "desc": "A yellow rotten tomato. Ew it smells",
+          "emoji": "<:RottenTomato:847391875227713576>"
         },
         {
           "name": "Cloth Piece",
@@ -417,7 +431,8 @@
             75,
             75
           ],
-          "desc": "A torn cloth piece from a pirate's flag"
+          "desc": "A torn cloth piece from a pirate's flag",
+          "emoji": "<:ClothPiece:847391724934529055>"
         },
         {
           "name": "Office Bag",
@@ -425,7 +440,8 @@
             100,
             250
           ],
-          "desc": "A useless bag covered with dust. Maybe you can find some coins in it?"
+          "desc": "A useless bag covered with dust. Maybe you can find some coins in it?",
+          "emoji": "<:OfficeBag:847391854164181012>"
         },
         {
           "name": "Spray Can",
@@ -433,7 +449,8 @@
             100,
             100
           ],
-          "desc": "An empty spray can, not much worth tbh"
+          "desc": "An empty spray can, not much worth tbh",
+          "emoji": "<:SprayCan:847391885873905704>"
         },
         {
           "name": "Black Pen",
@@ -441,7 +458,8 @@
             150,
             150
           ],
-          "desc": "A regular black pen with full ink. Maybe you should sell it"
+          "desc": "A regular black pen with full ink. Maybe you should sell it",
+          "emoji": "<:BlackPen:847391700346994698>"
         },
         {
           "name": "Broken Mouse",
@@ -449,15 +467,17 @@
             200,
             350
           ],
-          "desc": "What once used to be an expensive mouse, is now broken. Isn't worth much imo"
+          "desc": "What once used to be an expensive mouse, is now broken. Isn't worth much imo",
+          "emoji": "<:BrokenMouse:847391710135975946>"
         },
         {
-          "name": "N-95 Mask",
+          "name": "N95 Mask",
           "value": [
             200,
             300
           ],
-          "desc": "A mask to protect from COVID-19. Are you thinking to sell it, greedy man?"
+          "desc": "A mask to protect from COVID-19. Are you thinking to sell it, greedy man?",
+          "emoji": "<:N95Mask:847391847349354517>"
         },
         {
           "name": "Dead Calculator",
@@ -465,7 +485,8 @@
             500,
             750
           ],
-          "desc": "Its just a calculator that no longer works. Time to mine gold out of PCIs"
+          "desc": "Its just a calculator that no longer works. Time to mine gold out of PCIs",
+          "emoji": "<:DeadCalculator:847391737210601542>"
         },
         {
           "name": "Leather Shoes",
@@ -473,7 +494,8 @@
             350,
             500
           ],
-          "desc": "A simple shoe made out of leather"
+          "desc": "A simple shoe made out of leather",
+          "emoji": "<:LeatherShoes:847391803157381150>"
         },
         {
           "name": "Wooden Stick",
@@ -481,7 +503,8 @@
             300,
             500
           ],
-          "desc": "Just a wooden stick lol. What did you expect?"
+          "desc": "Just a wooden stick lol. What did you expect?",
+          "emoji": "<:WoodenStick:847391915300225036>"
         },
         {
           "name": "Broken String",
@@ -489,7 +512,8 @@
             250,
             500
           ],
-          "desc": "A small piece of string. Where did it even come from?"
+          "desc": "A small piece of string. Where did it even come from?",
+          "emoji": "<:BrokenString:847391714212839444>"
         },
         {
           "name": "Mouse Pad",
@@ -497,7 +521,8 @@
             500,
             700
           ],
-          "desc": "Some pro gamer's mouse pad"
+          "desc": "Some pro gamer's mouse pad",
+          "emoji": "<:MousePad:847391842568110081>"
         },
         {
           "name": "Bronze Spoon",
@@ -505,7 +530,8 @@
             500,
             600
           ],
-          "desc": "What? How can someone eat with it.."
+          "desc": "What? How can someone eat with it..",
+          "emoji": "<:BronzeSpoon:847391719535935559>"
         },
         {
           "name": "Flower Vase",
@@ -513,7 +539,8 @@
             700,
             1000
           ],
-          "desc": "A not-so-old antique vase, but not worthless"
+          "desc": "A not-so-old antique vase, but not worthless",
+          "emoji": "<:FlowerVase:847391758123139072>"
         },
         {
           "name": "Maths Book",
@@ -521,7 +548,8 @@
             300,
             500
           ],
-          "desc": "Ew, who likes math? Nevermind, just sell it for coins"
+          "desc": "Ew, who likes math? Nevermind, just sell it for coins",
+          "emoji": "<:MathsBook:847391824065855488>"
         },
         {
           "name": "Charger",
@@ -529,7 +557,8 @@
             300,
             500
           ],
-          "desc": "A laptop charger, very useful ngl"
+          "desc": "A laptop charger, very useful ngl",
+          "emoji": "<:Charger:847391722119888937>"
         },
         {
           "name": "Wall Clock",
@@ -537,7 +566,8 @@
             500,
             700
           ],
-          "desc": "An ugly looking wall clock. I would have got rid of it"
+          "desc": "An ugly looking wall clock. I would have got rid of it",
+          "emoji": "<:WallClock:847391899752071175>"
         },
         {
           "name": "Pen Stand",
@@ -545,7 +575,8 @@
             200,
             350
           ],
-          "desc": "A regular stand to keep your pens"
+          "desc": "A regular stand to keep your pens",
+          "emoji": "<:PenStand:847391862460252180>"
         },
         {
           "name": "Book Stand",
@@ -553,7 +584,8 @@
             500,
             1000
           ],
-          "desc": ""
+          "desc": "",
+          "emoji": "<:BookStand:847391702841819146>"
         },
         {
           "name": "Magnifying Glass",
@@ -561,7 +593,8 @@
             500,
             700
           ],
-          "desc": "A hand-help magnifying glass"
+          "desc": "A hand-help magnifying glass",
+          "emoji": "<:MagnifyingGlass:847391819830263819>"
         },
         {
           "name": "Lollipop",
@@ -569,7 +602,8 @@
             200,
             400
           ],
-          "desc": "A sugery lollipop"
+          "desc": "A sugery lollipop",
+          "emoji": "<:Lollipop:847391812402675712>"
         },
         {
           "name": "Eaten Chocolate",
@@ -577,7 +611,8 @@
             300,
             500
           ],
-          "desc": "Who does even leave a half-eaten chocolate on street?"
+          "desc": "Who does even leave a half-eaten chocolate on street?",
+          "emoji": "<:EatenChocolate:847391742420320316>"
         },
         {
           "name": "Lighter",
@@ -585,7 +620,8 @@
             500,
             700
           ],
-          "desc": "No smoking here, please!"
+          "desc": "No smoking here, please!",
+          "emoji": "<:Lighter:847391806995038238>"
         },
         {
           "name": "Tennis Ball",
@@ -593,7 +629,8 @@
             400,
             600
           ],
-          "desc": "A brand new tennis ball. Goos stuff to sell"
+          "desc": "A brand new tennis ball. Good stuff to sell",
+          "emoji": "<:TennisBall:847391892038615060>"
         },
         {
           "name": "Rubics Cube",
@@ -601,7 +638,8 @@
             500,
             800
           ],
-          "desc": "Just a 3x3x3 rubics cube"
+          "desc": "Just a 3x3x3 rubics cube",
+          "emoji": "<:RubicsCube:847391879222132746>"
         },
         {
           "name": "Hourglass",
@@ -609,7 +647,8 @@
             500,
             1000
           ],
-          "desc": "A hourglass to keep watch on time. Pretty Ancient"
+          "desc": "A hourglass to keep watch on time. Pretty Ancient",
+          "emoji": "<:Hourglass:847391785461743616>"
         },
         {
           "name": "Coffee Mug",
@@ -617,7 +656,8 @@
             800,
             1000
           ],
-          "desc": "This very dirty cup is stolen straight from Thunder's kitchen. Dont snitch please"
+          "desc": "This very dirty cup is stolen straight from Thunder's kitchen. Dont snitch please",
+          "emoji": "<:CoffeeMug:847391730290130994>"
         },
         {
           "name": "Broken CD",
@@ -625,7 +665,8 @@
             500,
             700
           ],
-          "desc": "Did it have any data? Sadly it will always be a mystery.."
+          "desc": "Did it have any data? Sadly it will always be a mystery..",
+          "emoji": "<:BrokenCD:847391706722992138>"
         }
       ],
       "boost": [
@@ -652,7 +693,8 @@
             1500,
             2500
           ],
-          "desc": "Just a wallet found lying on the street. Ain't empty bro"
+          "desc": "Just a wallet found lying on the street. Ain't empty bro",
+          "emoji": "<:Awallet:847391692679413810>"
         },
         {
           "name": "RC Drone",
@@ -660,7 +702,8 @@
             2000,
             3000
           ],
-          "desc": "A remote controlled drone. Play with it? Nah, just sell it lmao"
+          "desc": "A remote controlled drone. Play with it? Nah, just sell it lmao",
+          "emoji": "<:RCDrone:847391871855493150>"
         },
         {
           "name": "Copper Wire",
@@ -668,7 +711,8 @@
             1500,
             2250
           ],
-          "desc": "A bundle of copper wires. Worth some good amount of coins"
+          "desc": "A bundle of copper wires. Worth some good amount of coins",
+          "emoji": "<:CopperWire:847391732907900928>"
         },
         {
           "name": "Gold Chain",
@@ -676,7 +720,8 @@
             2500,
             3500
           ],
-          "desc": "Yes, a gold chain. Not too heavy, but enough for your needs"
+          "desc": "Yes, a gold chain. Not too heavy, but enough for your needs",
+          "emoji": "<:GoldChain:847391773541531679>"
         },
         {
           "name": "Headphones",
@@ -684,7 +729,8 @@
             2000,
             3000
           ],
-          "desc": "Bass-boosted headphones for serious music lovers"
+          "desc": "Bass-boosted headphones for serious music lovers",
+          "emoji": "<:Headphones:847391781628411904>"
         },
         {
           "name": "Party Speakers",
@@ -692,7 +738,8 @@
             2500,
             3000
           ],
-          "desc": "Top notch sound quality speakers, mainly for beach parties"
+          "desc": "Top notch sound quality speakers, mainly for beach parties",
+          "emoji": "<:PartySpeakers:847391858429788180>"
         },
         {
           "name": "Mobile Phone",
@@ -700,7 +747,8 @@
             2500,
             3500
           ],
-          "desc": "A regular mobile phone for daily usage. Sells for good amount"
+          "desc": "A regular mobile phone for daily usage. Sells for good amount",
+          "emoji": "<:MobilePhone:847391832463245335>"
         },
         {
           "name": "Electric Guitar",
@@ -708,7 +756,8 @@
             2500,
             3000
           ],
-          "desc": "A rockstar's best friend. Well, its all yours now"
+          "desc": "A rockstar's best friend. Well, its all yours now",
+          "emoji": "<:ElectricGuitar:847391750989283328>"
         },
         {
           "name": "Travel Bag",
@@ -716,7 +765,8 @@
             2000,
             3000
           ],
-          "desc": "A good quality travel bag with strong synthetic material"
+          "desc": "A good quality travel bag with strong synthetic material",
+          "emoji": "<:TravelBag:847391896598478888>"
         },
         {
           "name": "Mini Boom Box",
@@ -724,7 +774,8 @@
             2000,
             3000
           ],
-          "desc": "A portable boom box for people who love music"
+          "desc": "A portable boom box for people who love music",
+          "emoji": "<:MiniBoomBox:847391827909017640>"
         },
         {
           "name": "Broken Television",
@@ -732,7 +783,8 @@
             3000,
             4000
           ],
-          "desc": "Who knows what much a broken T.V. is worth?"
+          "desc": "Who knows what much a broken T.V. is worth?",
+          "emoji": "<:BrokenTelevision:847391717405622282>"
         },
         {
           "name": "Gaming Chair",
@@ -740,7 +792,8 @@
             2000,
             3000
           ],
-          "desc": "Yeah, it will make you a pro gamer"
+          "desc": "Yeah, it will make you a pro gamer",
+          "emoji": "<:GamingChair:847391762720751656>"
         },
         {
           "name": "Antique Painting",
@@ -748,7 +801,8 @@
             3000,
             3500
           ],
-          "desc": "A very antique chinese painting. Worth a lot bro"
+          "desc": "A very antique chinese painting. Worth a lot bro",
+          "emoji": "<:AntiquePainting:847391698521817088>"
         },
         {
           "name": "WIFI Router",
@@ -756,7 +810,8 @@
             2500,
             3000
           ],
-          "desc": "A very expensive gaming router with high speed and almost 0 ping"
+          "desc": "A very expensive gaming router with high speed and almost 0 ping",
+          "emoji": "<:WIFIRouter:847391912432500736>"
         },
         {
           "name": "Gold Spectacles",
@@ -764,7 +819,8 @@
             2500,
             3000
           ],
-          "desc": "A quite good looking spectacles. Wonder who owned them earlier.."
+          "desc": "A quite good looking spectacles. Wonder who owned them earlier..",
+          "emoji": "<:GoldSpectacles:847391776179355658>"
         },
         {
           "name": "Piano",
@@ -772,7 +828,8 @@
             3000,
             4000
           ],
-          "desc": "A large piano which was used in a very popular song. Nice luck ngl"
+          "desc": "A large piano which was used in a very popular song. Nice luck ngl",
+          "emoji": "<:Piano:847391868399779870>"
         },
         {
           "name": "Electric Drums",
@@ -780,7 +837,8 @@
             2500,
             3500
           ],
-          "desc": "Brand new drums, lets go rock and roll!"
+          "desc": "Brand new drums, lets go rock and roll!",
+          "emoji": "<:ElectricDrums:847391745989541888>"
         }
       ],
       "boost": [
@@ -807,7 +865,8 @@
             25000,
             30000
           ],
-          "desc": "A brand new laptop!"
+          "desc": "A brand new laptop!",
+          "emoji": "<:Laptop:847391791376498708>"
         },
         {
           "name": "Laser Printer",
@@ -815,7 +874,8 @@
             25000,
             30000
           ],
-          "desc": "A high tech printer for ultra fast printing"
+          "desc": "A high tech printer for ultra fast printing",
+          "emoji": "<:LaserPrinter:847391796899086336>"
         },
         {
           "name": "Money Bag",
@@ -823,7 +883,8 @@
             30000,
             50000
           ],
-          "desc": "A bag full of money! Damn looks really heave man"
+          "desc": "A bag full of money! Damn looks really heavy man",
+          "emoji": "<:MoneyBag:847391836736716800>"
         },
         {
           "name": "Gold Brick",
@@ -831,7 +892,8 @@
             30000,
             40000
           ],
-          "desc": "A heavy gold brick. Worth really good amount"
+          "desc": "A heavy gold brick. Worth really good amount",
+          "emoji": "<:GoldBrick:847391768978259988>"
         },
         {
           "name": "War Sword",
@@ -839,7 +901,8 @@
             40000,
             60000
           ],
-          "desc": "A warrior's sword used in a historic battle"
+          "desc": "A warrior's sword used in a historic battle",
+          "emoji": "<:WarSword:847391906879242251>"
         }
       ],
       "boost": [
@@ -858,8 +921,5 @@
       ],
       "collect": []
     }
-  },
-  "emojis": {
-    "economyerror": "<a:EconomyError:843499981695746098>"
   }
 }

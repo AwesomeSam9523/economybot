@@ -190,6 +190,62 @@ def is_dev(ctx):
 def is_staff(ctx):
     return ctx.author.id in staff
 
+def cache_allitems():
+    t = time.time()
+    bot.allitems = {}
+    for i in bot.items.keys():
+        mychest = i
+        for j in bot.items[i]["items"]:
+            item_name = j["name"]
+            item = Image.open(f'items/{item_name}.png').resize((225, 225))
+            y = 60
+            degree = 5
+            bgdegree = 0
+            frames = {}
+            font = ImageFont.truetype('badges/font2.ttf', 35)
+
+            def addframe(i, y, bgdegree):
+                bg = bot.unboxbgs[mychest][i]
+                frame = Image.new('RGBA', (850, 450))
+                frame.paste(bg, (0, 0), bg.convert('RGBA'))
+                frame.paste(item, (300, int(y)), item.convert('RGBA'))
+                draw = ImageDraw.Draw(frame)
+                draw.text((425 - (font.getsize(item_name)[0] / 2), 300), item_name, font=font, stroke_width=5,
+                          stroke_fill=(0, 0, 0))
+                obj = BytesIO()
+                frame.save(obj, 'PNG')
+                frame = Image.open(obj)
+                frames[i] = frame
+
+            for i in range(20):
+                first = threading.Thread(target=addframe, args=(i, y, bgdegree,))
+                first.start()
+                y -= 1.5
+                bgdegree -= 2.3077
+
+            for i in range(20, 40):
+                second = threading.Thread(target=addframe, args=(i, y, bgdegree,))
+                second.start()
+                y += 1.5
+                bgdegree -= 2.3077
+                second.join()
+
+            allframes = []
+            for i in range(40):
+                allframes.append(frames[i])
+            unbox_gif = BytesIO()
+            allframes[0].save(unbox_gif,
+                              format='GIF',
+                              save_all=True,
+                              append_images=allframes[1:],
+                              duration=75,
+                              loop=0)
+            unbox_gif.seek(0)
+            file = discord.File(fp=unbox_gif, filename='unboxing.gif')
+            bot.allitems[item_name] = unbox_gif
+            print(f'{item_name} cached successfully!')
+    print(f'All {len(bot.allitems.keys())} items cached successfully in {time.time() - t} secs')
+
 async def spam_protect(userid):
     if userid in disregarded:
         if userid not in devs: return 'return'
@@ -1288,7 +1344,22 @@ async def refresh(ctx=None):
     bot.help_json = data["help"]
     bot.shopc = data["shop"]["category"]
     bot.items = data["items"]
-    bot.emotes = data["emojis"]
+    if ctx is not None:
+        msg = await ctx.send(f'{ctx.author.mention} ⚠️Warning! You are about to rebuild the cache for the items. Continue?')
+        await msg.add_reaction(economyerror)
+        await msg.add_reaction(economysuccess)
+
+        def check(reaction, user):
+            if user == ctx.author and str(reaction.emoji) in [economyerror, economysuccess]:
+                return True
+        try:
+            reaction, user = await bot.wait_for('reaction_add', timeout=60.0, check=check)
+            if str(reaction) == economyerror:
+                await msg.delete()
+                await ctx.message.add_reaction(economysuccess)
+                return
+        except:
+            pass
     common_bgs = []
     rare_bgs = []
     legendary_bgs = []
@@ -1307,7 +1378,7 @@ async def refresh(ctx=None):
     print('Caching Items')
     with ThreadPoolExecutor(max_workers=1) as executor:
         await bot.loop.run_in_executor(executor, functools.partial(cache_allitems))
-    #asyncio.create_task(cache_allitems())
+
     if ctx is not None: await ctx.message.add_reaction(economysuccess)
 
 @bot.command()
@@ -2611,6 +2682,37 @@ async def bank(ctx, tier:int=None):
         await msg.clear_reactions()
         await msg.edit(embed=discord.Embed(description=f'{economyerror} Timed Out!', color=error_embed))
 
+@bot.command(aliases=["item"])
+@commands.check(general_checks_loop)
+async def iteminfo(ctx, *, name:str):
+    found = False
+    for i in bot.items.keys():
+        mychest = i
+        for j in bot.items[i]["items"]:
+            if name.lower() == j["name"].lower():
+                found = True
+                item = j
+                break
+    if not found:
+        embed = discord.Embed(description=f'{economyerror} The item `{name}` doesn\'t exist.', color=error_embed)
+        return await ctx.send(embed=embed)
+    if mychest == 'common':
+        chestcol = 183398
+    elif mychest == 'rare':
+        chestcol = 5164244
+    elif mychest == 'legendary':
+        chestcol = 16475796
+    embed = discord.Embed(title="Item Info", color=chestcol)
+    embed.add_field(name="Name", value=f'{item["name"]}', inline=False)
+    embed.add_field(name="Description", value=item["desc"], inline=False)
+    embed.add_field(name="Rarity", value=mychest.capitalize())
+    if item["value"][0] == item["value"][1]:
+        embed.add_field(name="Est. Value", value=f"`{await commait(item['value'][0])}` coins", inline=False)
+    else:
+        embed.add_field(name="Est. Value", value=f"`{await commait(item['value'][0])} - {await commait(item['value'][1])}` coins", inline=False)
+    embed.set_thumbnail(url=f"attachment://item.png")
+    await ctx.send(embed=embed, file=discord.File(f"items/{item['name']}.png", filename="item.png"))
+
 @bot.command()
 @commands.check(is_dev)
 async def test(ctx, a:str):
@@ -2625,64 +2727,21 @@ async def test(ctx, a:str):
 
 @bot.command()
 @commands.check(is_dev)
-async def addemojis(ctx):
-    for i in os.listdir('emojis'):
-        print(i)
+async def braincell(ctx):
+    for emoji in ctx.guild.emojis:
+        for i in bot.items.keys():
+            for j in bot.items[i]["items"]:
+                name = j["name"].replace(' ', '')
+                if name == emoji.name:
+                    j["emoji"] = str(emoji)
 
-def cache_allitems():
-    t = time.time()
-    for i in bot.items.keys():
-        mychest = i
-        for j in bot.items[i]["items"]:
-            item_name = j["name"]
-            item = Image.open(f'items/{item_name}.png').resize((225, 225))
-            y = 60
-            degree = 5
-            bgdegree = 0
-            frames = {}
-            font = ImageFont.truetype('badges/font2.ttf', 35)
+    with open('files/bot_data.json', 'r') as f:
+        data = json.load(f)
 
-            def addframe(i, y, bgdegree):
-                bg = bot.unboxbgs[mychest][i]
-                frame = Image.new('RGBA', (850, 450))
-                frame.paste(bg, (0, 0), bg.convert('RGBA'))
-                frame.paste(item, (300, int(y)), item.convert('RGBA'))
-                draw = ImageDraw.Draw(frame)
-                draw.text((425 - (font.getsize(item_name)[0] / 2), 300), item_name, font=font, stroke_width=5,
-                          stroke_fill=(0, 0, 0))
-                obj = BytesIO()
-                frame.save(obj, 'PNG')
-                frame = Image.open(obj)
-                frames[i] = frame
+    data["items"] = bot.items
 
-            for i in range(20):
-                first = threading.Thread(target=addframe, args=(i, y, bgdegree,))
-                first.start()
-                y -= 1.5
-                bgdegree -= 2.3077
-
-            for i in range(20, 40):
-                second = threading.Thread(target=addframe, args=(i, y, bgdegree,))
-                second.start()
-                y += 1.5
-                bgdegree -= 2.3077
-
-            second.join()
-            allframes = []
-            for i in range(40):
-                allframes.append(frames[i])
-            unbox_gif = BytesIO()
-            allframes[0].save(unbox_gif,
-                              format='GIF',
-                              save_all=True,
-                              append_images=allframes[1:],
-                              duration=75,
-                              loop=0)
-            unbox_gif.seek(0)
-            file = discord.File(fp=unbox_gif, filename='unboxing.gif')
-            bot.allitems[item_name] = unbox_gif
-            print(f'{item_name} cached successfully!')
-    print(f'All {len(bot.allitems.keys())} items cached successfully in {time.time() - t} secs')
+    with open('files/bot_data.json', 'w') as k:
+        k.write(json.dumps(data, indent=2))
 
 bot.connected_ = False
 @bot.event

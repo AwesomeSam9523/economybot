@@ -32,8 +32,6 @@
       "Common Chest",
       "Common Chest",
       "Common Chest",
-      "Common Chest",
-      "Common Chest",
       "Common Chest"
     ],
     "eq_lock": "Silver Lock",
@@ -78,7 +76,15 @@
       "Lollipop",
       "Rotten Tomato",
       "Office Bag",
-      "Copper Wire"
+      "Copper Wire",
+      "WIFI Router",
+      "Money Bag"
+    ]
+  },
+  "459337154099806218": {
+    "inv": [],
+    "items": [
+      "Broken Television"
     ]
   }
 }
