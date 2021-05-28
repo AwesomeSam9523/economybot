@@ -2727,30 +2727,25 @@ async def itemsinv(ctx, user_page_orignal:int=1):
     if itemsinv is None:
         return await ctx.reply('You don\'t own any items yet. Why not go and unbox?')
 
-    done = []
-    for items in userinv["items"]:
-        done.append(items)
-    invdict = {}
-    for i in set(done):
-        invdict[i] = done.count(i)
-    sorted_inv = sorted(invdict.items(), key=lambda x: x[1], reverse=True)
+    if len(set(bot.cachedinv.get(userid, ()))) != len(set(userinv["items"])):
+        done = []
+        for items in userinv["items"]:
+            done.append(items)
+        invdict = {}
+        for i in set(done):
+            invdict[i] = done.count(i)
+        bot.cachedinv[userid] = sorted(invdict.items(), key=lambda x: x[1], reverse=True)
 
-    if len(set(bot.cachedinv.get(userid, ()))) != len(set(done)):
-        bot.cachedinv[userid] = sorted_inv
-    else:
-        sorted_inv = bot.cachedinv[userid]
+    sorted_inv = bot.cachedinv[userid]
     item_count = 0
     max_pages = 0
     while True:
-        if max_pages < len(sorted_inv)/6:
-            max_pages += 1
-        else:
-            break
+        if max_pages < len(sorted_inv)/6: max_pages += 1
+        else: break
     if user_page_orignal <= 0: user_page_orignal = 1
     if user_page_orignal > max_pages: user_page_orignal = max_pages
     user_page = (user_page_orignal-1)*6
     if user_page != 0: user_page += user_page_orignal
-    print(user_page, user_page_orignal, len(sorted_inv), len(sorted_inv)/6)
 
     while True:
         try: current_item = sorted_inv[user_page][0]
