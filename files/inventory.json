@@ -89,17 +89,7 @@
   "732826772944715856": {
     "inv": [
       "Rare Chest",
-      "Rare Chest",
-      "Legendary Chest",
-      "Legendary Chest",
-      "Legendary Chest",
-      "Legendary Chest",
-      "Legendary Chest",
-      "Legendary Chest",
-      "Legendary Chest",
-      "Legendary Chest",
-      "Legendary Chest",
-      "Legendary Chest"
+      "Rare Chest"
     ],
     "items": [
       "Party Speakers",
@@ -115,7 +105,17 @@
       "Broken String",
       "WIFI Router",
       "Office Bag",
-      "Leather Shoes"
+      "Leather Shoes",
+      "Electric Drums",
+      "Travel Bag",
+      "WIFI Router",
+      "Headphones",
+      "War Sword",
+      "Party Speakers",
+      "WIFI Router",
+      "Copper Wire",
+      "Money Bag",
+      "Electric Guitar"
     ]
   }
 }

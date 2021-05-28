@@ -104,5 +104,14 @@
   "0x2659": "AwesomeSam#7985 (771601176155783198) =>\n**Command:** `itemsinv`\n**Message:** `e.items`\n**Error:** `Command raised an exception: NameError: name 'current_qty' is not defined`",
   "0x14b3": "AwesomeSam#7985 (771601176155783198) =>\n**Command:** `itemsinv`\n**Message:** `e.items 2`\n**Error:** `Command raised an exception: AttributeError: 'list' object has no attribute 'keys'`",
   "0xdd5": "AwesomeSam#7985 (771601176155783198) =>\n**Command:** `itemsinv`\n**Message:** `e.items 6`\n**Error:** `Command raised an exception: IndexError: list index out of range`",
-  "0x2392": "AwesomeSam#7985 (771601176155783198) =>\n**Command:** `itemsinv`\n**Message:** `e.items 6`\n**Error:** `Command raised an exception: IndexError: list index out of range`"
+  "0x2392": "AwesomeSam#7985 (771601176155783198) =>\n**Command:** `itemsinv`\n**Message:** `e.items 6`\n**Error:** `Command raised an exception: IndexError: list index out of range`",
+  "0x433": "AwesomeSam#7985 (771601176155783198) =>\n**Command:** `test`\n**Message:** `e.test`\n**Error:** `Command raised an exception: TypeError: Object of type Button is not JSON serializable`",
+  "0x6e6": "AwesomeSam#7985 (771601176155783198) =>\n**Command:** `test`\n**Message:** `e.test`\n**Error:** `Command raised an exception: AttributeError: 'dict' object has no attribute 'to_dict'`",
+  "0x259b": "AwesomeSam#7985 (771601176155783198) =>\n**Command:** `test`\n**Message:** `e.test`\n**Error:** `Command raised an exception: AttributeError: 'dict' object has no attribute 'to_dict'`",
+  "0x224e": "AwesomeSam#7985 (771601176155783198) =>\n**Command:** `test`\n**Message:** `e.test`\n**Error:** `Command raised an exception: KeyError: 'label'`",
+  "0x1b10": "AwesomeSam#7985 (771601176155783198) =>\n**Command:** `test`\n**Message:** `e.test`\n**Error:** `Command raised an exception: TypeError: Object of type Button is not JSON serializable`",
+  "0xdbe": "AwesomeSam#7985 (771601176155783198) =>\n**Command:** `_test`\n**Message:** `e.test`\n**Error:** `Command raised an exception: HTTPException: 400 Bad Request (error code: 50035): Invalid Form Body\nIn data.content: This field is required`",
+  "0x2211": "AwesomeSam#7985 (771601176155783198) =>\n**Command:** `_test`\n**Message:** `e.test`\n**Error:** `Command raised an exception: TypeError: __init__() takes 1 positional argument but 2 were given`",
+  "0x23cc": "AwesomeSam#7985 (771601176155783198) =>\n**Command:** `_test`\n**Message:** `e.test`\n**Error:** `Command raised an exception: TypeError: __init__() missing 6 required keyword-only arguments: 'bot', 'client', 'user', 'component', 'raw_data', and 'message'`",
+  "0x20ac": "AwesomeSam#7985 (771601176155783198) =>\n**Command:** `_test`\n**Message:** `e.test`\n**Error:** `Command raised an exception: TypeError: 'NoneType' object is not subscriptable`"
 }

@@ -1,23 +1,14 @@
 import time
 t1 = time.time()
-import os
-import random
-#import ujson as json
-import json
-import requests, operator
-import discord
-import asyncio
+import datetime, csv, threading, functools, asyncio, discord, requests, operator, json, random, os
 from discord.ext import commands
-import datetime
-import csv
+from discord.ext.commands import *
 from prettytable import PrettyTable
 import matplotlib.pyplot as plt
 from PIL import Image, ImageDraw, ImageFont, ImageEnhance, ImageFilter
 from io import BytesIO
-from discord.ext.commands import *
-import threading
 from concurrent.futures import ThreadPoolExecutor
-import functools
+from discord_components import Button, ButtonStyle, InteractionType, DiscordComponents, Select, Context
 
 print(f"Imports Complete in {float('{:.2f}'.format(time.time()-t1))} secs")
 tnew = time.time()
@@ -25,6 +16,7 @@ intents = discord.Intents.default()
 intents.members = True
 intents.presences = True
 bot = commands.Bot(command_prefix=["e.", "E."], intents=intents, case_insensitive=True)
+ddb = DiscordComponents(bot)
 bot.launch_time = datetime.datetime.utcnow()
 bot.dev = 1
 bot.remove_command('help')
@@ -2714,9 +2706,9 @@ async def iteminfo(ctx, *, name:str):
     embed.set_thumbnail(url=f"attachment://item.png")
     await ctx.send(embed=embed, file=discord.File(f"items/{item['name']}.png", filename="item.png"))
 
-@bot.command(aliases=['items'])
+@bot.command(aliases=['itemsinv'])
 @commands.check(general_checks_loop)
-async def itemsinv(ctx, user_page_orignal:int=1):
+async def items(ctx, user_page_orignal:int=1):
     userid = str(ctx.author.id)
     inv = await get_inv()
     userinv = inv.get(userid)
@@ -2740,40 +2732,107 @@ async def itemsinv(ctx, user_page_orignal:int=1):
     item_count = 0
     max_pages = 0
     while True:
+        print(max_pages, len(sorted_inv)/6)
         if max_pages < len(sorted_inv)/6: max_pages += 1
         else: break
+    max_pages -= 1
     if user_page_orignal <= 0: user_page_orignal = 1
     if user_page_orignal > max_pages: user_page_orignal = max_pages
     user_page = (user_page_orignal-1)*6
-    if user_page != 0: user_page += user_page_orignal
-
+    #if user_page != 0: user_page += user_page_orignal
+    print(sorted_inv)
     while True:
         try: current_item = sorted_inv[user_page][0]
         except: break
         for i in bot.items.keys():
             for j in bot.items[i]["items"]:
                 if j["name"] == current_item:
-                    if item_count > 6: break
-                    embed.add_field(name=f"{j['emoji']} {j['name']}", value=f'Qty: `{sorted_inv[user_page][1]}`', inline=False)
+                    if item_count == 6: break
+                    itemname = j['name']
+                    print(len(itemname))
+                    spaces = (25 - len(itemname))*'\u200b'
+                    if i == "common": rarity_emoji = "<:Common:847687974414319626>"
+                    elif i == "rare": rarity_emoji = "<:Rare:847687973202165841>"
+                    else: rarity_emoji = "<:Legendary:847687925596160002>"
+                    embed.add_field(name=f"{j['emoji']} {itemname}", value=f'{rarity_emoji} Quantity: `{sorted_inv[user_page][1]}`\n'
+                                                                            f'`{"-"*25}`', inline=False)
                     item_count += 1
                     user_page += 1
-            if item_count > 6: break
-        if item_count > 6: break
+            if item_count == 6: break
+        if item_count == 6: break
     embed.set_author(name=ctx.author.name, icon_url=ctx.author.avatar_url)
     embed.set_footer(text=f'Page: {user_page_orignal} of {max_pages}')
     await ctx.send(embed=embed)
 
 @bot.command()
+@commands.check(general_checks_loop)
+async def sell(ctx, *, item):
+    a = str(item).split(' ')
+    qty = 1
+    try:
+        fqty = a[-1]
+        item_name = a[0]
+        if fqty != item_name:
+            qty = int(fqty)
+            a.pop(-1)
+            item = ' '.join(a)
+    except: pass
+    userid = str(ctx.author.id)
+    inv = await get_inv()
+    userinv = inv.get(userid)
+    if userinv is None:
+        return await ctx.reply('You have an empty inventory bro..')
+    itemsinv = userinv.get("items", [])
+    invlower = [x.lower() for x in itemsinv]
+    if item.lower() not in invlower:
+        embed = discord.Embed(description=f"{economyerror} You don\'t own `{item}`", color=error_embed)
+        return await ctx.send(embed=embed)
+    userqty = invlower.count(item.lower())
+    for i in bot.items.keys():
+        for j in bot.items[i]["items"]:
+            if j["name"].lower() == item.lower():
+                item_main = j
+                break
+
+    if qty > userqty:
+        embed = discord.Embed(description=f"{economyerror} Dude, you don\'t own `{qty}` quantity of `{j['name']}`. What are you even thinking?", color=error_embed)
+        return await ctx.send(embed=embed)
+    value = 0
+    embed = discord.Embed(title=f'{economysuccess} Success!',
+                          description=f'You sold `{userqty}` {j["name"]} for {await commait(value)} coins!')
+
+@bot.command(aliases=["test"])
 @commands.check(is_dev)
-async def test(ctx, a:str):
-    string = ''
-    for i in bot.items[a].keys():
-        string += f'\n{i}:\n'
-        for j in bot.items[a][i]:
-            string += f'{j["name"]}\n'
-    for i in ctx.guild.emojis:
-        print(i)
-    #await ctx.send(f'```\n{string[1:]}```')
+async def _test(ctx):
+    blue = Button(style=ButtonStyle.blue, label="Blue", id="blue-btn")
+    red = Button(style=ButtonStyle.red, label="Red", id="red-btn")
+
+    blue_disabled = Button(style=ButtonStyle.blue, label="Blue", id="blue-btn", disabled=True)
+    red_disabled = Button(style=ButtonStyle.red, label="Red", id="red-btn", disabled=True)
+    a = await ctx.channel.send(
+        "Click the red button",
+        components=[[blue, red]])
+    while True:
+        res = await ddb.wait_for_interact("button_click")
+        if res.channel == ctx.channel:
+            if res.component.id == "blue-btn":
+                await res.respond(
+                    type=InteractionType.ChannelMessageWithSource,
+                    content='Bruh I told you to click Red!!')
+                continue
+            else:
+                await res.respond(
+                    type=InteractionType.ChannelMessageWithSource,
+                    content=f'Ah good boy!')
+                cont = Context(bot=bot, client=ddb, user=ctx.author, component=red, message=a, raw_data=res.raw_data)
+                blue.disabled = True
+                red.disabled = True
+
+                await a.edit(content=a.content, components=[[blue, red]])
+                break
+
+@bot.command()
+@commands.check(is_dev)
 
 @bot.command()
 @commands.check(is_dev)
