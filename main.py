@@ -2566,7 +2566,7 @@ async def use(ctx, *, item:str):
         embed = discord.Embed(color=chestcol)
         fetched = bot.get_user(ctx.author.id)
         embed.set_footer(text='Type e.sell <item-name> to sell an item for coins\nType e.iteminfo <item-name> for info!', icon_url=bot.pfp)
-        embed.set_author(name=f'{fetched.name} Unboxed: {item}', icon_url=fetched.avatar_url)
+        embed.set_author(name=f'{fetched.name} Unboxed: {item_name}', icon_url=fetched.avatar_url)
         embed.set_image(url="attachment://unboxing.gif")
         await ctx.send(embed=embed, file=file)
 
@@ -2741,6 +2741,7 @@ async def items(ctx, user_page_orignal:int=1):
     user_page = (user_page_orignal-1)*6
     #if user_page != 0: user_page += user_page_orignal
     print(sorted_inv)
+    components= []
     while True:
         try: current_item = sorted_inv[user_page][0]
         except: break
@@ -2754,12 +2755,14 @@ async def items(ctx, user_page_orignal:int=1):
                     if i == "common": rarity_emoji = "<:Common:847687974414319626>"
                     elif i == "rare": rarity_emoji = "<:Rare:847687973202165841>"
                     else: rarity_emoji = "<:Legendary:847687925596160002>"
-                    embed.add_field(name=f"{j['emoji']} {itemname}", value=f'{rarity_emoji} Quantity: `{sorted_inv[user_page][1]}`\n'
-                                                                            f'`{"-"*25}`', inline=False)
+                    components.append([Button(style=ButtonStyle.green, label=itemname, emoji=j["emoji"]), Button(style=ButtonStyle.grey, label=sorted_inv[user_page][1], emoji=j["emoji"])])
                     item_count += 1
                     user_page += 1
             if item_count == 6: break
         if item_count == 6: break
+    a = await ctx.channel.send(
+        "Your Inventory:",
+        components=components)
     embed.set_author(name=ctx.author.name, icon_url=ctx.author.avatar_url)
     embed.set_footer(text=f'Page: {user_page_orignal} of {max_pages}')
     await ctx.send(embed=embed)
