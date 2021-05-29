@@ -356,15 +356,6 @@
         "percent": 37
       },
       {
-        "icon": "common_chest.png",
-        "name": "Common Chest",
-        "desc": "1 Common Item + coins",
-        "price": "1,000",
-        "special": false,
-        "disc": "720",
-        "percent": 28
-      },
-      {
         "icon": "legendary_chest.png",
         "name": "Legendary Chest",
         "desc": "2 Rares & 0.1% for Epic + coins",
@@ -396,9 +387,18 @@
         "name": "Silver Lock",
         "desc": "Increases rob protection by 25%",
         "price": "6,000",
-        "special": true,
+        "special": false,
         "disc": "3,540",
         "percent": 41
+      },
+      {
+        "icon": "common_chest.png",
+        "name": "Common Chest",
+        "desc": "1 Common Item + coins",
+        "price": "1,000",
+        "special": true,
+        "disc": "730",
+        "percent": 27
       }
     ],
     "category": {
@@ -414,7 +414,7 @@
         "Gold Lock"
       ]
     },
-    "updated": 1622123692.4442368
+    "updated": 1622210408.514633
   },
   "items": {
     "common": {

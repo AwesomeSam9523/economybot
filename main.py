@@ -8,7 +8,8 @@ import matplotlib.pyplot as plt
 from PIL import Image, ImageDraw, ImageFont, ImageEnhance, ImageFilter
 from io import BytesIO
 from concurrent.futures import ThreadPoolExecutor
-from discord_components import Button, ButtonStyle, InteractionType, DiscordComponents, Select, Context
+from discord_components import Button, ButtonStyle, InteractionType, DiscordComponents, Select, Context, Option
+from discord_slash import SlashCommand, SlashContext
 
 print(f"Imports Complete in {float('{:.2f}'.format(time.time()-t1))} secs")
 tnew = time.time()
@@ -1054,7 +1055,7 @@ async def is_dm(ctx):
 async def if_allowed(ctx):
     return await check_channel(ctx.channel.id, ctx.guild.id)
 
-@bot.event
+'''@bot.event
 async def on_command_error(ctx, error):
     if isinstance(error, CommandNotFound):
         embed = discord.Embed(description=f'{economyerror} The command you are trying to use doesn\'t exist.', color=error_embed)
@@ -1083,7 +1084,7 @@ async def on_command_error(ctx, error):
                           color=error_embed)
     embed.set_footer(text='Sorry for the inconvinience')
     embed.timestamp = datetime.datetime.utcnow()
-    await ctx.send(embed=embed)
+    await ctx.send(embed=embed)'''
 
 @bot.event
 async def on_raw_reaction_add(payload):
@@ -2675,9 +2676,9 @@ async def bank(ctx, tier:int=None):
         await msg.clear_reactions()
         await msg.edit(embed=discord.Embed(description=f'{economyerror} Timed Out!', color=error_embed))
 
-@bot.command(aliases=["item"])
+@bot.command(aliases=["item"], pass_context=True)
 @commands.check(general_checks_loop)
-async def iteminfo(ctx, *, name:str):
+async def iteminfo(ctx, *, name:str, via:bool=False):
     found = False
     for i in bot.items.keys():
         for j in bot.items[i]["items"]:
@@ -2704,7 +2705,11 @@ async def iteminfo(ctx, *, name:str):
     else:
         embed.add_field(name="Est. Value", value=f"`{await commait(item['value'][0])} - {await commait(item['value'][1])}` coins", inline=False)
     embed.set_thumbnail(url=f"attachment://item.png")
-    await ctx.send(embed=embed, file=discord.File(f"items/{item['name']}.png", filename="item.png"))
+    file = discord.File(f"items/{item['name']}.png", filename="item.png")
+    if not via:
+        await ctx.send(embed=embed, file=file)
+    else:
+        return {"embed":embed, "file":file}
 
 @bot.command(aliases=['itemsinv'])
 @commands.check(general_checks_loop)
@@ -2739,8 +2744,6 @@ async def items(ctx, user_page_orignal:int=1):
     if user_page_orignal <= 0: user_page_orignal = 1
     if user_page_orignal > max_pages: user_page_orignal = max_pages
     user_page = (user_page_orignal-1)*6
-    #if user_page != 0: user_page += user_page_orignal
-    print(sorted_inv)
     components= []
     while True:
         try: current_item = sorted_inv[user_page][0]
@@ -2748,24 +2751,45 @@ async def items(ctx, user_page_orignal:int=1):
         for i in bot.items.keys():
             for j in bot.items[i]["items"]:
                 if j["name"] == current_item:
-                    if item_count == 6: break
+                    if item_count == 5: break
                     itemname = j['name']
-                    print(len(itemname))
-                    spaces = (25 - len(itemname))*'\u200b'
-                    if i == "common": rarity_emoji = "<:Common:847687974414319626>"
-                    elif i == "rare": rarity_emoji = "<:Rare:847687973202165841>"
-                    else: rarity_emoji = "<:Legendary:847687925596160002>"
-                    components.append([Button(style=ButtonStyle.green, label=itemname, emoji=j["emoji"]), Button(style=ButtonStyle.grey, label=sorted_inv[user_page][1], emoji=j["emoji"])])
+                    #print(len(itemname))
+                    if i == "common": rarity_emoji = 847687974414319626
+                    elif i == "rare": rarity_emoji = 847687973202165841
+                    else: rarity_emoji = 847687925596160002
+                    emoji = j["emoji"].split(':')[-1].replace('>', '')
+                    name = Button(style=ButtonStyle.green, label=itemname, emoji=bot.get_emoji(int(emoji)))
+                    rarity_qty = Button(style=ButtonStyle.grey, label=str(sorted_inv[user_page][1])+"x", emoji=bot.get_emoji(rarity_emoji))
+                    sell1 = Button(style=ButtonStyle.blue, label="Sell 1", id=itemname)
+                    sellall = Button(style=ButtonStyle.blue, label="Sell All", id=itemname)
+                    components.append([rarity_qty, name, sell1, sellall])
                     item_count += 1
                     user_page += 1
-            if item_count == 6: break
-        if item_count == 6: break
-    a = await ctx.channel.send(
-        "Your Inventory:",
-        components=components)
+            if item_count == 5: break
+        if item_count == 5: break
+    embed = discord.Embed(title=f"{economysuccess} Your Inventory:",
+                          description=f"Items Owned: `{len(sorted_inv)}/50`\n"
+                                      "Click on the item for item info!",
+                          color=3553599)
     embed.set_author(name=ctx.author.name, icon_url=ctx.author.avatar_url)
-    embed.set_footer(text=f'Page: {user_page_orignal} of {max_pages}')
-    await ctx.send(embed=embed)
+    embed.set_footer(text=f'Page {user_page_orignal} of {max_pages}')
+    a = await ctx.channel.send(embed=embed, components=components)
+    while True:
+        res = await bot.wait_for("button_click")
+        if res.channel == ctx.channel:
+            await res.respond(type=InteractionType.DeferredUpdateMessage)
+            via_iteminfo = await iteminfo(ctx, name=res.component.label, via=True)
+            resmsg = await ddb.send_component_msg(channel=ctx.channel, content='', embed=via_iteminfo["embed"], file=via_iteminfo["file"])
+            #await res.respond(type=InteractionType.ChannelMessageWithSource, embed=via_iteminfo["embed"], file=via_iteminfo["file"])
+
+@bot.command(aliases=["test"])
+@commands.check(is_dev)
+async def _test(ctx):
+    item1 = Option(label="This is 1", value="Value?")
+    item2 = Option(label="This is 2", value="IDK")
+    item3 = Option(label="This is 3", value="lmao")
+    dropdown = Select(options=[item1, item2, item3], placeholder="IDK bruh whats this", min_values=1, max_values=1)
+    await ctx.send("Select:", components=[dropdown])
 
 @bot.command()
 @commands.check(general_checks_loop)
@@ -2803,56 +2827,6 @@ async def sell(ctx, *, item):
     value = 0
     embed = discord.Embed(title=f'{economysuccess} Success!',
                           description=f'You sold `{userqty}` {j["name"]} for {await commait(value)} coins!')
-
-@bot.command(aliases=["test"])
-@commands.check(is_dev)
-async def _test(ctx):
-    blue = Button(style=ButtonStyle.blue, label="Blue", id="blue-btn")
-    red = Button(style=ButtonStyle.red, label="Red", id="red-btn")
-
-    blue_disabled = Button(style=ButtonStyle.blue, label="Blue", id="blue-btn", disabled=True)
-    red_disabled = Button(style=ButtonStyle.red, label="Red", id="red-btn", disabled=True)
-    a = await ctx.channel.send(
-        "Click the red button",
-        components=[[blue, red]])
-    while True:
-        res = await ddb.wait_for_interact("button_click")
-        if res.channel == ctx.channel:
-            if res.component.id == "blue-btn":
-                await res.respond(
-                    type=InteractionType.ChannelMessageWithSource,
-                    content='Bruh I told you to click Red!!')
-                continue
-            else:
-                await res.respond(
-                    type=InteractionType.ChannelMessageWithSource,
-                    content=f'Ah good boy!')
-                cont = Context(bot=bot, client=ddb, user=ctx.author, component=red, message=a, raw_data=res.raw_data)
-                blue.disabled = True
-                red.disabled = True
-
-                await a.edit(content=a.content, components=[[blue, red]])
-                break
-
-@bot.command()
-@commands.check(is_dev)
-
-@bot.command()
-@commands.check(is_dev)
-async def braincell(ctx):
-    async def chest(item):
-        file = discord.File(fp=bot.allitems[item], filename='unboxing.gif')
-        embed = discord.Embed()
-        fetched = bot.get_user(ctx.author.id)
-        embed.set_footer(
-            text='Type e.sell <item-name> to sell an item for coins\nType e.iteminfo <item-name> for info!',
-            icon_url=bot.pfp)
-        embed.set_author(name=f'{fetched.name} Unboxed: {item}', icon_url=fetched.avatar_url)
-        embed.set_image(url="attachment://unboxing.gif")
-        await ctx.send(embed=embed, file=file)
-
-    for i in bot.allitems.keys():
-        await chest(i)
 
 bot.connected_ = False
 @bot.event
