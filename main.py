@@ -9,7 +9,6 @@ from PIL import Image, ImageDraw, ImageFont, ImageEnhance, ImageFilter
 from io import BytesIO
 from concurrent.futures import ThreadPoolExecutor
 from discord_components import Button, ButtonStyle, InteractionType, DiscordComponents, Select, Context, Option
-from discord_slash import SlashCommand, SlashContext
 
 print(f"Imports Complete in {float('{:.2f}'.format(time.time()-t1))} secs")
 tnew = time.time()
@@ -165,6 +164,7 @@ bot.emotes = {}
 bot.unboxbgs = {}
 bot.allitems = {}
 bot.cachedinv = {}
+bot.used = {}
 
 usercmds = {}
 stock_names = ['Ava', 'Neil', 'Ryan', 'Anthony', 'Bernadette', 'Lauren', 'Justin', 'Matt', 'Wanda', 'James', 'Emily', 'Vanessa', 'Carl', 'Fiona', 'Stephanie', 'Pippa', 'Phil', 'Carol', 'Liam', 'Michael', 'Ella', 'Amanda', 'Caroline', 'Nicola', 'Sean', 'Oliver', 'Kylie', 'Rachel', 'Leonard', 'Julian', 'Richard', 'Peter', 'Irene', 'Dominic', 'Connor', 'Dorothy', 'Gavin', 'Isaac', 'Karen', 'Kimberly', 'Abigail', 'Yvonne', 'Steven', 'Felicity', 'Evan', 'Bella', 'Alison', 'Diane', 'Joan', 'Jan', 'Wendy', 'Nathan', 'Molly', 'Charles', 'Victor', 'Sally', 'Rose', 'Robert', 'Claire', 'Theresa', 'Grace', 'Keith', 'Stewart', 'Andrea', 'Alexander', 'Chloe', 'Nicholas', 'Edward', 'Deirdre', 'Anne', 'Joseph', 'Alan', 'Rebecca', 'Jane', 'Natalie', 'Cameron', 'Owen', 'Eric', 'Gabrielle', 'Sonia', 'Tim', 'Sarah', 'Madeleine', 'Megan', 'Lucas', 'Joe', 'Brandon', 'Brian', 'Jennifer', 'Alexandra', 'Adrian', 'John', 'Mary', 'Tracey', 'Jasmine', 'Penelope', 'Hannah', 'Thomas', 'Angela', 'Warren', 'Blake', 'Simon', 'Audrey', 'Frank', 'Samantha', 'Dan', 'Victoria', 'Paul', 'Jacob', 'Heather', 'Una', 'Lily', 'Carolyn', 'Jonathan', 'Ian', 'Piers', 'William', 'Gordon', 'Dylan', 'Olivia', 'Jake', 'Leah', 'Jessica', 'David', 'Katherine', 'Amelia', 'Benjamin', 'Boris', 'Sebastian', 'Lisa', 'Diana', 'Michelle', 'Emma', 'Sam', 'Stephen', 'Faith', 'Kevin', 'Austin', 'Jack', 'Ruth', 'Colin', 'Trevor', 'Joanne', 'Virginia', 'Anna', 'Max', 'Adam', 'Maria', 'Sophie', 'Sue', 'Andrew', 'Harry', 'Amy', 'Christopher', 'Donna', 'Melanie', 'Elizabeth', 'Lillian', 'Julia', 'Christian', 'Luke', 'Zoe', 'Joshua', 'Jason']
@@ -423,6 +423,27 @@ async def update_statements(stat):
 async def update_xp(data):
     with open('files/xp.json', 'w') as w:
         w.write(json.dumps(data, indent=2))
+
+async def update_sorted_inv(userid):
+    inv = await get_inv()
+    userinv = inv.get(userid)
+    if userinv is None:
+        bot.cachedinv[userid] = ()
+        return "userinv"
+    itemsinv = userinv.get("items")
+    embed = discord.Embed(color=embedcolor)
+    if itemsinv is None:
+        bot.cachedinv[userid] = ()
+        return "itemsinv"
+
+    done = []
+    for items in userinv["items"]:
+        done.append(items)
+    invdict = {}
+    for i in set(done):
+        invdict[i] = done.count(i)
+    bot.cachedinv[userid] = sorted(invdict.items(), key=lambda x: x[1], reverse=True)
+    return bot.cachedinv[userid]
 
 async def clear_dues():
     data = await get_data()
@@ -869,6 +890,40 @@ async def check_channel(chlid, guildid):
 async def get_errorfile():
     with open('files/errors.json', 'r') as f:
         return json.load(f)
+
+async def inv_components(userid, user_page_orignal):
+    user_page = (user_page_orignal - 1) * 6
+    components = []
+    sorted_inv = await update_sorted_inv(userid)
+    item_count = 0
+    while True:
+        try:
+            current_item = sorted_inv[user_page][0]
+        except:
+            break
+        for i in bot.items.keys():
+            for j in bot.items[i]["items"]:
+                if j["name"] == current_item:
+                    if item_count == 5: break
+                    itemname = j['name']
+                    if i == "common":
+                        rarity_emoji = 847687974414319626
+                    elif i == "rare":
+                        rarity_emoji = 847687973202165841
+                    else:
+                        rarity_emoji = 847687925596160002
+                    emoji = j["emoji"].split(':')[-1].replace('>', '')
+                    qty_userhas = sorted_inv[user_page][1]
+                    name = Button(style=ButtonStyle.green, label=itemname,
+                                  emoji=bot.get_emoji(int(emoji)), id="info")
+                    rarity_qty = Button(style=ButtonStyle.grey, label=str(qty_userhas) + "x",
+                                        emoji=bot.get_emoji(rarity_emoji))
+                    components.append([rarity_qty, name])
+                    item_count += 1
+                    user_page += 1
+            if item_count == 5: break
+        if item_count == 5: break
+    return components
 
 async def update_errorfile(a):
     with open('files/errors.json', 'w') as f:
@@ -2714,73 +2769,40 @@ async def iteminfo(ctx, *, name:str, via:bool=False):
 @bot.command(aliases=['itemsinv'])
 @commands.check(general_checks_loop)
 async def items(ctx, user_page_orignal:int=1):
-    userid = str(ctx.author.id)
-    inv = await get_inv()
-    userinv = inv.get(userid)
-    if userinv is None:
-        return await ctx.reply('You have an empty inventory bro..')
-    itemsinv = userinv.get("items")
-    embed = discord.Embed(color=embedcolor)
-    if itemsinv is None:
-        return await ctx.reply('You don\'t own any items yet. Why not go and unbox?')
+    updinv = await update_sorted_inv(str(ctx.author.id))
+    if updinv == "userinv": return await ctx.reply('You have an empty inventory bro..')
+    if updinv == "itemsinv": return await ctx.reply('You don\'t own any items yet. Why not go and unbox?')
 
-    if len(set(bot.cachedinv.get(userid, ()))) != len(set(userinv["items"])):
-        done = []
-        for items in userinv["items"]:
-            done.append(items)
-        invdict = {}
-        for i in set(done):
-            invdict[i] = done.count(i)
-        bot.cachedinv[userid] = sorted(invdict.items(), key=lambda x: x[1], reverse=True)
-
-    sorted_inv = bot.cachedinv[userid]
+    sorted_inv = updinv
     item_count = 0
-    max_pages = 0
+    max_pages = 1
     while True:
-        print(max_pages, len(sorted_inv)/6)
         if max_pages < len(sorted_inv)/6: max_pages += 1
         else: break
     max_pages -= 1
+    if max_pages == 0: max_pages += 1
     if user_page_orignal <= 0: user_page_orignal = 1
     if user_page_orignal > max_pages: user_page_orignal = max_pages
     user_page = (user_page_orignal-1)*6
-    components= []
-    while True:
-        try: current_item = sorted_inv[user_page][0]
-        except: break
-        for i in bot.items.keys():
-            for j in bot.items[i]["items"]:
-                if j["name"] == current_item:
-                    if item_count == 5: break
-                    itemname = j['name']
-                    #print(len(itemname))
-                    if i == "common": rarity_emoji = 847687974414319626
-                    elif i == "rare": rarity_emoji = 847687973202165841
-                    else: rarity_emoji = 847687925596160002
-                    emoji = j["emoji"].split(':')[-1].replace('>', '')
-                    name = Button(style=ButtonStyle.green, label=itemname, emoji=bot.get_emoji(int(emoji)))
-                    rarity_qty = Button(style=ButtonStyle.grey, label=str(sorted_inv[user_page][1])+"x", emoji=bot.get_emoji(rarity_emoji))
-                    sell1 = Button(style=ButtonStyle.blue, label="Sell 1", id=itemname)
-                    sellall = Button(style=ButtonStyle.blue, label="Sell All", id=itemname)
-                    components.append([rarity_qty, name, sell1, sellall])
-                    item_count += 1
-                    user_page += 1
-            if item_count == 5: break
-        if item_count == 5: break
+    components= await inv_components(str(ctx.author.id), user_page_orignal)
     embed = discord.Embed(title=f"{economysuccess} Your Inventory:",
                           description=f"Items Owned: `{len(sorted_inv)}/50`\n"
                                       "Click on the item for item info!",
                           color=3553599)
     embed.set_author(name=ctx.author.name, icon_url=ctx.author.avatar_url)
     embed.set_footer(text=f'Page {user_page_orignal} of {max_pages}')
-    a = await ctx.channel.send(embed=embed, components=components)
+    a = await ctx.send(embed=embed, components=components)
     while True:
         res = await bot.wait_for("button_click")
         if res.channel == ctx.channel:
-            await res.respond(type=InteractionType.DeferredUpdateMessage)
-            via_iteminfo = await iteminfo(ctx, name=res.component.label, via=True)
-            resmsg = await ddb.send_component_msg(channel=ctx.channel, content='', embed=via_iteminfo["embed"], file=via_iteminfo["file"])
-            #await res.respond(type=InteractionType.ChannelMessageWithSource, embed=via_iteminfo["embed"], file=via_iteminfo["file"])
+            if res.user != ctx.author:
+                await res.respond(type = InteractionType.ChannelMessageWithSource, content="Oops! You cant sell other's items lol")
+            else:
+                await res.respond(type=InteractionType.DeferredUpdateMessage)
+                if "info" in res.component.id:
+                    via_iteminfo = await iteminfo(ctx, name=res.component.label, via=True)
+                    resmsg = await ddb.send_component_msg(channel=ctx.channel, content='', embed=via_iteminfo["embed"], file=via_iteminfo["file"])
+                #await res.respond(type=InteractionType.ChannelMessageWithSource, embed=via_iteminfo["embed"], file=via_iteminfo["file"])
 
 @bot.command(aliases=["test"])
 @commands.check(is_dev)
@@ -2791,9 +2813,9 @@ async def _test(ctx):
     dropdown = Select(options=[item1, item2, item3], placeholder="IDK bruh whats this", min_values=1, max_values=1)
     await ctx.send("Select:", components=[dropdown])
 
-@bot.command()
+@bot.command(pass_context=True)
 @commands.check(general_checks_loop)
-async def sell(ctx, *, item):
+async def sell(ctx, *, item, via_items:bool=False):
     a = str(item).split(' ')
     qty = 1
     try:
@@ -2822,11 +2844,28 @@ async def sell(ctx, *, item):
                 break
 
     if qty > userqty:
-        embed = discord.Embed(description=f"{economyerror} Dude, you don\'t own `{qty}` quantity of `{j['name']}`. What are you even thinking?", color=error_embed)
+        embed = discord.Embed(description=f"{economyerror} Dude, you don\'t own `{qty}` quantity of `{item_main['name']}`. What are you even thinking?", color=error_embed)
         return await ctx.send(embed=embed)
-    value = 0
+    itemsinv.remove(item_main["name"])
+    userinv["items"] = itemsinv
+    inv[userid] = userinv
+    value = random.randint(item_main["value"][0], item_main["value"][1])*qty
     embed = discord.Embed(title=f'{economysuccess} Success!',
-                          description=f'You sold `{userqty}` {j["name"]} for {await commait(value)} coins!')
+                          description=f'You sold `{qty}` {item_main["name"]} for {await commait(value)} coins!')
+    await ctx.send(embed=embed)
+    await update_inv(inv)
+
+@bot.command()
+async def games(ctx):
+    ttt = Button(style=ButtonStyle.green, label="Tic-Tac-Toe", emoji="👀", id="ttt")
+    mine = Button(style=ButtonStyle.green, label="Minesweeper", emoji="💣", id="ttt")
+    snakes = Button(style=ButtonStyle.green, label="Mini Snakes & Ladders", emoji="🪜", id="ttt")
+    embed = discord.Embed(description=f"{economysuccess} Choose your game!", color=embedcolor)
+    await ctx.send(embed=embed, components=[ttt, mine, snakes])
+    def check():
+        return res.channel == ctx.channel and res.user == ctx.author
+    res = await bot.wait_for("button_click", check=check)
+    print("clicked")
 
 bot.connected_ = False
 @bot.event

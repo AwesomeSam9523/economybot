@@ -34,49 +34,24 @@
     ],
     "eq_lock": "Silver Lock",
     "items": [
-      "Hourglass",
       "Party Speakers",
-      "Money Bag",
-      "Black Pen",
-      "Money Bag",
-      "Copper Wire",
-      "Pen Stand",
-      "Gaming Chair",
-      "RC Drone",
-      "N95 Mask",
-      "Wall Clock",
-      "Mouse Pad",
-      "Lighter",
-      "Office Bag",
-      "Dead Calculator",
-      "Lollipop",
-      "A wallet",
-      "Wooden Stick",
-      "Rubics Cube",
-      "Rotten Tomato",
-      "Hourglass",
-      "Flower Vase",
-      "Rotten Tomato",
-      "N95 Mask",
-      "WIFI Router",
-      "Magnifying Glass",
-      "Book Stand",
-      "Magnifying Glass",
-      "Money Bag",
-      "RC Drone",
-      "Laptop",
-      "Pen Stand",
-      "Antique Painting",
       "Maths Book",
-      "Lighter",
-      "Piano",
-      "Electric Guitar",
-      "Lollipop",
       "Rotten Tomato",
+      "Lollipop",
+      "Broken Television",
+      "Wall Clock",
+      "Broken String",
       "Office Bag",
-      "Copper Wire",
+      "Leather Shoes",
+      "Electric Drums",
+      "Travel Bag",
+      "Headphones",
+      "War Sword",
+      "Party Speakers",
       "WIFI Router",
-      "Money Bag"
+      "Copper Wire",
+      "Money Bag",
+      "Electric Guitar"
     ]
   },
   "459337154099806218": {
@@ -115,6 +90,14 @@
       "Copper Wire",
       "Money Bag",
       "Electric Guitar"
+    ]
+  },
+  "669816890163724288": {
+    "inv": [
+      "Bronze Lock"
+    ],
+    "items": [
+      "Money Bag"
     ]
   }
 }
