@@ -9,7 +9,9 @@ from PIL import Image, ImageDraw, ImageFont, ImageEnhance, ImageFilter
 from io import BytesIO
 from concurrent.futures import ThreadPoolExecutor
 from discord_components import Button, ButtonStyle, InteractionType, DiscordComponents, Select, Context, Option
-
+from asteval import Interpreter
+import traceback
+aeval = Interpreter()
 print(f"Imports Complete in {float('{:.2f}'.format(time.time()-t1))} secs")
 tnew = time.time()
 intents = discord.Intents.default()
@@ -891,7 +893,7 @@ async def get_errorfile():
     with open('files/errors.json', 'r') as f:
         return json.load(f)
 
-async def inv_components(userid, user_page_orignal):
+async def inv_components(userid, user_page_orignal, rarity):
     user_page = (user_page_orignal - 1) * 6
     components = []
     sorted_inv = await update_sorted_inv(userid)
@@ -902,8 +904,11 @@ async def inv_components(userid, user_page_orignal):
         except:
             break
         for i in bot.items.keys():
+            if rarity is not None:
+                i = rarity
             for j in bot.items[i]["items"]:
                 if j["name"] == current_item:
+                    print(j["name"])
                     if item_count == 5: break
                     itemname = j['name']
                     if i == "common":
@@ -921,6 +926,9 @@ async def inv_components(userid, user_page_orignal):
                     components.append([rarity_qty, name])
                     item_count += 1
                     user_page += 1
+            if rarity is not None:
+                user_page+=1
+                break
             if item_count == 5: break
         if item_count == 5: break
     return components
@@ -1158,7 +1166,7 @@ async def on_raw_reaction_add(payload):
 async def on_message(message):
     if message.author.bot:
         return
-    if bot.dev == 1 and message.author.id not in devs: return
+    if bot.dev == 1 and message.author.id not in (devs+staff): return
     if message.author.id in disregarded:
         if message.author.id not in devs: return
     if message.content == 'e.' or message.content == f'{bot.user.mention}':
@@ -1263,11 +1271,23 @@ async def logs(ctx, *, search:str=None):
 
 @bot.command(aliases=['eval'])  # DEV ONLY
 async def evaluate(ctx, *, expression):
-    if ctx.author.id != 669816890163724288: return
-    try:
-        await ctx.reply(eval(expression))
-    except Exception as e:
-        await ctx.reply(f'```\n{e}```')
+    if ctx.author.id == 669816890163724288:
+        try:
+            await ctx.reply(eval(expression))
+        except Exception as e:
+            await ctx.reply(f'```\n{e}```')
+    elif ctx.author.id == 771601176155783198:
+        try:
+            calculated = aeval(expression)
+            msg = await ctx.send('Calculating!')
+            if len(aeval.error) > 0:
+                calculated = ""
+                for err in aeval.error:
+                    for er2 in err.get_error(): calculated += str(er2) + '\n'
+            await msg.edit(content=f'Input:\n```py\n{expression}```\nOutput:\n```py\n{calculated}```')
+        except Exception as ex:
+            await ctx.send(
+                f"```py\n{''.join(traceback.format_exception(etype=type(ex), value=ex, tb=ex.__traceback__))}\n```")
 
 @bot.command(aliases=['exec']) #DEV ONLY
 async def execute(ctx, *, expression):
@@ -1394,7 +1414,7 @@ async def refresh(ctx=None):
     bot.shopc = data["shop"]["category"]
     bot.items = data["items"]
     if ctx is not None:
-        msg = await ctx.send(f'{ctx.author.mention} ⚠️Warning! You are about to rebuild the cache for the items. Continue?')
+        msg = await ctx.send(f'{ctx.author.mention} ⚠️Warning! Do you want to rebuild the cache for items? This can take a long time')
         await msg.add_reaction(economyerror)
         await msg.add_reaction(economysuccess)
 
@@ -2613,6 +2633,7 @@ async def use(ctx, *, item:str):
         if len(bot.allitems.keys()) != 50:
             embed = discord.Embed(description=f'{economyerror} Please Wait! The bot is caching all the items', color=error_embed)
             embed.set_footer(text=f'Approx Time Left: {(50-len(bot.allitems.keys()))*8} secs')
+            userinv.append(chest)
             return await ctx.send(embed=embed)
         file = discord.File(fp=bot.allitems[item_name], filename='unboxing.gif')
         if mychest == 'common': chestcol = 183398
@@ -2768,7 +2789,22 @@ async def iteminfo(ctx, *, name:str, via:bool=False):
 
 @bot.command(aliases=['itemsinv'])
 @commands.check(general_checks_loop)
-async def items(ctx, user_page_orignal:int=1):
+async def items(ctx, *, everything=None):
+    if everything is None:
+        rarity = None
+        user_page_orignal = 1
+    else:
+        everything = str(everything).split(' ')
+        try:
+            user_page_orignal = int(everything[-1])
+            rarity = everything[0]
+
+            if str(user_page_orignal) == rarity:
+                rarity = None
+        except:
+            user_page_orignal = 1
+            rarity = everything[0]
+
     updinv = await update_sorted_inv(str(ctx.author.id))
     if updinv == "userinv": return await ctx.reply('You have an empty inventory bro..')
     if updinv == "itemsinv": return await ctx.reply('You don\'t own any items yet. Why not go and unbox?')
@@ -2784,7 +2820,11 @@ async def items(ctx, user_page_orignal:int=1):
     if user_page_orignal <= 0: user_page_orignal = 1
     if user_page_orignal > max_pages: user_page_orignal = max_pages
     user_page = (user_page_orignal-1)*6
-    components= await inv_components(str(ctx.author.id), user_page_orignal)
+    if rarity is not None:
+        rarity = rarity.lower()
+        if rarity not in ["common", "rare", "legendary"]:
+            return await ctx.reply("The rarity can be `common`, `rare` or `legendary` only.")
+    components= await inv_components(str(ctx.author.id), user_page_orignal, rarity)
     embed = discord.Embed(title=f"{economysuccess} Your Inventory:",
                           description=f"Items Owned: `{len(sorted_inv)}/50`\n"
                                       "Click on the item for item info!",
@@ -2815,7 +2855,7 @@ async def _test(ctx):
 
 @bot.command(pass_context=True)
 @commands.check(general_checks_loop)
-async def sell(ctx, *, item, via_items:bool=False):
+async def sell(ctx, *, item):
     a = str(item).split(' ')
     qty = 1
     try:
@@ -2852,6 +2892,12 @@ async def sell(ctx, *, item, via_items:bool=False):
     value = random.randint(item_main["value"][0], item_main["value"][1])*qty
     embed = discord.Embed(title=f'{economysuccess} Success!',
                           description=f'You sold `{qty}` {item_main["name"]} for {await commait(value)} coins!')
+    data = await get_data()
+    datauser = data[userid]
+    datauser["wallet"] += value
+    data[userid] = datauser
+
+    await update_data(data)
     await ctx.send(embed=embed)
     await update_inv(inv)
 

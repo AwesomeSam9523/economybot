@@ -157,12 +157,12 @@
         "desc": "Shows the info like rarity, name, estimated sell value etc. about the item"
       },
       "e.items": {
-        "usage": "e.items",
+        "usage": "e.items [rarity] [page]",
         "aliases": [
           "itemsinv",
           "iteminv"
         ],
-        "desc": "View the inventory for all your owned items"
+        "desc": "View the inventory for all your owned items\nRarity can be either `common`, `rare` or `legendary`"
       },
       "e.inventory": {
         "aliases": [
@@ -365,15 +365,6 @@
         "percent": 45
       },
       {
-        "icon": "rare_chest.png",
-        "name": "Rare Chest",
-        "desc": "1 Rare Item + coins",
-        "price": "3,500",
-        "special": false,
-        "disc": "1,750",
-        "percent": 50
-      },
-      {
         "icon": "bronze_lock.png",
         "name": "Bronze Lock",
         "desc": "Increases rob protection by 10%",
@@ -396,9 +387,18 @@
         "name": "Common Chest",
         "desc": "1 Common Item + coins",
         "price": "1,000",
-        "special": true,
+        "special": false,
         "disc": "730",
         "percent": 27
+      },
+      {
+        "icon": "rare_chest.png",
+        "name": "Rare Chest",
+        "desc": "1 Rare Item + coins",
+        "price": "3,500",
+        "special": true,
+        "disc": "2,520",
+        "percent": 28
       }
     ],
     "category": {
@@ -414,7 +414,7 @@
         "Gold Lock"
       ]
     },
-    "updated": 1622210408.514633
+    "updated": 1622356080.3972445
   },
   "items": {
     "common": {
