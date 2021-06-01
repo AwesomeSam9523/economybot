@@ -1,6 +1,6 @@
 import time
 t1 = time.time()
-import datetime, csv, threading, functools, asyncio, discord, requests, operator, json, random, os
+import datetime, csv, threading, functools, asyncio, discord, requests, operator, json, random, os, traceback, difflib
 from discord.ext import commands
 from discord.ext.commands import *
 from prettytable import PrettyTable
@@ -10,14 +10,61 @@ from io import BytesIO
 from concurrent.futures import ThreadPoolExecutor
 from discord_components import Button, ButtonStyle, InteractionType, DiscordComponents, Select, Context, Option
 from asteval import Interpreter
-import traceback
 aeval = Interpreter()
 print(f"Imports Complete in {float('{:.2f}'.format(time.time()-t1))} secs")
 tnew = time.time()
+
+class CustomContext(commands.Context):
+    async def reinvoke(self, command_to_invoke, *, call_hooks=False, restart=True):
+        cmd = command_to_invoke
+        view = self.view
+        if cmd is None:
+            raise ValueError('This context is not valid.')
+
+        # some state to revert to when we're done
+        index, previous = view.index, view.previous
+        invoked_with = self.invoked_with
+        invoked_subcommand = self.invoked_subcommand
+        invoked_parents = self.invoked_parents
+        subcommand_passed = self.subcommand_passed
+
+        if restart:
+            to_call = cmd.root_parent or cmd
+            view.index = len(self.prefix)
+            view.previous = 0
+            self.invoked_parents = []
+            self.invoked_with = view.get_word()  # advance to get the root command
+        else:
+            to_call = cmd
+
+        try:
+            await to_call.reinvoke(self, call_hooks=call_hooks)
+        finally:
+            self.command = cmd
+            view.index = index
+            view.previous = previous
+            self.invoked_with = invoked_with
+            self.invoked_subcommand = invoked_subcommand
+            self.invoked_parents = invoked_parents
+            self.subcommand_passed = subcommand_passed
+
+class MyBot(commands.Bot):
+    async def on_message(self, message):
+        ctx = await self.get_context(message, cls=CustomContext)
+        if message.author.bot:
+            return
+        if bot.dev == 1 and message.author.id not in (devs + staff): return
+        if message.author.id in disregarded:
+            if message.author.id not in devs: return
+        if message.content.lower() == 'e.' or message.content == f'{bot.user.mention}':
+            await message.channel.send('Do you need my help?\nGet started using `e.help`')
+        await open_account(message.author.id)
+        await self.invoke(ctx)
+
 intents = discord.Intents.default()
 intents.members = True
 intents.presences = True
-bot = commands.Bot(command_prefix=["e.", "E."], intents=intents, case_insensitive=True)
+bot = MyBot(command_prefix=["e.", "E."], intents=intents, case_insensitive=True)
 ddb = DiscordComponents(bot)
 bot.launch_time = datetime.datetime.utcnow()
 bot.dev = 1
@@ -34,6 +81,7 @@ embedcolor = 3407822
 support_server = 'https://discord.gg/aMqWWTunrJ'
 patreon_page = 'https://www.patreon.com/ThunderGameBot'
 invite_url = 'https://discord.com/api/oauth2/authorize?client_id=832083717417074689&permissions=392256&scope=bot'
+all_commands = ['logs', 'mybank', 'sellstocks', 'invite', 'daily', 'help', 'use', 'give', 'ping', 'set_chl', 'add_chl', 'estates', 'property', 'bank', 'del_chl', 'rem_chl', 'remove_chl', 'delete_chl', 'revenue', 'maintain', 'items', 'itemsinv', 'minesweeper', 'ms', 'mine', 'list_chl', 'show_chl', 'iteminfo', 'item', 'upgrade', 'stockinfo', 'sell', 'reset_chl', 'alerts', 'uptime', 'tictactoe', 'ttt', 'rob', 'games', 'transfer', 'find', 'report', 'flip', 'statement', 'transactions', 'shop', 'store', 'level', 'pf', 'balance', 'bal', 'inventory', 'inv', 'stocks', 'deposit', 'dep', 'buy', 'purchase', 'buystocks', 'withdraw', 'with', 'server']
 bank_details = {
     1: {"name":'Common Finance Bank Ltd.', "rate":3, "tier":"III"},
     2: {"name":'National Bank Pvt. Ltd.', "rate":5, "tier":"II"},
@@ -183,7 +231,6 @@ error_embed = 16290332
 success_embed = 2293571
 economysuccess = '<a:EconomySuccess:843499891522797568>'
 economyerror = '<a:EconomyError:843499981695746098>'
-
 
 def is_dev(ctx):
     return ctx.author.id in devs
@@ -1521,8 +1568,29 @@ async def if_allowed(ctx):
 @bot.event
 async def on_command_error(ctx, error):
     if isinstance(error, CommandNotFound):
-        embed = discord.Embed(description=f'{economyerror} The command you are trying to use doesn\'t exist.', color=error_embed)
-        return await ctx.send(embed=embed)
+        cmdused = ctx.invoked_with
+        match = difflib.get_close_matches(cmdused, all_commands, cutoff=0.7)
+        if len(match) == 0:
+            embed = discord.Embed(description=f'{economyerror} The command you are trying to use doesn\'t exist.\n'
+                                              f'Use `e.help` for list of commands', color=error_embed)
+            embed.set_footer(text="No suggestions found")
+            await ctx.send(embed=embed)
+        else:
+            embed = discord.Embed(title=f"<a:Unknown:849189167522381834> Do you mean `{match[0]}`?", color=embedcolor)
+            prev = await ctx.send(embed=embed)
+            common_yes = ["yes", "ye", "yeah", "yea", "ya", "yah", "ofc", "of course"]
+            def check(res):
+                return res.author == ctx.author and res.channel == ctx.channel
+            res = await bot.wait_for("message", check=check)
+            if any(common_yes in res.content.lower() for common_yes in common_yes):
+                embed = discord.Embed(title=f"{economysuccess} You meant `{match[0]}`", color=success_embed)
+                await prev.edit(embed=embed)
+                ctx2 = ctx
+                await ctx2.reinvoke(command_to_invoke=bot.get_command(match[0]))
+            else:
+                embed = discord.Embed(title=f"{economyerror} You didn't mean `{match[0]}`", color=error_embed)
+                return await prev.edit(embed=embed)
+        return
     if isinstance(error, CheckFailure):
         embed = discord.Embed(description=f'{economyerror} You are not qualified to use this command!', color=error_embed)
         return await ctx.send(embed=embed)
@@ -1565,18 +1633,6 @@ async def on_raw_reaction_add(payload):
         errorcode = cont.split(' ')[3].replace('`', '')
         a.pop(errorcode)
         await update_errorfile(a)
-
-@bot.event
-async def on_message(message):
-    if message.author.bot:
-        return
-    if bot.dev == 1 and message.author.id not in (devs+staff): return
-    if message.author.id in disregarded:
-        if message.author.id not in devs: return
-    if message.content == 'e.' or message.content == f'{bot.user.mention}':
-        await message.channel.send('Do you need my help?\nGet started using `e.help`')
-    await open_account(message.author.id)
-    await bot.process_commands(message)
 
 @bot.command()
 @commands.check(general_checks_loop)
@@ -1730,7 +1786,7 @@ async def format(ctx, member:discord.Member):
 
 @bot.command()
 @commands.is_owner()
-async def release(ctx, title:str, fake:int=0):
+async def release(ctx, title:str, fake:int):
     if ctx.author.id != 771601176155783198: return
     with open('files/updates.json', 'r') as upd:
         updates = json.load(upd)

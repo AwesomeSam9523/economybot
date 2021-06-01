@@ -115,5 +115,6 @@
   "0x23cc": "AwesomeSam#7985 (771601176155783198) =>\n**Command:** `_test`\n**Message:** `e.test`\n**Error:** `Command raised an exception: TypeError: __init__() missing 6 required keyword-only arguments: 'bot', 'client', 'user', 'component', 'raw_data', and 'message'`",
   "0x20ac": "AwesomeSam#7985 (771601176155783198) =>\n**Command:** `_test`\n**Message:** `e.test`\n**Error:** `Command raised an exception: TypeError: 'NoneType' object is not subscriptable`",
   "0x4ec": "AwesomeSam#7985 (771601176155783198) =>\n**Command:** `items`\n**Message:** `e.items`\n**Error:** `Command raised an exception: TypeError: object of type 'int' has no len()`",
-  "0x1e22": "AwesomeSam#7985 (771601176155783198) =>\n**Command:** `items`\n**Message:** `e.items`\n**Error:** `Command raised an exception: TypeError: object of type 'int' has no len()`"
+  "0x1e22": "AwesomeSam#7985 (771601176155783198) =>\n**Command:** `items`\n**Message:** `e.items`\n**Error:** `Command raised an exception: TypeError: object of type 'int' has no len()`",
+  "0x11aa": "AwesomeSam#7985 (771601176155783198) =>\n**Command:** `None`\n**Message:** `e.statemnt`\n**Error:** `Command \"statemnt\" is not found`"
 }

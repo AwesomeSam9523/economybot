@@ -126,6 +126,7 @@
     "- New command: `e.invite`: Invite the bot to your server",
     "- New command: `e.uptime`: View when was bot last restarted",
     "- New command: `e.ping`: View the bot's ping",
+    "Added \"Did you mean?\" when entering invalid command",
     "- Added buttons to `e.help` command",
     "- Updated `e.level` image to include active items (lock and boost)",
     "- Added 12 random bot status",
