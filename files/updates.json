@@ -117,9 +117,18 @@
     "- New command: `e.use`: Equip/unequip locks, open chests and activate/deactivate boosts",
     "- New command: `e.sell`: Sell items for coins",
     "- New command: `e.items`: View all the items you own",
+    "- New command: `e.iteminfo`: View info for an item",
+    "- New command: `e.games`: Play games with an interactive setup",
+    "- New command: `e.minesweeper`: Play minesweeper",
+    "- New command: `e.tictactoe`: Play Tic-Tac-Toe with your friend",
+    "- New command: `e.flip`: Gamble coins and flip the coin",
     "- New command: `e.server`: Get link to GameBot Hub",
     "- New command: `e.invite`: Invite the bot to your server",
+    "- New command: `e.uptime`: View when was bot last restarted",
+    "- New command: `e.ping`: View the bot's ping",
+    "- Added buttons to `e.help` command",
     "- Updated `e.level` image to include active items (lock and boost)",
+    "- Added 12 random bot status",
     "- Fixed typos in bot phrases"
   ]
 }

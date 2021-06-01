@@ -117,6 +117,21 @@
         ],
         "usage": "e.find",
         "desc": "Find coins or lose them!"
+      },
+      "e.games": {
+        "usage": "e.games (Interactive Setup)",
+        "aliases": ["None"],
+        "desc": "Play retro games like tic-tac-toe and minesweeper in a new way, with buttons!"
+      },
+      "e.minesweeper": {
+        "usage": "e.minesweeper",
+        "aliases": ["mine", "ms"],
+        "desc": "Play minesweeper and earn loads of coins"
+      },
+      "e.tictactoe": {
+        "usage": "e.tictactoe <user> <bet-amount>",
+        "aliases": ["ttt"],
+        "desc": "Challenge your friend for a game of tic-tac-toe and win 1.5x money back!"
       }
     },
     "Market": {
@@ -172,6 +187,59 @@
         "desc": "View your inventory"
       }
     },
+    "Bank": {
+      "category": "Bank",
+      "e.balance": {
+        "aliases": [
+          "bal"
+        ],
+        "usage": "e.balance [user]",
+        "desc": "View you balance: Bank, Wallet and Stocks"
+      },
+      "e.mybank": {
+        "aliases": [
+          "None"
+        ],
+        "usage": "e.mybank",
+        "desc": "View interest rate, average balance, bank tier etc."
+      },
+      "e.bank": {
+        "usage": "e.bank [tier]",
+        "aliases": [
+          "None"
+        ],
+        "desc": "View all the bank tiers and upgrade your bank for more interest and loan"
+      },
+      "e.statement": {
+        "aliases": [
+          "transactions"
+        ],
+        "usage": "e.statement [-a <amount>] [-t <c | d>] [-r <reason>]",
+        "desc": "View your bank statement and filter records based on Type, Amount and/or Reason"
+      },
+      "e.deposit": {
+        "aliases": [
+          "dep"
+        ],
+        "usage": "e.deposit <amount>",
+        "desc": "Deposit coins to bank"
+      },
+      "e.withdraw": {
+        "aliases": [
+          "with"
+        ],
+        "usage": "e.withdraw <amount>",
+        "desc": "Withdraw coins from bank"
+      }
+    },
+    "Casino": {
+      "category": "Casino",
+      "e.flip": {
+        "usage": "e.flip <amount>",
+        "desc": "Flip a coin and get 50% more if you win. Well if you lose, you get nothing kek",
+        "aliases": ["None"]
+      }
+    },
     "Estates": {
       "category": "Estates",
       "e.estates": {
@@ -225,51 +293,6 @@
         ],
         "usage": "e.sellstocks <quantity>",
         "desc": "Sell stocks on current price"
-      }
-    },
-    "Bank": {
-      "category": "Bank",
-      "e.balance": {
-        "aliases": [
-          "bal"
-        ],
-        "usage": "e.balance [user]",
-        "desc": "View you balance: Bank, Wallet and Stocks"
-      },
-      "e.mybank": {
-        "aliases": [
-          "None"
-        ],
-        "usage": "e.mybank",
-        "desc": "View interest rate, average balance, bank tier etc."
-      },
-      "e.bank": {
-        "usage": "e.bank [tier]",
-        "aliases": [
-          "None"
-        ],
-        "desc": "View all the bank tiers and upgrade your bank for more interest and loan"
-      },
-      "e.statement": {
-        "aliases": [
-          "transactions"
-        ],
-        "usage": "e.statement [-a <amount>] [-t <c | d>] [-r <reason>]",
-        "desc": "View your bank statement and filter records based on Type, Amount and/or Reason"
-      },
-      "e.deposit": {
-        "aliases": [
-          "dep"
-        ],
-        "usage": "e.deposit <amount>",
-        "desc": "Deposit coins to bank"
-      },
-      "e.withdraw": {
-        "aliases": [
-          "with"
-        ],
-        "usage": "e.withdraw <amount>",
-        "desc": "Withdraw coins from bank"
       }
     },
     "Admin": {
@@ -341,20 +364,20 @@
         ],
         "usage": "e.report <error-code>",
         "desc": "Report an error to developers"
+      },
+      "e.uptime": {
+        "usage": "e.uptime",
+        "aliases": ["None"],
+        "desc": "View when was bot last restarted"},
+      "e.ping": {
+        "usage": "e.ping",
+        "aliases": ["None"],
+        "desc": "View the bot's ping. Lesser ping = Better performance"
       }
     }
   },
   "shop": {
     "value": [
-      {
-        "icon": "gold_lock.png",
-        "name": "Gold Lock",
-        "desc": "Increases rob protection by 40%",
-        "price": "15,000",
-        "special": false,
-        "disc": "9,450",
-        "percent": 37
-      },
       {
         "icon": "legendary_chest.png",
         "name": "Legendary Chest",
@@ -396,9 +419,18 @@
         "name": "Rare Chest",
         "desc": "1 Rare Item + coins",
         "price": "3,500",
-        "special": true,
+        "special": false,
         "disc": "2,520",
         "percent": 28
+      },
+      {
+        "icon": "gold_lock.png",
+        "name": "Gold Lock",
+        "desc": "Increases rob protection by 40%",
+        "price": "15,000",
+        "special": true,
+        "disc": "11,100",
+        "percent": 26
       }
     ],
     "category": {
@@ -414,7 +446,7 @@
         "Gold Lock"
       ]
     },
-    "updated": 1622356080.3972445
+    "updated": 1622442588.4126654
   },
   "items": {
     "common": {
@@ -924,5 +956,44 @@
       ],
       "collect": []
     }
-  }
+  },
+  "status": [
+    {
+      "type": "p",
+      "status": "with {users} users"
+    }, {
+      "type": "w",
+      "status": "\uD83E\uDE99 Economy @ {guilds} servers"
+    }, {
+      "type": "w",
+      "status": "\uD83D\uDCCA Stocks | e.stocks"
+    }, {
+      "type": "p",
+      "status": "\uD83D\uDCE7 Help | e.help"
+    }, {
+      "type": "p",
+      "status": "\uD83C\uDFAE Games | e.games"
+    }, {
+      "type": "w",
+      "status": "\uD83C\uDFE0 Estates | e.estates"
+    }, {
+      "type": "w",
+      "status": "\uD83C\uDFE6 Banks | e.bank"
+    }, {
+      "type": "p",
+      "status": "\uD83C\uDF81 Unboxings | e.use"
+    }, {
+      "type": "w",
+      "status": "\uD83D\uDCA1 Alerts | e.alerts"
+    }, {
+      "type": "p",
+      "status": "\uD83D\uDCA3 Minesweeper | e.mine"
+    }, {
+      "type": "p",
+      "status": "\uD83C\uDD7E Tic Tac Toe | e.ttt"
+    }, {
+      "type": "p",
+      "status": "\uD83C\uDF25 Claim coins daily | e.daily"
+    }
+    ]
 }

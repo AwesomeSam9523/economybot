@@ -328,6 +328,13 @@
       "amount": 48,
       "time": "2021-05-25 17:01:34",
       "reason": "Bought 1 stock(s)"
+    },
+    {
+      "person": "System",
+      "type": "Debit",
+      "amount": 100,
+      "time": "2021-06-01 08:21:22",
+      "reason": "Won Tic-Tac-Toe"
     }
   ],
   "713056818972066140": [
@@ -770,6 +777,13 @@
       "amount": 3460,
       "time": "2021-05-24 15:16:42",
       "reason": "Sold 100 stock(s)"
+    },
+    {
+      "person": "System",
+      "type": "Debit",
+      "amount": 100,
+      "time": "2021-06-01 08:20:07",
+      "reason": "Won Tic-Tac-Toe"
     }
   ],
   "669816890163724288": [

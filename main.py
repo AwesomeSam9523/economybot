@@ -167,6 +167,11 @@ bot.unboxbgs = {}
 bot.allitems = {}
 bot.cachedinv = {}
 bot.used = {}
+bot.ms = {}
+bot.activems = {"users":[]}
+bot.waitings = {}
+bot.status = []
+bot.random_status = True
 
 usercmds = {}
 stock_names = ['Ava', 'Neil', 'Ryan', 'Anthony', 'Bernadette', 'Lauren', 'Justin', 'Matt', 'Wanda', 'James', 'Emily', 'Vanessa', 'Carl', 'Fiona', 'Stephanie', 'Pippa', 'Phil', 'Carol', 'Liam', 'Michael', 'Ella', 'Amanda', 'Caroline', 'Nicola', 'Sean', 'Oliver', 'Kylie', 'Rachel', 'Leonard', 'Julian', 'Richard', 'Peter', 'Irene', 'Dominic', 'Connor', 'Dorothy', 'Gavin', 'Isaac', 'Karen', 'Kimberly', 'Abigail', 'Yvonne', 'Steven', 'Felicity', 'Evan', 'Bella', 'Alison', 'Diane', 'Joan', 'Jan', 'Wendy', 'Nathan', 'Molly', 'Charles', 'Victor', 'Sally', 'Rose', 'Robert', 'Claire', 'Theresa', 'Grace', 'Keith', 'Stewart', 'Andrea', 'Alexander', 'Chloe', 'Nicholas', 'Edward', 'Deirdre', 'Anne', 'Joseph', 'Alan', 'Rebecca', 'Jane', 'Natalie', 'Cameron', 'Owen', 'Eric', 'Gabrielle', 'Sonia', 'Tim', 'Sarah', 'Madeleine', 'Megan', 'Lucas', 'Joe', 'Brandon', 'Brian', 'Jennifer', 'Alexandra', 'Adrian', 'John', 'Mary', 'Tracey', 'Jasmine', 'Penelope', 'Hannah', 'Thomas', 'Angela', 'Warren', 'Blake', 'Simon', 'Audrey', 'Frank', 'Samantha', 'Dan', 'Victoria', 'Paul', 'Jacob', 'Heather', 'Una', 'Lily', 'Carolyn', 'Jonathan', 'Ian', 'Piers', 'William', 'Gordon', 'Dylan', 'Olivia', 'Jake', 'Leah', 'Jessica', 'David', 'Katherine', 'Amelia', 'Benjamin', 'Boris', 'Sebastian', 'Lisa', 'Diana', 'Michelle', 'Emma', 'Sam', 'Stephen', 'Faith', 'Kevin', 'Austin', 'Jack', 'Ruth', 'Colin', 'Trevor', 'Joanne', 'Virginia', 'Anna', 'Max', 'Adam', 'Maria', 'Sophie', 'Sue', 'Andrew', 'Harry', 'Amy', 'Christopher', 'Donna', 'Melanie', 'Elizabeth', 'Lillian', 'Julia', 'Christian', 'Luke', 'Zoe', 'Joshua', 'Jason']
@@ -695,15 +700,37 @@ async def load_shop():
     for i in config["shop"]["value"]:
         storeitems.append(i)
 
+async def bot_status():
+    raw_status = ""
+    while True:
+        if not bot.random_status: break
+        current_status = random.choice(bot.status)
+        if current_status["status"] == raw_status: continue
+        guilds = len(bot.guilds)
+        users = 0
+        for i in bot.guilds: users += len(i.members)
+
+        s_type = current_status["type"]
+        raw_status = current_status["status"]
+        s_status = raw_status.format(users=await commait(users), guilds=await commait(guilds))
+        if s_type == "p":
+            await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.playing, name=s_status))
+        elif s_type == "w":
+            await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name=s_status))
+        elif s_type == "l":
+            await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name=s_status))
+
+        await asyncio.sleep(720)
+
 async def create_stuff():
     tnew = time.time()
     mybot = bot.get_user(832083717417074689)
     bot.pfp = mybot.avatar_url
-    await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name="Thunder qt"))
     tnew = time.time()
     #await bot.change_presence(status=discord.Status.invisible)
     await load_shop()
     await refresh()
+    await bot_status()
     print(f'Data Loaded and Activity set in {float("{:.2f}".format(time.time() - tnew))} secs')
     asyncio.create_task(loops())
     asyncio.create_task(stock_update())
@@ -908,7 +935,6 @@ async def inv_components(userid, user_page_orignal, rarity):
                 i = rarity
             for j in bot.items[i]["items"]:
                 if j["name"] == current_item:
-                    print(j["name"])
                     if item_count == 5: break
                     itemname = j['name']
                     if i == "common":
@@ -1110,69 +1136,202 @@ async def inventory_image(userid):
     bg.close()
     return discord.File(fp=image_bytes, filename='inventory.png')
 
-@bot.check
-async def is_dm(ctx):
-    return ctx.guild != None
+@bot.command(aliases=["ms", "mine"], pass_context=True, invoke_without_command=True)
+async def minesweeper(ctx):
+    bomb_count = random.randint(5, 10)
+    mainlist = ["empty" for i in range(25)]
 
-@bot.check
-async def if_allowed(ctx):
-    return await check_channel(ctx.channel.id, ctx.guild.id)
-
-'''@bot.event
-async def on_command_error(ctx, error):
-    if isinstance(error, CommandNotFound):
-        embed = discord.Embed(description=f'{economyerror} The command you are trying to use doesn\'t exist.', color=error_embed)
-        return await ctx.send(embed=embed)
-    if isinstance(error, CheckFailure):
-        embed = discord.Embed(description=f'{economyerror} You are not qualified to use this command!', color=error_embed)
-        return await ctx.send(embed=embed)
-    if isinstance(error, MissingRequiredArgument):
-        embed = discord.Embed(description=f'{economyerror} Missing an argument! Use `e.help {ctx.command}` for syntax.', color=error_embed)
-        return await ctx.send(embed=embed)
-    if isinstance(error, BadArgument):
-        embed = discord.Embed(description=f'{economyerror} Bad/Incorrect argument(s)! Use `e.help {ctx.command}` for syntax.', color=error_embed)
-        return await ctx.send(embed=embed)
-    code = hex(random.randint(1000, 9999))
-
-    a = await debugcode(code, f'{ctx.author} ({ctx.author.id}) =>\n**Command:** `{ctx.command}`\n**Message:** `{ctx.message.content}`\n**Error:** `{error}`')
-    if not a:
+    for i in range(bomb_count):
         while True:
-            code = hex(random.randint(1000, 9999))
-            a = await debugcode(code, f'{ctx.author} ({ctx.author.id}) =>\n\n**Command:** `{ctx.command}`\n**Message:** `{ctx.message.content}`\n**Error:** `{error}`')
-            if a:
+            getrand = random.randint(0, 24)
+            check = mainlist[getrand]
+            if check == "empty":
                 break
-    embed = discord.Embed(title=f'{economyerror} Oops! You just ran into an error',
-                          description=f'Kindly report this error using `e.report {code}` for further investigation.\n'
-                                      f'For a unique and error that is never been reported before, you get `1,000` coins!\n',
-                          color=error_embed)
-    embed.set_footer(text='Sorry for the inconvinience')
-    embed.timestamp = datetime.datetime.utcnow()
-    await ctx.send(embed=embed)'''
+            if "bomb" not in mainlist:
+                break
+        mainlist.insert(getrand, "bomb")
+        mainlist.pop(getrand + 1)
 
-@bot.event
-async def on_raw_reaction_add(payload):
-    if payload.channel_id != 844184710678577193: return
-    if payload.user_id not in devs: return
-    a = await get_errorfile()
-    if str(payload.emoji) == economysuccess:
-        chl = bot.get_channel(payload.channel_id)
-        msg = await chl.fetch_message(payload.message_id)
-        cont = str(msg.content)
-        errorcode = cont.split(' ')[3].replace('`', '')
-        a.pop(errorcode)
-        await update_errorfile(a)
+    rows = []
+    minesweeper = []
+    count = 0
 
-@bot.event
-async def on_message(message):
-    if message.author.bot:
-        return
-    if bot.dev == 1 and message.author.id not in (devs+staff): return
-    if message.author.id in disregarded:
-        if message.author.id not in devs: return
-    if message.content == 'e.' or message.content == f'{bot.user.mention}':
-        await message.channel.send('Do you need my help?\nGet started using `e.help`')
-    await open_account(message.author.id)
-    await bot.process_commands(message)
+    for i in range(len(mainlist)):
+        rows.append(mainlist[i])
+        count += 1
+        if count == 5:
+            minesweeper.append(rows)
+            rows = []
+            count = 0
+
+    count_row = []
+    count_sweeper = []
+    final_count = 0
+    for i in range(len(minesweeper)):
+        row = minesweeper[i]
+        if i != 0:
+            behind = minesweeper[i - 1]
+        else:
+            behind = ["empty" for i in range(5)]
+        if i != 4:
+            after = minesweeper[i + 1]
+        else:
+            after = ["empty" for i in range(5)]
+
+        for item in range(len(row)):
+            if item == 0:
+                a1 = "empty"
+                b1 = "empty"
+                c1 = "empty"
+            else:
+                a1 = behind[item - 1]
+                b1 = row[item - 1]
+                c1 = after[item - 1]
+
+            if item == 4:
+                a3 = "empty"
+                b3 = "empty"
+                c3 = "empty"
+            else:
+                a3 = behind[item + 1]
+                b3 = row[item + 1]
+                c3 = after[item + 1]
+
+            a2 = behind[item]
+            b2 = row[item]
+            c2 = after[item]
+
+            count_list = [x for x in [a1, a2, a3, b1, b2, b3, c1, c2, c3] if x == "bomb"]
+            itemtype = len(count_list)
+            count_row.append(itemtype)
+            final_count += 1
+            if final_count == 5:
+                count_sweeper.append(count_row)
+                count_row = []
+                final_count = 0
+    bot.ms[ctx.author.id] = {"main":minesweeper, "count":count_sweeper}
+    await start_ms(ctx)
+
+async def start_ms(ctx):
+    ifactive = ctx.author.id in bot.activems["users"]
+    if ifactive:
+        a = await ctx.send(f"You have already started a game earlier, please finish it.\n"
+                       f"If you want to discard that for `5,000` coins and start again, react with {economysuccess}")
+        await a.add_reaction(economysuccess)
+        def check(reaction, user):
+            if user == ctx.author and str(reaction.emoji) in [economysuccess]:
+                return True
+
+        try:
+            reaction, user = await bot.wait_for('reaction_add', timeout=60.0, check=check)
+            net = -5000
+            bot.activems["users"].remove(ctx.author.id)
+        except:
+            return
+    else:
+        net = 0
+    components = []
+    back_rows = []
+    count=0
+    for i in bot.ms[ctx.author.id]["main"]:
+        for j in i:
+            btn = Button(style=ButtonStyle.grey, label="\u200b", id=f'{j}_{count}')
+            back_rows.append(btn)
+            count += 1
+        components.append(back_rows)
+        back_rows = []
+    minemsg = await ctx.send("**Welcome to Minesweeper!**\n"
+                   "Rules:\n"
+                   "> For each correct move, you get `1,000` coins\n"
+                   "> For each incorrect move, `2,000` coins are taken away!\n"
+                   "> Your aim is to click on blocks avoiding any bombs. All the best!\n"
+                   f"`Note:` To end the game, react with {economyerror}\n\n"
+                   "Total Moves: `0`    Correct: `0`    Incorrect: `0`\n"
+                   f"Net Profit: `{net}`\n"
+                   "Here is your board:", components=components)
+    await minemsg.add_reaction(economyerror)
+    bot.activems["users"].append(ctx.author.id)
+    moves = 0
+    correct = 0
+    wrong = 0
+
+    bot.activems[minemsg.id] = (minemsg, ctx, net)
+    while True:
+        res = await bot.wait_for("button_click")
+        if res.user.id != ctx.author.id or res.message.id != minemsg.id:
+            continue
+
+        btnid = str(res.component.id).split('_')
+        pos = int(btnid[1])
+        typ = btnid[0]
+        moves += 1
+
+        getbtn = 0
+        getrow = []
+        prec = res.message.components
+        change = prec[pos]
+        emojisetter = {
+            0: "0\N{variation selector-16}\N{combining enclosing keycap}",
+            1: "1\N{variation selector-16}\N{combining enclosing keycap}",
+            2: "2\N{variation selector-16}\N{combining enclosing keycap}",
+            3: "3\N{variation selector-16}\N{combining enclosing keycap}",
+            4: "4\N{variation selector-16}\N{combining enclosing keycap}",
+            5: "5\N{variation selector-16}\N{combining enclosing keycap}",
+            6: "6\N{variation selector-16}\N{combining enclosing keycap}",
+            7: "7\N{variation selector-16}\N{combining enclosing keycap}",
+            8: "8\N{variation selector-16}\N{combining enclosing keycap}"
+        }
+        if typ == "bomb":
+            wrong += 1
+            net -= 2000
+            change.emoji = "💣"
+            change.style = ButtonStyle.red
+        else:
+            correct += 1
+            net += 1000
+            cc = 0
+            done = False
+            for i in bot.ms[ctx.author.id]["count"]:
+                if done: break
+                for nxt in i:
+                    if pos == cc:
+                        change.emoji = emojisetter[nxt]
+                        change.style = ButtonStyle.green
+                        done = True
+                    else: cc += 1
+                    if done: break
+
+        change.disabled = True
+        prec.pop(pos)
+        prec.insert(pos, change)
+
+        fcom = []
+        for i in prec:
+            getrow.append(i)
+            getbtn += 1
+
+            if getbtn == 5:
+                fcom.append(getrow)
+                getrow = []
+                getbtn = 0
+        cntn = f"Total Moves: `{moves}`    Correct: `{correct}`    Incorrect: `{wrong}`\n" \
+               f"Net Profit: `{net}`\n"
+        bot.activems[minemsg.id] = (minemsg, ctx,  net)
+        if moves == 25:
+            await stop_ms(minemsg, ctx, net)
+            break
+        else:
+            await res.respond(type=InteractionType.UpdateMessage, content=cntn, components=fcom)
+
+async def stop_ms(minemsg, ctx, net):
+    data = await get_data()
+    user = data[str(ctx.author.id)]
+    user["wallet"] += net
+    data[str(ctx.author.id)] = user
+    await update_data(data)
+    bot.activems["users"].remove(ctx.author.id)
+    await minemsg.edit(content=f"**The game ended**\nNet Profit: `{await commait(net)}`", components=[])
+    await minemsg.clear_reactions()
 
 async def general_checks_loop(ctx):
     state = await spam_protect(ctx.author.id)
@@ -1198,6 +1357,226 @@ async def general_checks_loop(ctx):
         asyncio.create_task(update_xp(xps))
         asyncio.create_task(add_xp_tm(userid))
     return toreturn
+
+@bot.command(aliases=["ttt"])
+async def tictactoe(ctx, user:discord.Member, bet:int=100):
+    if user == ctx.author:
+        return await ctx.send("Bruh you cant start a game with yourself")
+    if bet not in [100, 200, 500, 1000, 2500, 5000, 10000]:
+        return await ctx.send(f"The betting amount should be {', '.join(str(x) for x in [100, 250, 200, 500, 1000, 2000, 2500, 5000, 10000])} "
+                              f"or 20000")
+    bot.waitings[ctx.author.id] = [ctx.author, user]
+
+    cont = f"{ctx.author.mention} vs {user.mention}\n" \
+           f"Bet Amount: `{await commait(bet)}`\n" \
+           f"Click 'Accept' to start. Waiting on: {' '.join([x.mention for x in bot.waitings[ctx.author.id]])}"
+    pre = await ctx.send(cont, components=[Button(label='Accept', style=ButtonStyle.green)])
+    data = await get_data()
+    started = False
+    while True:
+        res = await bot.wait_for("button_click")
+        if res.user not in [ctx.author, user]: continue
+        if res.user in bot.waitings[ctx.author.id]:
+            per = data[str(user.id)]
+            p = per["wallet"]
+            if p < bet:
+                cont = f"{user.mention} doesn't have enough coins!"
+                compo = []
+            else:
+                per["wallet"] -= bet
+                data[str(user.id)] = per
+                await update_data(data)
+
+                bot.waitings[ctx.author.id].remove(res.user)
+                cont = f"{ctx.author.mention} vs {user.mention}\n" \
+                       f"Bet Amount: `{await commait(bet)}`\n" \
+                       f"Click 'Accept' to start. Waiting on: {' '.join([x.mention for x in bot.waitings[ctx.author.id]])}"
+                compo = [Button(label='Accept', style=ButtonStyle.green)]
+            await res.respond(type=7, content=cont, components=compo)
+        else:
+            await res.respond(type=InteractionType.DeferredUpdateMessage)
+
+        if len(bot.waitings[ctx.author.id]) == 0:
+            await pre.delete()
+            started = True
+            break
+
+    if started:
+        board = {1: "", 2: "", 3: "",
+                 4: "", 5: "", 6: "",
+                 7: "", 8: "", 9: ""}
+        row = []
+        cont = []
+        c = 0
+        for i in range(1, 10):
+            row.append(Button(style=2, label="\u200b", id=i))
+            c += 1
+            if c == 3:
+                cont.append(row)
+                row = []
+                c = 0
+        turn = random.choice([ctx.author, user])
+        msg = await ctx.send(f"{turn.mention} to move first:", components=cont)
+        emoji = "❌"
+        moves = 0
+        for i in range(10):
+            while True:
+                res = await bot.wait_for("button_click")
+                if res.user.id != turn.id: continue
+                else: break
+            cc = msg.components
+            resid = res.component.id
+            board[int(resid)] = emoji
+            count = 1
+            done = False
+            for j in cc:
+                for k in j:
+                    if count == int(resid):
+                        k.emoji = emoji
+                        k.disabled = True
+                        done = True
+                    if done: break
+                    count += 1
+                if done: break
+            moves += 1
+            tie = False
+            gameover = False
+            if moves >= 5:
+                if board[7] == board[8] == board[9] != '':  # across the top
+                    gameover = True
+
+                elif board[4] == board[5] == board[6] != '':  # across the middle
+                    gameover = True
+
+                elif board[1] == board[2] == board[3] != '':  # across the bottom
+                    gameover = True
+
+                elif board[1] == board[4] == board[7] != '':  # down the left side
+                    gameover = True
+
+                elif board[2] == board[5] == board[8] != '':  # down the middle
+                    gameover = True
+
+                elif board[3] == board[6] == board[9] != '':  # down the right side
+                    gameover = True
+
+                elif board[7] == board[5] == board[3] != '':  # diagonal
+                    gameover = True
+
+                elif board[1] == board[5] == board[9] != '':  # diagonal
+                    gameover = True
+            if moves >= 9:
+                tie = True
+
+            if gameover:
+                await res.respond(type=7, content=f"**Game Over!**\nWinner: 🏆 {turn.mention} 🏆", components=[])
+                if turn == ctx.author: id2 = user
+                else: id2 = ctx.author
+                await ttt_end(turn, id2, bet)
+                break
+            elif tie:
+                await res.respond(type=7, content=f"**Game Tied!**\nWell Played!", components=[])
+                if turn == ctx.author: id2 = user
+                else: id2 = ctx.author
+                await ttt_tie(turn.id, id2.id, bet)
+                break
+            else:
+                if turn == ctx.author: turn = user
+                else: turn = ctx.author
+                if emoji == "❌": emoji = "⭕"
+                else: emoji = "❌"
+
+                await res.respond(type=7, content=f"{turn.mention} Your chance:", components=cc)
+
+async def ttt_end(id1, id2, bet):
+    data = await get_data()
+    winner = data[str(id1.id)]
+    winner["wallet"] += 1.5*bet
+    data[str(id1)] = winner
+
+    await create_statement(id1, bot.user, 0.5*bet, "Won Tic-Tac-Toe", 'Credit')
+    await create_statement(id2, bot.user, bet, "Lost Tic-Tac-Toe", 'Debit')
+    await update_data(data)
+
+async def ttt_tie(id1, id2, bet):
+    data = await get_data()
+    winner1 = data[str(id1)]
+    winner1["wallet"] += bet
+    data[str(id1)] = winner1
+
+    winner2 = data[str(id2)]
+    winner2["wallet"] += bet
+    data[str(id2)] = winner2
+
+    await update_data(data)
+
+@bot.check
+async def is_dm(ctx):
+    return ctx.guild != None
+
+@bot.check
+async def if_allowed(ctx):
+    return await check_channel(ctx.channel.id, ctx.guild.id)
+
+@bot.event
+async def on_command_error(ctx, error):
+    if isinstance(error, CommandNotFound):
+        embed = discord.Embed(description=f'{economyerror} The command you are trying to use doesn\'t exist.', color=error_embed)
+        return await ctx.send(embed=embed)
+    if isinstance(error, CheckFailure):
+        embed = discord.Embed(description=f'{economyerror} You are not qualified to use this command!', color=error_embed)
+        return await ctx.send(embed=embed)
+    if isinstance(error, MissingRequiredArgument):
+        embed = discord.Embed(description=f'{economyerror} Missing an argument! Use `e.help {ctx.command}` for syntax.', color=error_embed)
+        return await ctx.send(embed=embed)
+    if isinstance(error, BadArgument):
+        embed = discord.Embed(description=f'{economyerror} Bad/Incorrect argument(s)! Use `e.help {ctx.command}` for syntax.', color=error_embed)
+        return await ctx.send(embed=embed)
+    if isinstance(error, UnboundLocalError): return
+    code = hex(random.randint(1000, 9999))
+
+    a = await debugcode(code, f'{ctx.author} ({ctx.author.id}) =>\n**Command:** `{ctx.command}`\n**Message:** `{ctx.message.content}`\n**Error:** `{error}`')
+    if not a:
+        while True:
+            code = hex(random.randint(1000, 9999))
+            a = await debugcode(code, f'{ctx.author} ({ctx.author.id}) =>\n\n**Command:** `{ctx.command}`\n**Message:** `{ctx.message.content}`\n**Error:** `{error}`')
+            if a:
+                break
+    embed = discord.Embed(title=f'{economyerror} Oops! You just ran into an error',
+                          description=f'Kindly report this error using `e.report {code}` for further investigation.\n'
+                                      f'For a unique and error that is never been reported before, you get `1,000` coins!\n',
+                          color=error_embed)
+    embed.set_footer(text='Sorry for the inconvinience')
+    embed.timestamp = datetime.datetime.utcnow()
+    await ctx.send(embed=embed)
+
+@bot.event
+async def on_raw_reaction_add(payload):
+    if payload.message_id in bot.activems.keys():
+        if payload.user_id != bot.activems[payload.message_id][1].author.id: return
+        await stop_ms(bot.activems[payload.message_id][0], bot.activems[payload.message_id][1],bot.activems[payload.message_id][2])
+    if payload.channel_id != 844184710678577193: return
+    if payload.user_id not in devs: return
+    a = await get_errorfile()
+    if str(payload.emoji) == economysuccess:
+        chl = bot.get_channel(payload.channel_id)
+        msg = await chl.fetch_message(payload.message_id)
+        cont = str(msg.content)
+        errorcode = cont.split(' ')[3].replace('`', '')
+        a.pop(errorcode)
+        await update_errorfile(a)
+
+@bot.event
+async def on_message(message):
+    if message.author.bot:
+        return
+    if bot.dev == 1 and message.author.id not in (devs+staff): return
+    if message.author.id in disregarded:
+        if message.author.id not in devs: return
+    if message.content == 'e.' or message.content == f'{bot.user.mention}':
+        await message.channel.send('Do you need my help?\nGet started using `e.help`')
+    await open_account(message.author.id)
+    await bot.process_commands(message)
 
 @bot.command()
 @commands.check(general_checks_loop)
@@ -1351,7 +1730,7 @@ async def format(ctx, member:discord.Member):
 
 @bot.command()
 @commands.is_owner()
-async def release(ctx, title:str):
+async def release(ctx, title:str, fake:int=0):
     if ctx.author.id != 771601176155783198: return
     with open('files/updates.json', 'r') as upd:
         updates = json.load(upd)
@@ -1360,7 +1739,6 @@ async def release(ctx, title:str):
     embed = discord.Embed(title=f'Whats New:', color=embedcolor)
     i = 0
     while True:
-        print(i)
         try: name = update[i]
         except: break
 
@@ -1374,9 +1752,12 @@ async def release(ctx, title:str):
 
     with open('files/updates.json', 'w') as n:
         n.write(json.dumps(updates, indent=2))
-    await ctx.send(embed=embed)
-    chl = bot.get_channel(838963496476606485)
-    #await chl.send('<@&839370096248881204>',embed = embed)
+
+    if fake == 1:
+        chl = bot.get_channel(838963496476606485)
+        await chl.send('<@&839370096248881204>', embed = embed)
+    else:
+        await ctx.send(embed=embed)
 
 @bot.command()
 @commands.check(is_staff)
@@ -1413,6 +1794,7 @@ async def refresh(ctx=None):
     bot.help_json = data["help"]
     bot.shopc = data["shop"]["category"]
     bot.items = data["items"]
+    bot.status = data["status"]
     if ctx is not None:
         msg = await ctx.send(f'{ctx.author.mention} ⚠️Warning! Do you want to rebuild the cache for items? This can take a long time')
         await msg.add_reaction(economyerror)
@@ -2307,16 +2689,18 @@ async def help(ctx, specify=None):
                 finallist.append(' '.join(splitted))
             content = '\n'.join(finallist)
             embed.add_field(name=f'**● __{j}__**', value=f'```less\n{content}```', inline=False)
-        embed.add_field(name='\u200b', value=f'[Support Server]({support_server}) | [Invite Url]({invite_url}) | [Patreon Page]({patreon_page})\n\n'
-                                             f'For more support, visit [Support Server]({support_server}) or use `e.server`\n'
+        embed.add_field(name='\u200b', value=f'For more support, visit our Support Server (click button) or use `e.server`\n'
                                              f'`<>` and `[]` are **not** required while using commands\n\n'
                                              f'Syntax: `<>` = Required `[]` = Optional')
+        components = [[Button(style=ButtonStyle.URL, label="Support Server", url=support_server),
+                      Button(style=ButtonStyle.URL, label="Invite URL", url=invite_url),
+                      Button(style=ButtonStyle.URL, label="Patron Page", url=patreon_page)]]
         try:
-            await ctx.author.send(embed=embed)
+            await ctx.author.send(embed=embed, components=components)
             embed = discord.Embed(title=f'{economysuccess} You received a mail!', color=success_embed)
             await ctx.reply(embed=embed)
         except:
-            await ctx.send(embed=embed)
+            await ctx.send(embed=embed, components=components)
         return
     x = bot.help_json.values()
     notfound = True
@@ -2504,12 +2888,10 @@ async def find(ctx):
 async def shop(ctx, page:int=1):
     if page <= 0: page = 1
     while True:
-        print(len(storeitems))
         if page*8 > len(storeitems):
             page -= 1
         else:
             break
-    print(page)
     storeimg = await createstore((page)*8,(page+1)*8)
     await ctx.send(file=storeimg)
 
@@ -2904,14 +3286,73 @@ async def sell(ctx, *, item):
 @bot.command()
 async def games(ctx):
     ttt = Button(style=ButtonStyle.green, label="Tic-Tac-Toe", emoji="👀", id="ttt")
-    mine = Button(style=ButtonStyle.green, label="Minesweeper", emoji="💣", id="ttt")
-    snakes = Button(style=ButtonStyle.green, label="Mini Snakes & Ladders", emoji="🪜", id="ttt")
-    embed = discord.Embed(description=f"{economysuccess} Choose your game!", color=embedcolor)
-    await ctx.send(embed=embed, components=[ttt, mine, snakes])
-    def check():
-        return res.channel == ctx.channel and res.user == ctx.author
-    res = await bot.wait_for("button_click", check=check)
-    print("clicked")
+    mine = Button(style=ButtonStyle.green, label="Minesweeper", emoji="💣", id="mine")
+
+    msg = await ctx.send(f"**Welcome to Gamebot Arcade <:gamepad:849117058875916308>**\nChoose your game below:", components=[ttt, mine])
+    while True:
+        res = await bot.wait_for("button_click")
+        if res.channel != ctx.channel and res.user != ctx.author: pass
+        else: break
+    if res.component.id == "mine":
+        await res.respond(type=InteractionType.DeferredUpdateMessage)
+        await msg.delete()
+        await minesweeper(ctx)
+    elif res.component.id == "ttt":
+        await res.respond(type=7, content="Tag your friend with whom you will like to play")
+        def check(c):
+            return c.author == ctx.author and c.channel == ctx.channel
+        c = await bot.wait_for("message", timeout=60, check=check)
+        person = c.mentions[0]
+        confirm_p = await ctx.send(f'{person.mention} Hey, {ctx.author.mention} wants to challenge you for a game of'
+                                   f' Tic-Tac-Toe. Click "Accept" to start!', components=[Button(label="Accept", style=ButtonStyle.green)])
+        while True:
+            res = await bot.wait_for("button_click")
+            if res.user != person and res.id != confirm_p.id:
+                await res.respond(type=InteractionType.DeferredUpdateMessage)
+            else:
+                await res.respond(type=7, content=f"Challenge Accepted! "
+                                                  f"{ctx.author.mention} to select betting amount:",
+                                  components=[[Button(label=x, style=ButtonStyle.grey) for x in [100, 200, 250, 500, 1000]],
+                                              [Button(label=x, style=ButtonStyle.grey) for x in [2000, 2500, 5000, 10000, 20000]]])
+                break
+        while True:
+            res = await bot.wait_for("button_click")
+            if res.user not in [ctx.author] and res.id != confirm_p.id: continue
+            await res.respond(type=InteractionType.DeferredUpdateMessage)
+            break
+        await confirm_p.delete()
+        await tictactoe(ctx, bot.get_user(person.id), int(res.component.label))
+
+@bot.command()
+async def flip(ctx, bet:int):
+    if bet < 50:
+        return await ctx.reply("Minimum bet amount is 50 coins")
+
+    data = await get_data()
+    user = data[str(ctx.author.id)]
+    if bet > user["wallet"]:
+        return await ctx.send(f"{ctx.author.mention} Imagine betting more than you have in your pockets..")
+    embed = discord.Embed(description=f"Call your side! Amount at stake: `{bet}` coins", color=embedcolor)
+    msg = await ctx.send(embed=embed,
+                   components=[[Button(label="Heads", style=ButtonStyle.blue), Button(label="Tails", style=ButtonStyle.green)]])
+    while True:
+        res = await bot.wait_for("button_click")
+        if res.user != ctx.author and res.id != msg.id: continue
+        break
+    win = random.choice(["Heads", "Tails"])
+    if win == res.component.label:
+        cont = f"Congratulations! You win back {int(bet/2)} coins"
+        color= success_embed
+        user["wallet"] += bet*0.5
+    else:
+        cont = f"You lose hahaha. Nothing for you!"
+        color= error_embed
+        user["wallet"] -= bet
+    data[str(ctx.author.id)] = user
+    embed=discord.Embed(title=win,
+                        description=f"{cont}", color=color)
+    await res.respond(type=7, embed=embed)
+    await update_data(data)
 
 bot.connected_ = False
 @bot.event
