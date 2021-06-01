@@ -14,57 +14,10 @@ aeval = Interpreter()
 print(f"Imports Complete in {float('{:.2f}'.format(time.time()-t1))} secs")
 tnew = time.time()
 
-class CustomContext(commands.Context):
-    async def reinvoke(self, command_to_invoke, *, call_hooks=False, restart=True):
-        cmd = command_to_invoke
-        view = self.view
-        if cmd is None:
-            raise ValueError('This context is not valid.')
-
-        # some state to revert to when we're done
-        index, previous = view.index, view.previous
-        invoked_with = self.invoked_with
-        invoked_subcommand = self.invoked_subcommand
-        invoked_parents = self.invoked_parents
-        subcommand_passed = self.subcommand_passed
-
-        if restart:
-            to_call = cmd.root_parent or cmd
-            view.index = len(self.prefix)
-            view.previous = 0
-            self.invoked_parents = []
-            self.invoked_with = view.get_word()  # advance to get the root command
-        else:
-            to_call = cmd
-
-        try:
-            await to_call.reinvoke(self, call_hooks=call_hooks)
-        finally:
-            self.command = cmd
-            view.index = index
-            view.previous = previous
-            self.invoked_with = invoked_with
-            self.invoked_subcommand = invoked_subcommand
-            self.invoked_parents = invoked_parents
-            self.subcommand_passed = subcommand_passed
-
-class MyBot(commands.Bot):
-    async def on_message(self, message):
-        ctx = await self.get_context(message, cls=CustomContext)
-        if message.author.bot:
-            return
-        if bot.dev == 1 and message.author.id not in (devs + staff): return
-        if message.author.id in disregarded:
-            if message.author.id not in devs: return
-        if message.content.lower() == 'e.' or message.content == f'{bot.user.mention}':
-            await message.channel.send('Do you need my help?\nGet started using `e.help`')
-        await open_account(message.author.id)
-        await self.invoke(ctx)
-
 intents = discord.Intents.default()
 intents.members = True
 intents.presences = True
-bot = MyBot(command_prefix=["e.", "E."], intents=intents, case_insensitive=True)
+bot = commands.Bot(command_prefix=["e.", "E."], intents=intents, case_insensitive=True)
 ddb = DiscordComponents(bot)
 bot.launch_time = datetime.datetime.utcnow()
 bot.dev = 1
@@ -1582,11 +1535,13 @@ async def on_command_error(ctx, error):
             def check(res):
                 return res.author == ctx.author and res.channel == ctx.channel
             res = await bot.wait_for("message", check=check)
-            if any(common_yes in res.content.lower() for common_yes in common_yes):
+            if any(x in res.content.lower() for x in common_yes):
                 embed = discord.Embed(title=f"{economysuccess} You meant `{match[0]}`", color=success_embed)
                 await prev.edit(embed=embed)
-                ctx2 = ctx
-                await ctx2.reinvoke(command_to_invoke=bot.get_command(match[0]))
+                corrected = ctx.message
+                splits = corrected.content.split(' ')
+                corrected.content = f"e.{match[0]} {' '.join(splits[1:])}"
+                await bot.process_commands(corrected)
             else:
                 embed = discord.Embed(title=f"{economyerror} You didn't mean `{match[0]}`", color=error_embed)
                 return await prev.edit(embed=embed)
