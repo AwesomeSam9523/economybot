@@ -116,5 +116,10 @@
   "0x20ac": "AwesomeSam#7985 (771601176155783198) =>\n**Command:** `_test`\n**Message:** `e.test`\n**Error:** `Command raised an exception: TypeError: 'NoneType' object is not subscriptable`",
   "0x4ec": "AwesomeSam#7985 (771601176155783198) =>\n**Command:** `items`\n**Message:** `e.items`\n**Error:** `Command raised an exception: TypeError: object of type 'int' has no len()`",
   "0x1e22": "AwesomeSam#7985 (771601176155783198) =>\n**Command:** `items`\n**Message:** `e.items`\n**Error:** `Command raised an exception: TypeError: object of type 'int' has no len()`",
-  "0x11aa": "AwesomeSam#7985 (771601176155783198) =>\n**Command:** `None`\n**Message:** `e.statemnt`\n**Error:** `Command \"statemnt\" is not found`"
+  "0x11aa": "AwesomeSam#7985 (771601176155783198) =>\n**Command:** `None`\n**Message:** `e.statemnt`\n**Error:** `Command \"statemnt\" is not found`",
+  "0x178e": "AwesomeSam#7985 (771601176155783198) =>\n**Command:** `level`\n**Message:** `e.pf`\n**Error:** `Command raised an exception: FileNotFoundError: [Errno 2] No such file or directory: './badges/3.png'`",
+  "0x1261": "AwesomeSam#7985 (771601176155783198) =>\n**Command:** `profile`\n**Message:** `e.pf`\n**Error:** `Command raised an exception: FileNotFoundError: [Errno 2] No such file or directory: 'badges/awards/unbox_bw.png'`",
+  "0x128e": "AwesomeSam#7985 (771601176155783198) =>\n**Command:** `file`\n**Message:** `e.file`\n**Error:** `Command raised an exception: TypeError: sync_upload_file() missing 1 required positional argument: 'payload'`",
+  "0x802": "AwesomeSam#7985 (771601176155783198) =>\n**Command:** `stocks`\n**Message:** `e.stocks`\n**Error:** `Command raised an exception: IndexError: list index out of range`",
+  "0x22ec": "AwesomeSam#7985 (771601176155783198) =>\n**Command:** `iteminfo`\n**Message:** `e.iteminfo coffee mug`\n**Error:** `Command raised an exception: TypeError: a bytes-like object is required, not 'PngImageFile'`"
 }

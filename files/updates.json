@@ -113,7 +113,6 @@
   ],
   "2.3": [
     "- New command: `e.bank`: Upgrade your bank tier",
-    "- New command: `e.ping`: Check the bot's ping",
     "- New command: `e.use`: Equip/unequip locks, open chests and activate/deactivate boosts",
     "- New command: `e.sell`: Sell items for coins",
     "- New command: `e.items`: View all the items you own",
@@ -126,10 +125,13 @@
     "- New command: `e.invite`: Invite the bot to your server",
     "- New command: `e.uptime`: View when was bot last restarted",
     "- New command: `e.ping`: View the bot's ping",
-    "Added \"Did you mean?\" when entering invalid command",
+    "- Added achievements: Use `e.pf` to see them",
+    "- Completed `e.profile` command",
+    "- Added \"Did you mean?\" when entering invalid command",
     "- Added buttons to `e.help` command",
-    "- Updated `e.level` image to include active items (lock and boost)",
+    "- Updated `e.profile` image to include active items (lock and boost)",
     "- Added 12 random bot status",
-    "- Fixed typos in bot phrases"
+    "- Fixed typos in bot phrases",
+    "- Fixed ~~so many~~ few bugs"
   ]
 }
