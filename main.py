@@ -1319,7 +1319,7 @@ async def start_ms(ctx):
 
     bot.activems[minemsg.id] = (minemsg, ctx, net)
     while True:
-        def check():
+        def check(res):
             return res.user.id == ctx.author.id and res.message.id == minemsg.id
         res = await bot.wait_for("button_click", check=check)
 
@@ -1540,11 +1540,11 @@ async def on_command_error(ctx, error):
     trace = error.__traceback__
     lines = traceback.format_exception(etype, error, trace)
     traceback_text = ''.join(lines)
-    a = await debugcode(code, f'{ctx.author} ({ctx.author.id}) =>\n**Command:** `{ctx.command}`\n**Message:** `{ctx.message.content}`\n**Error:** `{traceback_text}`')
+    a = await debugcode(code, f'{ctx.author} ({ctx.author.id}) =>\n**Command:** `{ctx.command}`\n**Message:** `{ctx.message.content}`\n**Error:** ```py\n{traceback_text}```')
     if not a:
         while True:
             code = hex(random.randint(1000, 9999))
-            a = await debugcode(code, f'{ctx.author} ({ctx.author.id}) =>\n\n**Command:** `{ctx.command}`\n**Message:** `{ctx.message.content}`\n**Error:** `{traceback_text}`')
+            a = await debugcode(code, f'{ctx.author} ({ctx.author.id}) =>\n\n**Command:** `{ctx.command}`\n**Message:** `{ctx.message.content}`\n**Error:** ```py\n{traceback_text}```')
             if a: break
     embed = discord.Embed(title=f'{economyerror} Oops! You just ran into an error',
                           description=f'Kindly report this error using **`e.report {code}`** for further investigation',
@@ -3035,7 +3035,7 @@ async def use(ctx, *, item:str):
         embed.set_footer(text='Type e.sell <item-name> to sell an item for coins\nType e.iteminfo <item-name> for info!', icon_url=bot.pfp)
         embed.set_author(name=f'{fetched.name} Unboxed: {item_name}', icon_url=fetched.avatar_url)
         embed.set_image(url="attachment://unboxing.gif")
-        bytes = open(f"{bot.allitems[item_name]}", "rb")
+        #bytes = open(f"{bot.allitems[item_name]}", "rb")
         #await uploader.upload_file(ctx.channel, bytes, "iteminfo.png", embed=embed)
         #await upload_file(ctx.channel, bot.allitems[item_name], "unboxing.gif", {"embed":embed})
         await ctx.send(embed=embed, file=file)
