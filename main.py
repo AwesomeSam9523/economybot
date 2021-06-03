@@ -1483,7 +1483,7 @@ async def on_message(message):
     if bot.dev == 1 and message.author.id not in (devs+staff): return
     if message.author.id in disregarded:
         if message.author.id not in devs: return
-    if message.content == 'e.' or message.content == f'{bot.user.mention}':
+    if message.content.lower() == 'e.' or message.content == f'{bot.user.mention}':
         await message.channel.send('Do you need my help?\nGet started using `e.help`')
     await open_account(message.author.id)
     await bot.process_commands(message)
@@ -1496,7 +1496,7 @@ async def is_dm(ctx):
 async def if_allowed(ctx):
     return await check_channel(ctx.channel.id, ctx.guild.id)
 
-#@bot.event
+@bot.event
 async def on_command_error(ctx, error):
     if isinstance(error, CommandNotFound):
         cmdused = ctx.invoked_with
