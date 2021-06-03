@@ -175,6 +175,7 @@ bot.activems = {"users":[]}
 bot.waitings = {}
 bot.status = []
 bot.random_status = True
+bot.maint = False
 
 usercmds = {}
 stock_names = ['Ava', 'Neil', 'Ryan', 'Anthony', 'Bernadette', 'Lauren', 'Justin', 'Matt', 'Wanda', 'James', 'Emily', 'Vanessa', 'Carl', 'Fiona', 'Stephanie', 'Pippa', 'Phil', 'Carol', 'Liam', 'Michael', 'Ella', 'Amanda', 'Caroline', 'Nicola', 'Sean', 'Oliver', 'Kylie', 'Rachel', 'Leonard', 'Julian', 'Richard', 'Peter', 'Irene', 'Dominic', 'Connor', 'Dorothy', 'Gavin', 'Isaac', 'Karen', 'Kimberly', 'Abigail', 'Yvonne', 'Steven', 'Felicity', 'Evan', 'Bella', 'Alison', 'Diane', 'Joan', 'Jan', 'Wendy', 'Nathan', 'Molly', 'Charles', 'Victor', 'Sally', 'Rose', 'Robert', 'Claire', 'Theresa', 'Grace', 'Keith', 'Stewart', 'Andrea', 'Alexander', 'Chloe', 'Nicholas', 'Edward', 'Deirdre', 'Anne', 'Joseph', 'Alan', 'Rebecca', 'Jane', 'Natalie', 'Cameron', 'Owen', 'Eric', 'Gabrielle', 'Sonia', 'Tim', 'Sarah', 'Madeleine', 'Megan', 'Lucas', 'Joe', 'Brandon', 'Brian', 'Jennifer', 'Alexandra', 'Adrian', 'John', 'Mary', 'Tracey', 'Jasmine', 'Penelope', 'Hannah', 'Thomas', 'Angela', 'Warren', 'Blake', 'Simon', 'Audrey', 'Frank', 'Samantha', 'Dan', 'Victoria', 'Paul', 'Jacob', 'Heather', 'Una', 'Lily', 'Carolyn', 'Jonathan', 'Ian', 'Piers', 'William', 'Gordon', 'Dylan', 'Olivia', 'Jake', 'Leah', 'Jessica', 'David', 'Katherine', 'Amelia', 'Benjamin', 'Boris', 'Sebastian', 'Lisa', 'Diana', 'Michelle', 'Emma', 'Sam', 'Stephen', 'Faith', 'Kevin', 'Austin', 'Jack', 'Ruth', 'Colin', 'Trevor', 'Joanne', 'Virginia', 'Anna', 'Max', 'Adam', 'Maria', 'Sophie', 'Sue', 'Andrew', 'Harry', 'Amy', 'Christopher', 'Donna', 'Melanie', 'Elizabeth', 'Lillian', 'Julia', 'Christian', 'Luke', 'Zoe', 'Joshua', 'Jason']
@@ -1395,7 +1396,7 @@ async def stop_ms(minemsg, ctx, net):
     await minemsg.edit(content=f"**The game ended**\nNet Profit: `{await commait(net)}`", components=[])
     await minemsg.clear_reactions()
 
-async def general_checks_loop(ctx):
+async def general(ctx):
     state = await spam_protect(ctx.author.id)
     toreturn = True
     if state == 'warn':
@@ -1483,8 +1484,12 @@ async def on_message(message):
     if bot.dev == 1 and message.author.id not in (devs+staff): return
     if message.author.id in disregarded:
         if message.author.id not in devs: return
-    if message.content.lower() == 'e.' or message.content == f'{bot.user.mention}':
-        await message.channel.send('Do you need my help?\nGet started using `e.help`')
+    if bot.maint and message.author.id not in devs:
+        embed= discord.Embed(description=f"⚠️ The bot is in maintainance mode. Please retry later", color=error_embed)
+        await message.reply(embed=embed)
+        return
+    if message.content.lower() == 'e.' or all(msg in message.content.lower() for msg in ["<@!832083717417074689>", "help"]):
+        await message.reply('Do you need my help?\nGet started using `e.help`')
     await open_account(message.author.id)
     await bot.process_commands(message)
 
@@ -1571,7 +1576,7 @@ async def on_raw_reaction_add(payload):
         await update_errorfile(a)
 
 @bot.command()
-@commands.check(general_checks_loop)
+@commands.check(general)
 async def report(ctx, code):
     a = await get_errorfile()
     if code not in a:
@@ -1615,6 +1620,12 @@ async def dvm(ctx):
 async def _exit(ctx):
     await bot.wait_until_ready()
     await bot.close()
+
+@bot.command(hidden=True)
+@commands.check(is_dev)
+async def maint(ctx, state:bool):
+    bot.maint = state
+    await ctx.reply(f"Maintainence mode state: **{state}**")
 
 @bot.command(hidden=True)
 @commands.check(is_dev)
@@ -1769,7 +1780,7 @@ async def stockinfo(ctx):
     await ctx.send(embed=embed)
 
 @bot.command()
-@commands.check(general_checks_loop)
+@commands.check(general)
 async def uptime(ctx):
     delta_uptime = datetime.datetime.utcnow() - bot.launch_time
     hours, remainder = divmod(int(delta_uptime.total_seconds()), 3600)
@@ -1843,7 +1854,7 @@ async def badge(ctx, member:discord.Member, badge:str):
     await ctx.message.add_reaction('✅')
 
 @bot.command(aliases=['bal'])
-@commands.check(general_checks_loop)
+@commands.check(general)
 async def balance(ctx, member:discord.Member = None):
     if member is None:
         userid = ctx.author.id
@@ -1869,7 +1880,7 @@ async def balance(ctx, member:discord.Member = None):
     await ctx.send(embed=embed)
 
 @bot.command(aliases=['dep'])
-@commands.check(general_checks_loop)
+@commands.check(general)
 async def deposit(ctx, amount:str = None):
     if amount is None:
         await ctx.reply('`e.dep <amount>`, idiot.')
@@ -1901,7 +1912,7 @@ async def deposit(ctx, amount:str = None):
     await ctx.send(f'{ctx.author.mention} Successfully deposited `{await commait(amount)}` coins.')
 
 @bot.command(aliases=['with'])
-@commands.check(general_checks_loop)
+@commands.check(general)
 async def withdraw(ctx, amount: str = None):
     if amount is None:
         await ctx.reply('`e.with <amount>`, idiot.')
@@ -1934,7 +1945,7 @@ async def withdraw(ctx, amount: str = None):
     await ctx.send(f'{ctx.author.mention} Successfully withdrew `{await commait(amount)}` coins.')
 
 @bot.command()
-@commands.check(general_checks_loop)
+@commands.check(general)
 async def mybank(ctx, member:discord.Member = None):
     if member is None:
         userid = ctx.author.id
@@ -1966,7 +1977,7 @@ async def mybank(ctx, member:discord.Member = None):
     await ctx.send(embed=embed)
 
 @bot.command()
-@commands.check(general_checks_loop)
+@commands.check(general)
 async def daily(ctx):
     await avg_update()
 
@@ -2006,7 +2017,7 @@ async def daily(ctx):
     await ctx.send(embed=embed)
 
 @bot.command()
-@commands.check(general_checks_loop)
+@commands.check(general)
 async def give(ctx, member:discord.Member, amount:int):
     data = await get_data()
     await open_account(member.id)
@@ -2056,7 +2067,7 @@ async def give(ctx, member:discord.Member, amount:int):
     await ctx.send(embed=embed)
 
 @bot.command(aliases=['property'])
-@commands.check(general_checks_loop)
+@commands.check(general)
 async def estates(ctx, member:discord.Member=None):
     if member is None:
         userid = ctx.author.id
@@ -2105,7 +2116,7 @@ async def disregard(ctx, member:discord.Member):
     await ctx.message.add_reaction(economysuccess)
 
 @bot.command()
-@commands.check(general_checks_loop)
+@commands.check(general)
 async def revenue(ctx):
     userid = ctx.author.id
     await open_estates(userid)
@@ -2170,7 +2181,7 @@ async def revenue(ctx):
     await ctx.send(embed=embed)
 
 @bot.command()
-@commands.check(general_checks_loop)
+@commands.check(general)
 async def maintain(ctx):
     userid = ctx.author.id
     await open_estates(userid)
@@ -2231,7 +2242,7 @@ async def maintain(ctx):
     await ctx.send(embed=embed)
 
 @bot.command()
-@commands.check(general_checks_loop)
+@commands.check(general)
 async def upgrade(ctx):
     userid = ctx.author.id
     await open_estates(userid)
@@ -2322,7 +2333,7 @@ async def upgrade(ctx):
         await msg.edit(embed=discord.Embed(description=f'{economyerror} Timed Out!', color=error_embed))
 
 @bot.command()
-@commands.check(general_checks_loop)
+@commands.check(general)
 async def alerts(ctx, state:str = None):
     if state is None:
         embed = discord.Embed(title='Alerts System',
@@ -2356,7 +2367,7 @@ async def alerts(ctx, state:str = None):
         await ctx.send(f'{ctx.author.mention} Incorrect Option. Use `e.alerts` to see help.')
 
 @bot.command()
-@commands.check(general_checks_loop)
+@commands.check(general)
 async def transfer(ctx, togive:discord.Member = None, amount = None, *, reason = None):
     await open_account(togive.id)
     await open_account(ctx.author.id)
@@ -2416,7 +2427,7 @@ async def transfer(ctx, togive:discord.Member = None, amount = None, *, reason =
     await ctx.send(embed=embed)
 
 @bot.command(aliases=['transactions'])
-@commands.check(general_checks_loop)
+@commands.check(general)
 async def statement(ctx, *args):
     if '-u' not in args:
         member = ctx.author
@@ -2476,7 +2487,7 @@ async def statement(ctx, *args):
     await ctx.send(f'**Bank Statement of `{member.name}`:**\n```css\n{desc}```')
 
 @bot.command(aliases=['pf', 'level'])
-@commands.check(general_checks_loop)
+@commands.check(general)
 async def profile(ctx, member:discord.Member = None):
     if member is None:
         member = ctx.author
@@ -2495,7 +2506,7 @@ async def profile(ctx, member:discord.Member = None):
     #await upload_file(ctx.channel, bytes, "level.png")
 
 @bot.command()
-@commands.check(general_checks_loop)
+@commands.check(general)
 async def stocks(ctx):
     columns = ['Name', 'Highest   ', 'Lowest', 'Current', 'Volume']
     details = list(bot.current_stock)
@@ -2560,7 +2571,7 @@ async def stocks(ctx):
     await ctx.send(embed=embed, file=discord.File("graph.png"))
 
 @bot.command()
-@commands.check(general_checks_loop)
+@commands.check(general)
 async def buystocks(ctx, amount):
     data = await get_data()
     stock_data = await get_stocks()
@@ -2624,7 +2635,7 @@ async def buystocks(ctx, amount):
     await update_awards(awards)
 
 @bot.command()
-@commands.check(general_checks_loop)
+@commands.check(general)
 async def sellstocks(ctx, amount):
     data = await get_data()
     stock_data = await get_stocks()
@@ -2668,7 +2679,7 @@ async def sellstocks(ctx, amount):
     await ctx.send(embed=embed)
 
 @bot.command()
-@commands.check(general_checks_loop)
+@commands.check(general)
 async def help(ctx, specify=None):
     embed = discord.Embed(color=embedcolor,
                           description=f'[Support Server]({support_server}) | [Invite Url]({invite_url}) | [Patreon Page]({patreon_page})\nTo get help on a command, use `e.help <command name>`')
@@ -2740,7 +2751,7 @@ async def help(ctx, specify=None):
         await ctx.send(embed=embed)
 
 @bot.command(aliases=['add_chl'])
-@commands.check(general_checks_loop)
+@commands.check(general)
 @commands.has_permissions(manage_channels=True)
 async def set_chl(ctx, channel:discord.TextChannel):
     a = await get_admin()
@@ -2757,7 +2768,7 @@ async def set_chl(ctx, channel:discord.TextChannel):
     await ctx.send(embed=embed)
 
 @bot.command(aliases=['rem_chl', 'remove_chl', 'delete_chl'])
-@commands.check(general_checks_loop)
+@commands.check(general)
 @commands.has_permissions(manage_channels=True)
 async def del_chl(ctx, channel:discord.TextChannel):
     a = await get_admin()
@@ -2772,7 +2783,7 @@ async def del_chl(ctx, channel:discord.TextChannel):
     await ctx.send(embed=embed)
 
 @bot.command(aliases=['show_chl'])
-@commands.check(general_checks_loop)
+@commands.check(general)
 @commands.has_permissions(manage_channels=True)
 async def list_chl(ctx):
     a = await get_admin()
@@ -2784,7 +2795,7 @@ async def list_chl(ctx):
     await ctx.send(embed=embed)
 
 @bot.command()
-@commands.check(general_checks_loop)
+@commands.check(general)
 @commands.has_permissions(manage_channels=True)
 async def reset_chl(ctx):
     a = await get_admin()
@@ -2795,7 +2806,7 @@ async def reset_chl(ctx):
     await ctx.send(embed=embed)
 
 @bot.command()
-@commands.check(general_checks_loop)
+@commands.check(general)
 async def rob(ctx, member:discord.Member):
     await open_account(member.id)
     await open_account(ctx.author.id)
@@ -2869,7 +2880,7 @@ async def rob(ctx, member:discord.Member):
     await ctx.send(embed=embed)
 
 @bot.command()
-@commands.check(general_checks_loop)
+@commands.check(general)
 async def find(ctx):
     chance = random.randint(1, 100)
     a = await get_data()
@@ -2890,7 +2901,7 @@ async def find(ctx):
     await ctx.send(embed=embed)
 
 @bot.command(aliases=['store'])
-@commands.check(general_checks_loop)
+@commands.check(general)
 async def shop(ctx, page:int=1):
     if page <= 0: page = 1
     while True:
@@ -2903,14 +2914,14 @@ async def shop(ctx, page:int=1):
     #await ctx.send(file=storeimg)
 
 @bot.command(aliases=['inv'])
-@commands.check(general_checks_loop)
+@commands.check(general)
 async def inventory(ctx):
     inv = await inventory_image(ctx.author.id)
     await upload_file(ctx.channel, inv, "inventory.png")
     #await ctx.send(file=inv)
 
 @bot.command(aliases=['purchase'])
-@commands.check(general_checks_loop)
+@commands.check(general)
 async def buy(ctx, *, item):
     a = str(item).split(' ')
     qty = 1
@@ -2971,7 +2982,7 @@ async def buy(ctx, *, item):
     await ctx.send(embed=embed)
 
 @bot.command()
-@commands.check(general_checks_loop)
+@commands.check(general)
 async def server(ctx):
     embed = discord.Embed(description=f'**Discord Support Server:** [Join Here]({support_server})\n'
                                       f'Server Members: `idk lol`', color=embedcolor)
@@ -2979,7 +2990,7 @@ async def server(ctx):
     await ctx.send(embed=embed)
 
 @bot.command()
-@commands.check(general_checks_loop)
+@commands.check(general)
 async def invite(ctx):
     guilds = bot.guilds
     members = 0
@@ -3084,7 +3095,7 @@ async def ping(ctx):
     await msg.edit(content=f'Pong! `{ping} ms`')
 
 @bot.command()
-@commands.check(general_checks_loop)
+@commands.check(general)
 async def bank(ctx, tier:int=None):
     if tier is None:
         await open_account(ctx.author.id)
@@ -3159,7 +3170,7 @@ async def bank(ctx, tier:int=None):
         await msg.edit(embed=discord.Embed(description=f'{economyerror} Timed Out!', color=error_embed))
 
 @bot.command(aliases=["item"], pass_context=True)
-@commands.check(general_checks_loop)
+@commands.check(general)
 async def iteminfo(ctx, *, name:str, via:bool=False):
     found = False
     for i in bot.items.keys():
@@ -3196,7 +3207,7 @@ async def iteminfo(ctx, *, name:str, via:bool=False):
         return {"embed":embed, "file":file}
 
 @bot.command(aliases=['itemsinv'])
-@commands.check(general_checks_loop)
+@commands.check(general)
 async def items(ctx, *, everything=None):
     if everything is None:
         rarity = None
@@ -3262,7 +3273,7 @@ async def _test(ctx):
     await ctx.send("Select:", components=[dropdown])
 
 @bot.command(pass_context=True)
-@commands.check(general_checks_loop)
+@commands.check(general)
 async def sell(ctx, *, item):
     a = str(item).split(' ')
     qty = 1
@@ -3310,7 +3321,7 @@ async def sell(ctx, *, item):
     await update_inv(inv)
 
 @bot.command()
-@commands.check(general_checks_loop)
+@commands.check(general)
 async def games(ctx):
     ttt = Button(style=ButtonStyle.green, label="Tic-Tac-Toe", emoji="👀", id="ttt")
     mine = Button(style=ButtonStyle.green, label="Minesweeper", emoji="💣", id="mine")
@@ -3349,7 +3360,7 @@ async def games(ctx):
         await tictactoe(ctx, bot.get_user(person.id), int(res.component.label))
 
 @bot.command(aliases=["ms", "mine"], pass_context=True, invoke_without_command=True)
-@commands.check(general_checks_loop)
+@commands.check(general)
 async def minesweeper(ctx):
     bomb_count = random.randint(5, 10)
     mainlist = ["empty" for i in range(25)]
@@ -3426,7 +3437,7 @@ async def minesweeper(ctx):
     await start_ms(ctx)
 
 @bot.command(aliases=["ttt"])
-@commands.check(general_checks_loop)
+@commands.check(general)
 async def tictactoe(ctx, user:discord.Member, bet:int=100):
     if user == ctx.author:
         return await ctx.send("Bruh you cant start a game with yourself")
@@ -3555,7 +3566,7 @@ async def tictactoe(ctx, user:discord.Member, bet:int=100):
             await res.respond(type=7, content=f"{turn.mention} Your chance:", components=cc)
 
 @bot.command()
-@commands.check(general_checks_loop)
+@commands.check(general)
 async def flip(ctx, bet:int):
     if bet < 50:
         return await ctx.reply("Minimum bet amount is 50 coins")
