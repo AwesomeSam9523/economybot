@@ -99,7 +99,8 @@
       "category": "Fun",
       "e.profile": {
         "aliases": [
-          "pf", "level"
+          "pf",
+          "level"
         ],
         "usage": "e.profile [user]",
         "desc": "Shows you level, perks and other stats"
@@ -429,22 +430,22 @@
         "percent": 27
       },
       {
-        "icon": "gold_lock.png",
-        "name": "Gold Lock",
-        "desc": "Increases rob protection by 40%",
-        "price": "15,000",
-        "special": false,
-        "disc": "11,100",
-        "percent": 26
-      },
-      {
         "icon": "rare_chest.png",
         "name": "Rare Chest",
         "desc": "1 Rare Item + coins",
         "price": "3,500",
-        "special": true,
+        "special": false,
         "disc": "2,800",
         "percent": 20
+      },
+      {
+        "icon": "gold_lock.png",
+        "name": "Gold Lock",
+        "desc": "Increases rob protection by 40%",
+        "price": "15,000",
+        "special": true,
+        "disc": "13,350",
+        "percent": 11
       }
     ],
     "category": {
@@ -460,7 +461,7 @@
         "Gold Lock"
       ]
     },
-    "updated": 1622602646.6612167
+    "updated": 1622689246.140853
   },
   "items": {
     "common": {

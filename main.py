@@ -1319,9 +1319,9 @@ async def start_ms(ctx):
 
     bot.activems[minemsg.id] = (minemsg, ctx, net)
     while True:
-        res = await bot.wait_for("button_click")
-        if res.user.id != ctx.author.id or res.message.id != minemsg.id:
-            continue
+        def check():
+            return res.user.id == ctx.author.id and res.message.id == minemsg.id
+        res = await bot.wait_for("button_click", check=check)
 
         btnid = str(res.component.id).split('_')
         pos = int(btnid[1])
@@ -1476,6 +1476,18 @@ async def achievement(ctx, userid, field):
     await update_awards(awards)
     await update_data(data)
 
+@bot.event
+async def on_message(message):
+    if message.author.bot:
+        return
+    if bot.dev == 1 and message.author.id not in (devs+staff): return
+    if message.author.id in disregarded:
+        if message.author.id not in devs: return
+    if message.content == 'e.' or message.content == f'{bot.user.mention}':
+        await message.channel.send('Do you need my help?\nGet started using `e.help`')
+    await open_account(message.author.id)
+    await bot.process_commands(message)
+
 @bot.check
 async def is_dm(ctx):
     return ctx.guild != None
@@ -1484,7 +1496,7 @@ async def is_dm(ctx):
 async def if_allowed(ctx):
     return await check_channel(ctx.channel.id, ctx.guild.id)
 
-@bot.event
+#@bot.event
 async def on_command_error(ctx, error):
     if isinstance(error, CommandNotFound):
         cmdused = ctx.invoked_with
@@ -1524,13 +1536,16 @@ async def on_command_error(ctx, error):
     if isinstance(error, UnboundLocalError): return
     code = hex(random.randint(1000, 9999))
 
-    a = await debugcode(code, f'{ctx.author} ({ctx.author.id}) =>\n**Command:** `{ctx.command}`\n**Message:** `{ctx.message.content}`\n**Error:** `{error}`')
+    etype = type(error)
+    trace = error.__traceback__
+    lines = traceback.format_exception(etype, error, trace)
+    traceback_text = ''.join(lines)
+    a = await debugcode(code, f'{ctx.author} ({ctx.author.id}) =>\n**Command:** `{ctx.command}`\n**Message:** `{ctx.message.content}`\n**Error:** `{traceback_text}`')
     if not a:
         while True:
             code = hex(random.randint(1000, 9999))
-            a = await debugcode(code, f'{ctx.author} ({ctx.author.id}) =>\n\n**Command:** `{ctx.command}`\n**Message:** `{ctx.message.content}`\n**Error:** `{error}`')
-            if a:
-                break
+            a = await debugcode(code, f'{ctx.author} ({ctx.author.id}) =>\n\n**Command:** `{ctx.command}`\n**Message:** `{ctx.message.content}`\n**Error:** `{traceback_text}`')
+            if a: break
     embed = discord.Embed(title=f'{economyerror} Oops! You just ran into an error',
                           description=f'Kindly report this error using **`e.report {code}`** for further investigation',
                           color=error_embed)
@@ -1939,8 +1954,8 @@ async def mybank(ctx, member:discord.Member = None):
     embed.add_field(name='Bank Tier', value=f'{bank_details[btype]["tier"]}')
     embed.add_field(name='\u200b', value='\u200b')
     embed.add_field(name='Daily Interest', value=f'{bank_details[btype]["rate"]}%')
-    embed.add_field(name='Current Balance', value=f'{person["bank"]}')
-    embed.add_field(name='Average Balance', value=f'{person2["avg"]}')
+    embed.add_field(name='Current Balance', value=f'`{await commait(person["bank"])}`')
+    embed.add_field(name='Average Balance', value=f'`{await commait(person2["avg"])}`')
     embed.add_field(name='Note:', value='To claim interest, use `e.daily`.\n'
                                         'Your average balance in last 24 hours will be taken in account for that.')
     fetched = bot.get_user(userid)
@@ -3295,15 +3310,16 @@ async def sell(ctx, *, item):
     await update_inv(inv)
 
 @bot.command()
+@commands.check(general_checks_loop)
 async def games(ctx):
     ttt = Button(style=ButtonStyle.green, label="Tic-Tac-Toe", emoji="👀", id="ttt")
     mine = Button(style=ButtonStyle.green, label="Minesweeper", emoji="💣", id="mine")
 
     msg = await ctx.send(f"**Welcome to Gamebot Arcade <:gamepad:849117058875916308>**\nChoose your game below:", components=[ttt, mine])
-    while True:
-        res = await bot.wait_for("button_click")
-        if res.channel != ctx.channel and res.user != ctx.author: pass
-        else: break
+    def check(res):
+        return res.user == ctx.author
+    res = await bot.wait_for("button_click", check=check)
+
     if res.component.id == "mine":
         await res.respond(type=InteractionType.DeferredUpdateMessage)
         await msg.delete()
@@ -3311,30 +3327,29 @@ async def games(ctx):
     elif res.component.id == "ttt":
         await res.respond(type=7, content="Tag your friend with whom you will like to play")
         def check(c):
-            return c.author == ctx.author and c.channel == ctx.channel
+            return c.author == ctx.author and c.channel == ctx.channel and len(c.mentions) != 0
         c = await bot.wait_for("message", timeout=60, check=check)
+
         person = c.mentions[0]
         confirm_p = await ctx.send(f'{person.mention} Hey, {ctx.author.mention} wants to challenge you for a game of'
                                    f' Tic-Tac-Toe. Click "Accept" to start!', components=[Button(label="Accept", style=ButtonStyle.green)])
-        while True:
-            res = await bot.wait_for("button_click")
-            if res.user != person and res.id != confirm_p.id:
-                await res.respond(type=InteractionType.DeferredUpdateMessage)
-            else:
-                await res.respond(type=7, content=f"Challenge Accepted! "
-                                                  f"{ctx.author.mention} to select betting amount:",
-                                  components=[[Button(label=x, style=ButtonStyle.grey) for x in [100, 200, 250, 500, 1000]],
-                                              [Button(label=x, style=ButtonStyle.grey) for x in [2000, 2500, 5000, 10000, 20000]]])
-                break
-        while True:
-            res = await bot.wait_for("button_click")
-            if res.user not in [ctx.author] and res.id != confirm_p.id: continue
-            await res.respond(type=InteractionType.DeferredUpdateMessage)
-            break
+        def check(res):
+            return res.user == person and res.message.id == confirm_p.id
+        #and res.message.id == confirm_p.message.id
+        res = await bot.wait_for("button_click", check=check)
+        await res.respond(type=7, content=f"Challenge Accepted! "
+                                          f"{ctx.author.mention} to select betting amount:",
+                          components=[[Button(label=x, style=ButtonStyle.grey) for x in [100, 200, 250, 500, 1000]],
+                                      [Button(label=x, style=ButtonStyle.grey) for x in [2000, 2500, 5000, 10000, 20000]]])
+        def check(res):
+            return res.user == ctx.author
+        res = await bot.wait_for("button_click", check=check)
+        await res.respond(type=InteractionType.DeferredUpdateMessage)
         await confirm_p.delete()
         await tictactoe(ctx, bot.get_user(person.id), int(res.component.label))
 
 @bot.command(aliases=["ms", "mine"], pass_context=True, invoke_without_command=True)
+@commands.check(general_checks_loop)
 async def minesweeper(ctx):
     bomb_count = random.randint(5, 10)
     mainlist = ["empty" for i in range(25)]
@@ -3411,32 +3426,34 @@ async def minesweeper(ctx):
     await start_ms(ctx)
 
 @bot.command(aliases=["ttt"])
+@commands.check(general_checks_loop)
 async def tictactoe(ctx, user:discord.Member, bet:int=100):
     if user == ctx.author:
         return await ctx.send("Bruh you cant start a game with yourself")
-    if bet not in [100, 200, 500, 1000, 2500, 5000, 10000]:
-        return await ctx.send(f"The betting amount should be {', '.join(str(x) for x in [100, 250, 200, 500, 1000, 2000, 2500, 5000, 10000])} "
+    bet = int(bet)
+    if bet not in [100, 200, 250, 500, 1000, 2000, 2500, 5000, 10000, 20000]:
+        return await ctx.send(f"The betting amount should be {', '.join(str(x) for x in [100, 200, 250, 500, 1000, 2000, 2500, 5000, 10000])} "
                               f"or 20000")
     bot.waitings[ctx.author.id] = [ctx.author, user]
-
+    data = await get_data()
     cont = f"{ctx.author.mention} vs {user.mention}\n" \
            f"Bet Amount: `{await commait(bet)}`\n" \
            f"Click 'Accept' to start. Waiting on: {' '.join([x.mention for x in bot.waitings[ctx.author.id]])}"
     pre = await ctx.send(cont, components=[Button(label='Accept', style=ButtonStyle.green)])
-    data = await get_data()
-    started = False
     while True:
-        res = await bot.wait_for("button_click")
-        if res.user not in [ctx.author, user]: continue
+        def check(res):
+            return res.user in [ctx.author, user]
+        res = await bot.wait_for("button_click", check=check)
+
         if res.user in bot.waitings[ctx.author.id]:
-            per = data[str(user.id)]
+            per = data[str(res.user.id)]
             p = per["wallet"]
             if p < bet:
-                cont = f"{user.mention} doesn't have enough coins!"
+                cont = f"{res.user.mention} doesn't have enough coins!"
                 compo = []
             else:
                 per["wallet"] -= bet
-                data[str(user.id)] = per
+                data[str(res.user.id)] = per
                 await update_data(data)
 
                 bot.waitings[ctx.author.id].remove(res.user)
@@ -3450,97 +3467,95 @@ async def tictactoe(ctx, user:discord.Member, bet:int=100):
 
         if len(bot.waitings[ctx.author.id]) == 0:
             await pre.delete()
-            started = True
             break
 
-    if started:
-        board = {1: "", 2: "", 3: "",
-                 4: "", 5: "", 6: "",
-                 7: "", 8: "", 9: ""}
-        row = []
-        cont = []
-        c = 0
-        for i in range(1, 10):
-            row.append(Button(style=2, label="\u200b", id=i))
-            c += 1
-            if c == 3:
-                cont.append(row)
-                row = []
-                c = 0
-        turn = random.choice([ctx.author, user])
-        msg = await ctx.send(f"{turn.mention} to move first:", components=cont)
-        emoji = "❌"
-        moves = 0
-        for i in range(10):
-            while True:
-                res = await bot.wait_for("button_click")
-                if res.user.id != turn.id: continue
-                else: break
-            cc = msg.components
-            resid = res.component.id
-            board[int(resid)] = emoji
-            count = 1
-            done = False
-            for j in cc:
-                for k in j:
-                    if count == int(resid):
-                        k.emoji = emoji
-                        k.disabled = True
-                        done = True
-                    if done: break
-                    count += 1
+    board = {1: "", 2: "", 3: "",
+             4: "", 5: "", 6: "",
+             7: "", 8: "", 9: ""}
+    row = []
+    cont = []
+    c = 0
+    for i in range(1, 10):
+        row.append(Button(style=2, label="\u200b", id=i))
+        c += 1
+        if c == 3:
+            cont.append(row)
+            row = []
+            c = 0
+    turn = random.choice([ctx.author, user])
+    msg = await ctx.send(f"{turn.mention} to move first:", components=cont)
+    emoji = "❌"
+    moves = 0
+    for i in range(10):
+        def check(res):
+            return res.user.id == turn.id
+        res = await bot.wait_for("button_click", check=check)
+        cc = msg.components
+        resid = res.component.id
+        board[int(resid)] = emoji
+        count = 1
+        done = False
+        for j in cc:
+            for k in j:
+                if count == int(resid):
+                    k.emoji = emoji
+                    k.disabled = True
+                    done = True
                 if done: break
-            moves += 1
-            tie = False
-            gameover = False
-            if moves >= 5:
-                if board[7] == board[8] == board[9] != '':  # across the top
-                    gameover = True
+                count += 1
+            if done: break
+        moves += 1
+        tie = False
+        gameover = False
+        if moves >= 5:
+            if board[7] == board[8] == board[9] != '':  # across the top
+                gameover = True
 
-                elif board[4] == board[5] == board[6] != '':  # across the middle
-                    gameover = True
+            elif board[4] == board[5] == board[6] != '':  # across the middle
+                gameover = True
 
-                elif board[1] == board[2] == board[3] != '':  # across the bottom
-                    gameover = True
+            elif board[1] == board[2] == board[3] != '':  # across the bottom
+                gameover = True
 
-                elif board[1] == board[4] == board[7] != '':  # down the left side
-                    gameover = True
+            elif board[1] == board[4] == board[7] != '':  # down the left side
+                gameover = True
 
-                elif board[2] == board[5] == board[8] != '':  # down the middle
-                    gameover = True
+            elif board[2] == board[5] == board[8] != '':  # down the middle
+                gameover = True
 
-                elif board[3] == board[6] == board[9] != '':  # down the right side
-                    gameover = True
+            elif board[3] == board[6] == board[9] != '':  # down the right side
+                gameover = True
 
-                elif board[7] == board[5] == board[3] != '':  # diagonal
-                    gameover = True
+            elif board[7] == board[5] == board[3] != '':  # diagonal
+                gameover = True
 
-                elif board[1] == board[5] == board[9] != '':  # diagonal
-                    gameover = True
-            if moves >= 9:
-                tie = True
+            elif board[1] == board[5] == board[9] != '':  # diagonal
+                gameover = True
+        if moves >= 9:
+            tie = True
 
-            if gameover:
-                await res.respond(type=7, content=f"**Game Over!**\nWinner: 🏆 {turn.mention} 🏆", components=[])
-                if turn == ctx.author: id2 = user
-                else: id2 = ctx.author
-                await ttt_end(turn, id2, bet, ctx)
-                break
-            elif tie:
-                await res.respond(type=7, content=f"**Game Tied!**\nWell Played!", components=[])
-                if turn == ctx.author: id2 = user
-                else: id2 = ctx.author
-                await ttt_tie(turn.id, id2.id, bet)
-                break
-            else:
-                if turn == ctx.author: turn = user
-                else: turn = ctx.author
-                if emoji == "❌": emoji = "⭕"
-                else: emoji = "❌"
+        if gameover:
+            await res.respond(type=7, content=f"**Game Over!**\nWinner: 🏆 {turn.mention} 🏆", components=[])
+            if turn == ctx.author: id2 = user
+            else: id2 = ctx.author
+            await ttt_end(turn, id2, bet, ctx)
+            break
+        elif tie:
+            await res.respond(type=7, content=f"**Game Tied!**\nWell Played!", components=[])
+            if turn == ctx.author: id2 = user
+            else: id2 = ctx.author
+            await ttt_tie(turn.id, id2.id, bet)
+            break
+        else:
+            if turn == ctx.author: turn = user
+            else: turn = ctx.author
+            if emoji == "❌": emoji = "⭕"
+            else: emoji = "❌"
 
-                await res.respond(type=7, content=f"{turn.mention} Your chance:", components=cc)
+            await res.respond(type=7, content=f"{turn.mention} Your chance:", components=cc)
 
 @bot.command()
+@commands.check(general_checks_loop)
 async def flip(ctx, bet:int):
     if bet < 50:
         return await ctx.reply("Minimum bet amount is 50 coins")
@@ -3552,10 +3567,10 @@ async def flip(ctx, bet:int):
     embed = discord.Embed(description=f"Call your side! Amount at stake: `{bet}` coins", color=embedcolor)
     msg = await ctx.send(embed=embed,
                    components=[[Button(label="Heads", style=ButtonStyle.blue), Button(label="Tails", style=ButtonStyle.green)]])
-    while True:
-        res = await bot.wait_for("button_click")
-        if res.user != ctx.author and res.id != msg.id: continue
-        break
+    def check(res):
+        return res.user == ctx.author
+    res = await bot.wait_for("button_click", check=check)
+
     win = random.choice(["Heads", "Tails"])
     if win == res.component.label:
         cont = f"Congratulations! You win back {int(bet/2)} coins"

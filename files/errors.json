@@ -6,7 +6,10 @@
     "0x12q6",
     "0x71h4",
     "0x70m7",
-    "0x28i2"
+    "0x28i2",
+    "0x22b9",
+    "0x902",
+    "0x63e"
   ],
   "0x53l5": "Rishabh4#9012 (713056818972066140) =>\n**Command:** `re`\n**Message:** `E.RE`\n**Error:** `a is a required argument that is missing.`",
   "0x12n7": "Rishabh4#9012 (713056818972066140) =>\n**Command:** `re`\n**Message:** `e.re`\n**Error:** `a is a required argument that is missing.`",
@@ -121,5 +124,13 @@
   "0x1261": "AwesomeSam#7985 (771601176155783198) =>\n**Command:** `profile`\n**Message:** `e.pf`\n**Error:** `Command raised an exception: FileNotFoundError: [Errno 2] No such file or directory: 'badges/awards/unbox_bw.png'`",
   "0x128e": "AwesomeSam#7985 (771601176155783198) =>\n**Command:** `file`\n**Message:** `e.file`\n**Error:** `Command raised an exception: TypeError: sync_upload_file() missing 1 required positional argument: 'payload'`",
   "0x802": "AwesomeSam#7985 (771601176155783198) =>\n**Command:** `stocks`\n**Message:** `e.stocks`\n**Error:** `Command raised an exception: IndexError: list index out of range`",
-  "0x22ec": "AwesomeSam#7985 (771601176155783198) =>\n**Command:** `iteminfo`\n**Message:** `e.iteminfo coffee mug`\n**Error:** `Command raised an exception: TypeError: a bytes-like object is required, not 'PngImageFile'`"
+  "0x22ec": "AwesomeSam#7985 (771601176155783198) =>\n**Command:** `iteminfo`\n**Message:** `e.iteminfo coffee mug`\n**Error:** `Command raised an exception: TypeError: a bytes-like object is required, not 'PngImageFile'`",
+  "0x902": "AliveBeast#3849 (732826772944715856) =>\n**Command:** `games`\n**Message:** `e.games`\n**Error:** `Command raised an exception: AttributeError: 'Context' object has no attribute 'id'`",
+  "0x26eb": "AliveBeast#3849 (732826772944715856) =>\n**Command:** `games`\n**Message:** `e.games`\n**Error:** `Command raised an exception: AttributeError: 'Context' object has no attribute 'id'`",
+  "0x40c": "AwesomeSam#7985 (771601176155783198) =>\n**Command:** `games`\n**Message:** `e.games`\n**Error:** `Command raised an exception: ValueError: invalid literal for int() with base 10: 'Accept'`",
+  "0xa96": "Rishabh#9012 (713056818972066140) =>\n**Command:** `games`\n**Message:** `e.games`\n**Error:** `Command raised an exception: IndexError: list index out of range`",
+  "0x1b2e": "AwesomeSam#7985 (771601176155783198) =>\n**Command:** `games`\n**Message:** `e.games`\n**Error:** `Command raised an exception: AttributeError: 'Context' object has no attribute 'id'`",
+  "0x84e": "AwesomeSam#7985 (771601176155783198) =>\n**Command:** `games`\n**Message:** `e.games`\n**Error:** `Command raised an exception: AttributeError: 'Context' object has no attribute 'id'`",
+  "0x72f": "AwesomeSam#7985 (771601176155783198) =>\n**Command:** `games`\n**Message:** `e.games`\n**Error:** `Command raised an exception: AttributeError: 'Context' object has no attribute 'id'`",
+  "0x1088": "AwesomeSam#7985 (771601176155783198) =>\n**Command:** `games`\n**Message:** `e.games`\n**Error:** `Command raised an exception: AttributeError: 'ComponentMessage' object has no attribute 'message'`"
 }

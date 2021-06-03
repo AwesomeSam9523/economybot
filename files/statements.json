@@ -398,6 +398,20 @@
       "amount": 25,
       "time": "2021-06-02 19:43:03",
       "reason": "Bought 1 stock(s)"
+    },
+    {
+      "person": "System",
+      "type": "Debit",
+      "amount": 5000,
+      "time": "2021-06-02 21:57:42",
+      "reason": "Lost Tic-Tac-Toe"
+    },
+    {
+      "person": "AliveBeast#3849",
+      "type": "Debit",
+      "amount": 2000,
+      "time": "2021-06-02 22:14:25",
+      "reason": "bugs"
     }
   ],
   "713056818972066140": [
@@ -847,6 +861,20 @@
       "amount": 100,
       "time": "2021-06-01 08:20:07",
       "reason": "Won Tic-Tac-Toe"
+    },
+    {
+      "person": "System",
+      "type": "Credit",
+      "amount": 2500.0,
+      "time": "2021-06-02 21:57:42",
+      "reason": "Won Tic-Tac-Toe"
+    },
+    {
+      "person": "AwesomeSam#7985",
+      "type": "Credit",
+      "amount": 2000,
+      "time": "2021-06-02 22:14:26",
+      "reason": "bugs"
     }
   ],
   "669816890163724288": [
