@@ -15,6 +15,14 @@ class FileUploadError(Exception):pass
 class ConcurrentUploader:
     def __init__(self, client):
         self.client = client
+        self.session = None
+        
+    def __sync_recreate(self):
+        self.session = requests.Session()
+        
+    async def recreate(self):
+        with ThreadPoolExecutor(max_workers = 1) as executor:
+            await self.client.loop.run_in_executor(executor, functools.partial(self.__sync_recreate))
         
     def sync_upload_file(self, channel, file_data, filename, embed, content):
         file = {
@@ -29,7 +37,7 @@ class ConcurrentUploader:
         if content is not None:
             data_json["content"] = str(content)
 
-        return requests.post(
+        return self.session.post(
             f"https://discord.com/api/v8/channels/{channel.id}/messages",
             files = file,
             data = {"payload_json": ujson.dumps(data_json)},
@@ -52,6 +60,7 @@ class ConcurrentUploader:
                                                               )
         if response.status_code != 200:
             raise FileUploadError(f"Received Response: {response.status_code}")
+        await self.recreate()
         return discord.Message(
             state = self.client._get_state(),
             channel=channel,

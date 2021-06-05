@@ -17,15 +17,6 @@
       "Common Chest",
       "Common Chest",
       "Common Chest",
-      "Common Chest",
-      "Common Chest",
-      "Common Chest",
-      "Common Chest",
-      "Common Chest",
-      "Common Chest",
-      "Common Chest",
-      "Common Chest",
-      "Common Chest",
       "Bronze Lock",
       "Bronze Lock",
       "Common Chest"
@@ -33,7 +24,6 @@
     "eq_lock": "Bronze Lock",
     "items": [
       "Party Speakers",
-      "Maths Book",
       "Rotten Tomato",
       "Lollipop",
       "Broken Television",
@@ -48,7 +38,21 @@
       "WIFI Router",
       "Copper Wire",
       "Electric Guitar",
-      "Rotten Tomato"
+      "Rotten Tomato",
+      "Maths Book",
+      "Broken Television",
+      "Office Bag",
+      "Hourglass",
+      "Broken CD",
+      "Mini Boom Box",
+      "Office Bag",
+      "Charger",
+      "Cloth Piece",
+      "Headphones",
+      "Spray Can",
+      "Headphones",
+      "Leather Shoes",
+      "Flower Vase"
     ]
   },
   "459337154099806218": {
@@ -219,6 +223,11 @@
       "Legendary Chest",
       "Legendary Chest",
       "Legendary Chest"
+    ]
+  },
+  "849885950770282537": {
+    "inv": [
+      "Common Chest"
     ]
   }
 }

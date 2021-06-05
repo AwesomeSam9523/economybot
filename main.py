@@ -935,9 +935,9 @@ async def profile_image(member, level, userxp, xp, total_xp, guildid):
         eq_boost = userinv.get('eq_boost')
         paste_loc = 332
         if eq_lock is None and eq_boost is None:
-            newdraw.text((335, 150), 'None', font=ImageFont.truetype("badges/font2.ttf", 15), fill=(0,0,0))
+            newdraw.text((335, 145), 'None', font=ImageFont.truetype("badges/font2.ttf", 15), fill=(0,0,0))
     else:
-        newdraw.text((335, 150), 'None', font=ImageFont.truetype("badges/font2.ttf", 15), fill=(0,0,0))
+        newdraw.text((335, 145), 'None', font=ImageFont.truetype("badges/font2.ttf", 15), fill=(0,0,0))
     networth = await calculate_networth(member.id)
     newdraw.text((180, 34), f'{member.name}#{member.discriminator}', font=font, fill='#000000')
     newdraw.text((180, 70), f"Level {level} | XP: {userxp}", font=fontm, fill='#000000')
@@ -1012,9 +1012,9 @@ async def profile_image(member, level, userxp, xp, total_xp, guildid):
                     img.paste(lock, (paste_loc, 140), lock.convert('RGBA'))
                     lock.close()
         if eq_lock is None and eq_boost is None:
-            draw.text((335, 150), 'None', font=ImageFont.truetype("badges/font2.ttf", 15))
+            draw.text((335, 145), 'None', font=ImageFont.truetype("badges/font2.ttf", 15))
     else:
-        draw.text((335, 150), 'None', font=ImageFont.truetype("badges/font2.ttf", 15))
+        draw.text((335, 145), 'None', font=ImageFont.truetype("badges/font2.ttf", 15))
     enhancer = ImageEnhance.Sharpness(img)
     img = enhancer.enhance(2)
     image_bytes = BytesIO()
@@ -2503,7 +2503,6 @@ async def profile(ctx, member:discord.Member = None):
             break
     bytes = await profile_image(member, lev, xp, newxp, max_xp, ctx.guild.id)
     await uploader.upload_file(ctx.channel, bytes, filename="level.png")
-    #await upload_file(ctx.channel, bytes, "level.png")
 
 @bot.command()
 @commands.check(general)
@@ -2915,8 +2914,9 @@ async def shop(ctx, page:int=1):
 
 @bot.command(aliases=['inv'])
 @commands.check(general)
-async def inventory(ctx):
-    inv = await inventory_image(ctx.author.id)
+async def inventory(ctx, member:discord.Member = None):
+    if member is None: member = ctx.author
+    inv = await inventory_image(member.id)
     await upload_file(ctx.channel, inv, "inventory.png")
     #await ctx.send(file=inv)
 
@@ -3007,6 +3007,7 @@ async def invite(ctx):
     await ctx.send(embed=embed)
 
 @bot.command()
+@commands.check(general)
 async def use(ctx, *, item:str):
     async def lock(shopitem):
         eq = userinv.setdefault('eq_lock', '')
@@ -3089,6 +3090,7 @@ async def use(ctx, *, item:str):
     await update_inv(inv)
 
 @bot.command()
+@commands.check(general)
 async def ping(ctx):
     msg = await ctx.send('Pong!')
     ping = "{:.2f}".format(bot.latency*1000)
@@ -3310,7 +3312,8 @@ async def sell(ctx, *, item):
     inv[userid] = userinv
     value = random.randint(item_main["value"][0], item_main["value"][1])*qty
     embed = discord.Embed(title=f'{economysuccess} Success!',
-                          description=f'You sold `{qty}` {item_main["name"]} for {await commait(value)} coins!')
+                          description=f'You sold `{qty}` {item_main["name"]} for {await commait(value)} coins!',
+                          color=embedcolor)
     data = await get_data()
     datauser = data[userid]
     datauser["wallet"] += value

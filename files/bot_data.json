@@ -191,7 +191,7 @@
         "aliases": [
           "inv"
         ],
-        "usage": "e.inventory",
+        "usage": "e.inventory [user]",
         "desc": "View your inventory"
       }
     },
@@ -412,15 +412,6 @@
         "percent": 10
       },
       {
-        "icon": "silver_lock.png",
-        "name": "Silver Lock",
-        "desc": "Increases rob protection by 25%",
-        "price": "6,000",
-        "special": false,
-        "disc": "3,540",
-        "percent": 41
-      },
-      {
         "icon": "common_chest.png",
         "name": "Common Chest",
         "desc": "1 Common Item + coins",
@@ -443,9 +434,18 @@
         "name": "Gold Lock",
         "desc": "Increases rob protection by 40%",
         "price": "15,000",
-        "special": true,
+        "special": false,
         "disc": "13,350",
         "percent": 11
+      },
+      {
+        "icon": "silver_lock.png",
+        "name": "Silver Lock",
+        "desc": "Increases rob protection by 25%",
+        "price": "6,000",
+        "special": true,
+        "disc": "3,540",
+        "percent": 41
       }
     ],
     "category": {
@@ -461,7 +461,7 @@
         "Gold Lock"
       ]
     },
-    "updated": 1622689246.140853
+    "updated": 1622787070.5922785
   },
   "items": {
     "common": {

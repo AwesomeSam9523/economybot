@@ -14,5 +14,21 @@
   "stocks": {
     "771601176155783198": 1000001
   },
-  "unbox": {}
+  "unbox": {
+    "771601176155783198": [
+      "Maths Book",
+      "Broken Television",
+      "Office Bag",
+      "Hourglass",
+      "Broken CD",
+      "Mini Boom Box",
+      "Charger",
+      "Cloth Piece",
+      "Headphones",
+      "Spray Can",
+      "Mobile Phone",
+      "Leather Shoes",
+      "Flower Vase"
+    ]
+  }
 }

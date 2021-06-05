@@ -133,5 +133,10 @@
     "- Added 12 random bot status",
     "- Fixed typos in bot phrases",
     "- Fixed ~~so many~~ few bugs"
+  ],
+  "2.4": [
+    "- Added an option to view other's inventory",
+    "- Fixed tic-tac-toe bug",
+    "- Fixed 'None' positioning in `e.profile`"
   ]
 }
