@@ -421,15 +421,6 @@
         "percent": 27
       },
       {
-        "icon": "rare_chest.png",
-        "name": "Rare Chest",
-        "desc": "1 Rare Item + coins",
-        "price": "3,500",
-        "special": false,
-        "disc": "2,800",
-        "percent": 20
-      },
-      {
         "icon": "gold_lock.png",
         "name": "Gold Lock",
         "desc": "Increases rob protection by 40%",
@@ -443,9 +434,18 @@
         "name": "Silver Lock",
         "desc": "Increases rob protection by 25%",
         "price": "6,000",
-        "special": true,
+        "special": false,
         "disc": "3,540",
         "percent": 41
+      },
+      {
+        "icon": "rare_chest.png",
+        "name": "Rare Chest",
+        "desc": "1 Rare Item + coins",
+        "price": "3,500",
+        "special": true,
+        "disc": "1,785",
+        "percent": 49
       }
     ],
     "category": {
@@ -461,7 +461,7 @@
         "Gold Lock"
       ]
     },
-    "updated": 1622787070.5922785
+    "updated": 1622965993.2406876
   },
   "items": {
     "common": {

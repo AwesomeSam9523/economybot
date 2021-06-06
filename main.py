@@ -1062,6 +1062,7 @@ async def inv_components(userid, user_page_orignal, rarity):
     components = []
     sorted_inv = await update_sorted_inv(userid)
     item_count = 0
+    maxlen = 0
     while True:
         try:
             current_item = sorted_inv[user_page][0]
@@ -1082,6 +1083,9 @@ async def inv_components(userid, user_page_orignal, rarity):
                         rarity_emoji = 847687925596160002
                     emoji = j["emoji"].split(':')[-1].replace('>', '')
                     qty_userhas = sorted_inv[user_page][1]
+                    itemname = itemname.ljust(maxlen, "\u0009")
+                    maxlen = len(itemname)
+                    print(f"`{itemname}`, {maxlen}")
                     name = Button(style=ButtonStyle.green, label=itemname,
                                   emoji=bot.get_emoji(int(emoji)), id="info")
                     rarity_qty = Button(style=ButtonStyle.grey, label=str(qty_userhas) + "x",
@@ -1322,8 +1326,11 @@ async def start_ms(ctx):
     while True:
         def check(res):
             return res.user.id == ctx.author.id and res.message.id == minemsg.id
-        res = await bot.wait_for("button_click", check=check)
-
+        try:
+            res = await bot.wait_for("button_click", check=check, timeout=60)
+        except:
+            await stop_ms(minemsg, ctx, net)
+            break
         btnid = str(res.component.id).split('_')
         pos = int(btnid[1])
         typ = btnid[0]
@@ -3249,7 +3256,7 @@ async def items(ctx, *, everything=None):
     embed = discord.Embed(title=f"{economysuccess} Your Inventory:",
                           description=f"Items Owned: `{len(sorted_inv)}/50`\n"
                                       "Click on the item for item info!",
-                          color=3553599)
+                          color=0x2f3136)
     embed.set_author(name=ctx.author.name, icon_url=ctx.author.avatar_url)
     embed.set_footer(text=f'Page {user_page_orignal} of {max_pages}')
     a = await ctx.send(embed=embed, components=components)
@@ -3342,22 +3349,33 @@ async def games(ctx):
         await res.respond(type=7, content="Tag your friend with whom you will like to play")
         def check(c):
             return c.author == ctx.author and c.channel == ctx.channel and len(c.mentions) != 0
-        c = await bot.wait_for("message", timeout=60, check=check)
-
+        try:
+            c = await bot.wait_for("message", timeout=60, check=check)
+        except:
+            await msg.edit(content="Timed Out! User didnt reply in time")
         person = c.mentions[0]
+        if person.bot:
+            return await ctx.send("You can't challenge a bot lmao. You'll always lose...")
         confirm_p = await ctx.send(f'{person.mention} Hey, {ctx.author.mention} wants to challenge you for a game of'
                                    f' Tic-Tac-Toe. Click "Accept" to start!', components=[Button(label="Accept", style=ButtonStyle.green)])
         def check(res):
             return res.user == person and res.message.id == confirm_p.id
-        #and res.message.id == confirm_p.message.id
-        res = await bot.wait_for("button_click", check=check)
+        try:
+            res = await bot.wait_for("button_click", check=check, timeout=120)
+        except:
+            await confirm_p.edit(content="User didn't accept the challenge. What a coward lmfao", components=[])
+            return
         await res.respond(type=7, content=f"Challenge Accepted! "
                                           f"{ctx.author.mention} to select betting amount:",
                           components=[[Button(label=x, style=ButtonStyle.grey) for x in [100, 200, 250, 500, 1000]],
                                       [Button(label=x, style=ButtonStyle.grey) for x in [2000, 2500, 5000, 10000, 20000]]])
         def check(res):
             return res.user == ctx.author
-        res = await bot.wait_for("button_click", check=check)
+        try:
+            res = await bot.wait_for("button_click", check=check, timeout=60)
+        except:
+            await confirm_p.edit(content="Timed Out! User didn't reply in time", components=[])
+            return
         await res.respond(type=InteractionType.DeferredUpdateMessage)
         await confirm_p.delete()
         await tictactoe(ctx, bot.get_user(person.id), int(res.component.label))
@@ -3444,6 +3462,8 @@ async def minesweeper(ctx):
 async def tictactoe(ctx, user:discord.Member, bet:int=100):
     if user == ctx.author:
         return await ctx.send("Bruh you cant start a game with yourself")
+    if user.bot:
+        return await ctx.send("You can't challenge a bot lmao. You'll always lose...")
     bet = int(bet)
     if bet not in [100, 200, 250, 500, 1000, 2000, 2500, 5000, 10000, 20000]:
         return await ctx.send(f"The betting amount should be {', '.join(str(x) for x in [100, 200, 250, 500, 1000, 2000, 2500, 5000, 10000])} "
@@ -3457,8 +3477,11 @@ async def tictactoe(ctx, user:discord.Member, bet:int=100):
     while True:
         def check(res):
             return res.user in [ctx.author, user]
-        res = await bot.wait_for("button_click", check=check)
-
+        try:
+            res = await bot.wait_for("button_click", check=check, timeout=60)
+        except:
+            await pre.edit(content=f"{' '.join([x.mention for x in bot.waitings[ctx.author.id]])} didn't respond in time", components=[])
+            return
         if res.user in bot.waitings[ctx.author.id]:
             per = data[str(res.user.id)]
             p = per["wallet"]
@@ -3502,8 +3525,15 @@ async def tictactoe(ctx, user:discord.Member, bet:int=100):
     moves = 0
     for i in range(10):
         def check(res):
-            return res.user.id == turn.id
-        res = await bot.wait_for("button_click", check=check)
+            return res.user.id == turn.id and res.message.id == msg.id
+        try:
+            res = await bot.wait_for("button_click", check=check)
+        except:
+            await res.respond(type=7, content=f"**Game Over! The user didn't move in time**\nWinner: 🏆 {turn.mention} 🏆", components=[])
+            if turn == ctx.author: id2 = user
+            else: id2 = ctx.author
+            await ttt_end(turn, id2, bet, ctx)
+            return
         cc = msg.components
         resid = res.component.id
         board[int(resid)] = emoji
