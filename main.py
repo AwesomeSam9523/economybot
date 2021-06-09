@@ -2062,7 +2062,7 @@ async def estates(ctx, member:discord.Member=None):
     file = discord.File(image_bytes, filename="estate.png")
     embed.set_image(url="attachment://estate.png")
 
-    await ctx.send(embed=embed)
+    await ctx.send(embed=embed, file=file)
 
 @bot.command(hidden=True)
 @commands.check(is_dev)
@@ -2694,7 +2694,7 @@ async def help(ctx, specify=None):
                         alias_list.remove(aliases)
                         aliases = 'e.' + aliases
                         alias_list.insert(0, aliases)
-                embed = discord.Embed(color=embedcolor, title=f'Command: {j[2:]}', description=info['desc']+f'\n\n**Category:** `{i["category"]}`\n**Cooldown** `{info["cooldown"]}s`\n**Usage:** `{info["usage"]}`')
+                embed = discord.Embed(color=embedcolor, title=f'Command: {j[2:]}', description=info['desc']+f'\n\n**Category:** `{i["category"]}`\n**Cooldown:** `{info["cooldown"]}s`\n**Usage:** `{info["usage"]}`')
                 embed.add_field(name='Aliases', value='```less\n'+'\n'.join(alias_list)+'```', inline=False)
                 embed.set_footer(text='Syntax: <> = required, [] = optional')
                 notfound = False
