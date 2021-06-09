@@ -34,7 +34,6 @@ disregarded = []
 embedcolor = 3407822
 
 support_server = 'https://discord.gg/aMqWWTunrJ'
-patreon_page = 'https://www.patreon.com/ThunderGameBot'
 invite_url = 'https://discord.com/api/oauth2/authorize?client_id=832083717417074689&permissions=392256&scope=bot'
 all_commands = []
 bank_details = {
@@ -715,9 +714,7 @@ async def bot_status():
         if current_status["status"] == raw_status: continue
         await bot.wait_until_ready()
         guilds = len(bot.guilds)
-        users = 0
-        for i in bot.guilds: users += i.member_count
-
+        users = len(bot.users)
         s_type = current_status["type"]
         raw_status = current_status["status"]
         s_status = raw_status.format(users=await commait(users), guilds=await commait(guilds))
@@ -880,8 +877,6 @@ async def profile_image(member, level, userxp, xp, total_xp, guildid):
     badges = await get_badges()
     if str(member.id) in badges['staff']: staff = True
     else: staff = False
-    if str(member.id) in badges['patron']: patron = True
-    else: patron = False
     location = 710
     if staff:
         staff_icon = Image.open('badges/staff.png')
@@ -892,12 +887,6 @@ async def profile_image(member, level, userxp, xp, total_xp, guildid):
         staff_icon = staff_icon.resize((37, 37))
         img.paste(staff_icon, (location, 55), staff_icon)
         staff_icon.close()
-        location -= 45
-    if patron:
-        patron_icon = Image.open('badges/patron.png')
-        patron_icon = patron_icon.resize((37, 37))
-        img.paste(patron_icon, (location, 55), patron_icon)
-        patron_icon.close()
         location -= 45
     server_r, global_r = await xp_ranks(member.id, guildid)
     if global_r > 1000:
@@ -1623,9 +1612,13 @@ async def _exit(ctx):
 
 @bot.command(hidden=True)
 @commands.check(is_dev)
-async def maint(ctx, state:bool):
-    bot.maint = state
-    await ctx.reply(f"Maintainence mode state: **{state}**")
+async def maint(ctx):
+    if bot.maint:
+        await ctx.reply(f"Maintainence mode state: **Off**")
+        bot.maint = False
+    else:
+        await ctx.reply(f"Maintainence mode state: **On**")
+        bot.maint = True
 
 @bot.command(hidden=True)
 @commands.check(is_dev)
@@ -1713,25 +1706,6 @@ async def clear(ctx, member:discord.Member):
     await ctx.send(f'{ctx.author.mention} Cleared data of `{member.name}#{member.discriminator}` successfully!')
 
 @bot.command(hidden=True)
-@commands.check(is_dev)
-async def format(ctx, member:discord.Member):
-    data = await get_data()
-    estate = await get_estates()
-    xp = await get_xp()
-    st = await get_stocks()
-    state = await get_statements()
-    userid = str(member.id)
-
-    person = data[userid]
-    person['bank'] = 0
-    person['wallet'] = 0
-
-    data[userid] = person
-    await update_data(data)
-    await update_logs(f'{ctx.author}-!-clear-!-[{member.id}]-!-{datetime.datetime.today().replace(microsecond=0)}')
-    await ctx.send(f'{ctx.author.mention} Cleared data of `{member.name}#{member.discriminator}` successfully!')
-
-@bot.command(hidden=True)
 @commands.is_owner()
 async def release(ctx, title:str, fake:int):
     if ctx.author.id != 771601176155783198: return
@@ -1786,7 +1760,7 @@ async def uptime(ctx):
     hours, remainder = divmod(int(delta_uptime.total_seconds()), 3600)
     minutes, seconds = divmod(remainder, 60)
     days, hours = divmod(hours, 24)
-    await ctx.send(f"I have been working for `{days}d, {hours}h, {minutes}m, {seconds}s`")
+    await ctx.reply(f"I have been up for `{days}d, {hours}h, {minutes}m, {seconds}s`")
 
 @bot.command(pass_context=True,hidden=True)
 @commands.check(is_staff)
@@ -1834,26 +1808,6 @@ async def refresh(ctx=None):
         await bot.loop.run_in_executor(executor, functools.partial(cache_allitems))
 
     if ctx is not None: await ctx.message.add_reaction(economysuccess)
-
-@bot.command(hidden=True)
-@commands.check(is_staff)
-async def badge(ctx, member:discord.Member, badge:str):
-    badges = await get_badges()
-    userid = str(member.id)
-
-    badge_type = badges.get(badge)
-    if badge_type is None:
-        list_of_all = list(badges.keys())
-        await ctx.message.add_reaction('‼️')
-        return await ctx.send(f'{ctx.author.mention} Badge `{badge_type}` not found!\n'
-                        f'Please Choose from: `{" ,".join(list_of_all)}`')
-    if userid in badge_type:
-        return await ctx.message.add_reaction('✅')
-    badge_type.append(userid)
-    badges[badge] = badge_type
-    await update_badges(badges)
-    await update_logs(f'{ctx.author}-!-badges-!-[{member.id}; {badge}]-!-{await current_time()}')
-    await ctx.message.add_reaction('✅')
 
 @bot.command(aliases=['bal'])
 @commands.check(general)
@@ -2552,8 +2506,10 @@ async def stocks(ctx):
     plt.xlabel('Time')
     plt.ylabel('Price')
     plt.rc('grid', linestyle="-", color='white')
-    image_bytes = BytesIO()
-    plt.savefig(image_bytes, format='png', transparent=True)
+
+    fig = plt.gcf()
+    fig.set_size_inches(6, 4.5)
+    plt.savefig('graph.png', transparent=True)
     plt.close()
 
     left = datetime.timedelta(seconds=((len(stock_data) - config["line"]) * round(86400 / len(stock_data), 4)))
@@ -2567,7 +2523,7 @@ async def stocks(ctx):
     embed.add_field(name='Time Left', value=f'`{colon_format[0]}h {colon_format[1]}m {colon_format[2]}s`')
 
     embed.set_image(url="attachment://graph.png")
-    await ctx.send(embed=embed, file=discord.File(fp=image_bytes, filename="graph.png"))
+    await ctx.send(embed=embed, file=discord.File('graph.png', filename="graph.png"))
 
 @bot.command()
 @commands.check(general)
@@ -2681,7 +2637,7 @@ async def sellstocks(ctx, amount):
 @commands.check(general)
 async def help(ctx, specify=None):
     embed = discord.Embed(color=embedcolor,
-                          description=f'[Support Server]({support_server}) | [Invite Url]({invite_url}) | [Patreon Page]({patreon_page})\nTo get help on a command, use `e.help <command name>`')
+                          description=f'[Support Server]({support_server}) | [Invite Url]({invite_url})\nTo get help on a command, use `e.help <command name>`')
     embed.set_author(name='Help', icon_url=bot.pfp)
     embed.set_footer(text='Bot developed by: AwesomeSam#7985 and BlackThunder#4007')
     if specify is None:
@@ -2709,8 +2665,7 @@ async def help(ctx, specify=None):
                                              f'`<>` and `[]` are **not** required while using commands\n\n'
                                              f'Syntax: `<>` = Required `[]` = Optional')
         components = [[Button(style=ButtonStyle.URL, label="Support Server", url=support_server),
-                      Button(style=ButtonStyle.URL, label="Invite URL", url=invite_url),
-                      Button(style=ButtonStyle.URL, label="Patron Page", url=patreon_page)]]
+                      Button(style=ButtonStyle.URL, label="Invite URL", url=invite_url)]]
         try:
             await ctx.author.send(embed=embed, components=components)
             embed = discord.Embed(title=f'{economysuccess} You received a mail!', color=success_embed)
@@ -2739,7 +2694,7 @@ async def help(ctx, specify=None):
                         alias_list.remove(aliases)
                         aliases = 'e.' + aliases
                         alias_list.insert(0, aliases)
-                embed = discord.Embed(color=embedcolor, title=f'Command: {j[2:]}', description=info['desc']+f'\n\n**Usage:** `{info["usage"]}`\n**Category:** `{i["category"]}`')
+                embed = discord.Embed(color=embedcolor, title=f'Command: {j[2:]}', description=info['desc']+f'\n\n**Category:** `{i["category"]}`\n**Cooldown** `{info["cooldown"]}s`\n**Usage:** `{info["usage"]}`')
                 embed.add_field(name='Aliases', value='```less\n'+'\n'.join(alias_list)+'```', inline=False)
                 embed.set_footer(text='Syntax: <> = required, [] = optional')
                 notfound = False
@@ -2869,7 +2824,7 @@ async def rob(ctx, member:discord.Member):
             await update_data(a)
         else:
             walletm = a[str(ctx.author.id)]['wallet']
-            prize = random.randint(int(walletm / 5), int(walletm / 2))
+            prize = random.randint(int(walletm / 5), int(walletm / 3))
             walleta = a[str(ctx.author.id)]['wallet']
             walleta -= prize
             a[str(ctx.author.id)]['wallet'] = walleta
@@ -2995,8 +2950,7 @@ async def invite(ctx):
     for i in guilds:
         members += len(i.members)
     embed = discord.Embed(description=f'Invite the bot: [Invite URL]({invite_url})\n\n'
-                                      f'Support Server: [Join]({support_server})\n'
-                                      f'Support us on Patreon: [Support]({patreon_page})\n\n'
+                                      f'Support Server: [Join]({support_server})\n\n'
                                       f'Servers: `{len(guilds)}`\n'
                                       f'Users: `{members}`\n'
                                       f'Shards: `{bot.shard_count}`',
@@ -3261,9 +3215,19 @@ async def items(ctx, *, everything=None):
 @bot.command(aliases=["test"],hidden=True)
 @commands.check(is_dev)
 async def _test(ctx):
-    await asyncio.sleep(10)
-    with ThreadPoolExecutor(max_workers=1) as executor:
-        await bot.loop.run_in_executor(executor, functools.partial(print, "Hello"))
+    newjson = {}
+    for i in bot.help_json.keys():
+        cat = bot.help_json[i]
+        for j in cat.keys():
+            if j == "category": continue
+            cool = bot.cooldown[j[2:]]["duration"]
+            cat[j]["cooldown"] = cool
+        newjson[i] = cat
+    with open('files/bot_data.json', 'r') as r:
+        data = json.load(r)
+    data["help"] = newjson
+    with open('files/bot_data.json', 'w') as f:
+        f.write(json.dumps(data, indent=2))
 
 @bot.command(hidden=True)
 @commands.check(is_dev)

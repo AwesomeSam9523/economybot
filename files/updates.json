@@ -137,6 +137,10 @@
   "2.4": [
     "- Added an option to view other's inventory",
     "- Fixed tic-tac-toe bug",
-    "- Fixed 'None' positioning in `e.profile`"
+    "- Fixed 'None' positioning in `e.profile`",
+    "- You can no longer start tic-tac-toe with a bot or with yourself",
+    "- Added timeouts to all the games",
+    "- Tic-Tac-Toe auto ends if user doesn't reply in a specific time",
+    "- Added cooldowns to all the commands (Can be viewed using `e.help <cmd>`)"
   ]
 }
