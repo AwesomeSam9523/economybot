@@ -1,6 +1,6 @@
 import time
 t1 = time.time()
-import datetime, csv, threading, functools, asyncio, discord, requests, operator, json, random, os, traceback, difflib
+import datetime, csv, threading, functools, asyncio, discord, requests, operator, json, random, os, traceback, difflib, sys
 from discord.ext import commands
 from discord.ext.commands import *
 from prettytable import PrettyTable
@@ -176,6 +176,7 @@ bot.waitings = {}
 bot.status = []
 bot.random_status = True
 bot.maint = False
+bot.cooldown = {}
 
 usercmds = {}
 stock_names = ['Ava', 'Neil', 'Ryan', 'Anthony', 'Bernadette', 'Lauren', 'Justin', 'Matt', 'Wanda', 'James', 'Emily', 'Vanessa', 'Carl', 'Fiona', 'Stephanie', 'Pippa', 'Phil', 'Carol', 'Liam', 'Michael', 'Ella', 'Amanda', 'Caroline', 'Nicola', 'Sean', 'Oliver', 'Kylie', 'Rachel', 'Leonard', 'Julian', 'Richard', 'Peter', 'Irene', 'Dominic', 'Connor', 'Dorothy', 'Gavin', 'Isaac', 'Karen', 'Kimberly', 'Abigail', 'Yvonne', 'Steven', 'Felicity', 'Evan', 'Bella', 'Alison', 'Diane', 'Joan', 'Jan', 'Wendy', 'Nathan', 'Molly', 'Charles', 'Victor', 'Sally', 'Rose', 'Robert', 'Claire', 'Theresa', 'Grace', 'Keith', 'Stewart', 'Andrea', 'Alexander', 'Chloe', 'Nicholas', 'Edward', 'Deirdre', 'Anne', 'Joseph', 'Alan', 'Rebecca', 'Jane', 'Natalie', 'Cameron', 'Owen', 'Eric', 'Gabrielle', 'Sonia', 'Tim', 'Sarah', 'Madeleine', 'Megan', 'Lucas', 'Joe', 'Brandon', 'Brian', 'Jennifer', 'Alexandra', 'Adrian', 'John', 'Mary', 'Tracey', 'Jasmine', 'Penelope', 'Hannah', 'Thomas', 'Angela', 'Warren', 'Blake', 'Simon', 'Audrey', 'Frank', 'Samantha', 'Dan', 'Victoria', 'Paul', 'Jacob', 'Heather', 'Una', 'Lily', 'Carolyn', 'Jonathan', 'Ian', 'Piers', 'William', 'Gordon', 'Dylan', 'Olivia', 'Jake', 'Leah', 'Jessica', 'David', 'Katherine', 'Amelia', 'Benjamin', 'Boris', 'Sebastian', 'Lisa', 'Diana', 'Michelle', 'Emma', 'Sam', 'Stephen', 'Faith', 'Kevin', 'Austin', 'Jack', 'Ruth', 'Colin', 'Trevor', 'Joanne', 'Virginia', 'Anna', 'Max', 'Adam', 'Maria', 'Sophie', 'Sue', 'Andrew', 'Harry', 'Amy', 'Christopher', 'Donna', 'Melanie', 'Elizabeth', 'Lillian', 'Julia', 'Christian', 'Luke', 'Zoe', 'Joshua', 'Jason']
@@ -187,25 +188,6 @@ error_embed = 16290332
 success_embed = 2293571
 economysuccess = '<a:EconomySuccess:843499891522797568>'
 economyerror = '<a:EconomyError:843499981695746098>'
-
-def sync_upload_file(channel, file_data, filename, payload):
-    file = {
-        filename: file_data
-    }
-    return requests.post(
-        f"https://discord.com/api/v8/channels/{channel.id}/messages",
-        files=file,
-        data=payload,
-        headers = {"Authorization":"Bot "+bot.token}
-    )
-
-async def upload_file(channel, bytes_io, filename="unknown.png", payload={}):
-    """
-    Upload files concurrently
-    By BlackThunder#4007
-    """
-    with ThreadPoolExecutor(max_workers = 1) as executor:
-        return await bot.loop.run_in_executor(executor, functools.partial(sync_upload_file, channel, bytes_io, filename, payload))
 
 def is_dev(ctx):
     return ctx.author.id in devs
@@ -753,7 +735,6 @@ async def create_stuff():
     mybot = bot.get_user(832083717417074689)
     bot.pfp = mybot.avatar_url
     tnew = time.time()
-    #await bot.change_presence(status=discord.Status.invisible)
     await load_shop()
     with open('files/bot_data.json', 'r') as c:
         data = json.load(c)
@@ -876,7 +857,6 @@ async def profile_image(member, level, userxp, xp, total_xp, guildid):
     gadugi_b = ImageFont.truetype("badges/oswald.ttf", 26)
 
     img = Image.open("badges/levelbg.png")
-    #member_colour = member.color.to_rgb()
     member_colour = (255, 42, 84)
     avatar = await get_avatar(member)
     ava_mask = Image.open("badges/AVAmask.png").convert('L')
@@ -1026,7 +1006,6 @@ async def profile_image(member, level, userxp, xp, total_xp, guildid):
     xpbar.close()
     image_bytes.seek(0)
     return image_bytes
-    #return discord.File(fp=image_bytes, filename='level.png')
 
 async def xp_ranks(member, guild):
     userid = str(member)
@@ -1075,17 +1054,11 @@ async def inv_components(userid, user_page_orignal, rarity):
                 if j["name"] == current_item:
                     if item_count == 5: break
                     itemname = j['name']
-                    if i == "common":
-                        rarity_emoji = 847687974414319626
-                    elif i == "rare":
-                        rarity_emoji = 847687973202165841
-                    else:
-                        rarity_emoji = 847687925596160002
+                    emojis = {"common":847687974414319626, "rare":847687973202165841, "legendary":847687925596160002}
+                    rarity_emoji = emojis[i]
                     emoji = j["emoji"].split(':')[-1].replace('>', '')
                     qty_userhas = sorted_inv[user_page][1]
-                    itemname = itemname.ljust(maxlen, "\u0009")
-                    maxlen = len(itemname)
-                    print(f"`{itemname}`, {maxlen}")
+                    if len(itemname) > maxlen: maxlen = len(itemname)
                     name = Button(style=ButtonStyle.green, label=itemname,
                                   emoji=bot.get_emoji(int(emoji)), id="info")
                     rarity_qty = Button(style=ButtonStyle.grey, label=str(qty_userhas) + "x",
@@ -1164,7 +1137,7 @@ async def createstore(start, page):
 
     newimg = newimg.filter(ImageFilter.GaussianBlur(radius=2))
     newimg = newimg.filter(ImageFilter.GaussianBlur(radius=4))
-    #frame.paste(newimg, (0, 0), newimg)
+
     frame = Image.alpha_composite(frame, newimg)
     draw = ImageDraw.Draw(frame, mode="RGBA")
     draw.fontmode = "1"
@@ -1202,7 +1175,6 @@ async def createstore(start, page):
     image_bytes.seek(0)
     frame.close()
     return image_bytes
-    #return discord.File(fp=image_bytes, filename='store.png')
 
 async def inventory_image(userid):
     userid = str(userid)
@@ -1277,7 +1249,6 @@ async def inventory_image(userid):
     image_bytes.seek(0)
     bg.close()
     return image_bytes
-    #return discord.File(fp=image_bytes, filename='inventory.png')
 
 async def start_ms(ctx):
     ifactive = ctx.author.id in bot.activems["users"]
@@ -1394,12 +1365,13 @@ async def start_ms(ctx):
             await res.respond(type=InteractionType.UpdateMessage, content=cntn, components=fcom)
 
 async def stop_ms(minemsg, ctx, net):
+    try: bot.activems["users"].remove(ctx.author.id)
+    except: return
     data = await get_data()
     user = data[str(ctx.author.id)]
     user["wallet"] += net
     data[str(ctx.author.id)] = user
     await update_data(data)
-    bot.activems["users"].remove(ctx.author.id)
     await minemsg.edit(content=f"**The game ended**\nNet Profit: `{await commait(net)}`", components=[])
     await minemsg.clear_reactions()
 
@@ -1407,7 +1379,7 @@ async def general(ctx):
     state = await spam_protect(ctx.author.id)
     toreturn = True
     if state == 'warn':
-        embed = discord.Embed(title=f'{economyerror} Using commands too fast!', color=error_embed)
+        embed = discord.Embed(description=f'{economyerror} You are being rate-limited for using commands too fast!\nTry again in few secs..', color=error_embed)
         await ctx.send(embed=embed)
         toreturn = False
     elif state == 'disregard':
@@ -1418,10 +1390,26 @@ async def general(ctx):
         toreturn= False
     elif state == 'return':
         toreturn= False
+    cmd = bot.cooldown[ctx.command.name]
+    ifuser = [i for i in cmd["users"] if i[0] == ctx.author.id]
+    if len(ifuser) != 0:
+        left = cmd["duration"] - (time.time() - ifuser[0][1])
+        if left > 0:
+            final = datetime.datetime.strptime(str(datetime.timedelta(seconds=left)), '%H:%M:%S.%f')
+            colon_format = str(final).split(" ")[1].split(':')
+            ms = colon_format[2].split('.')
+            mss = float("{:.2f}".format(float(ms[1])/6000))
+            timeleft = f'{colon_format[1]}m {ms[0]}s {int(mss)}ms'
+            await ctx.reply(f'{random.choice(bot.phrases["cooldown"]).format(timeleft=timeleft)}')
+            raise IgnoreError
+        else:
+            bot.cooldown[ctx.command.name]["users"].remove(ifuser[0])
+    else:
+        bot.cooldown[ctx.command.name]["users"].append((ctx.author.id, time.time()))
     if ctx.author.id not in xp_timeout:
         userid = ctx.author.id
         xps = await get_xp()
-        xp = xps.setdefault(f'{userid}', 0)
+        xp = xps.setdefault(str(userid), 0)
         togive = random.randint(10, 25)
         xps[str(userid)] = xp + togive
         asyncio.create_task(update_xp(xps))
@@ -1510,6 +1498,7 @@ async def if_allowed(ctx):
 
 @bot.event
 async def on_command_error(ctx, error):
+    if isinstance(error, UnboundLocalError) or isinstance(error, IgnoreError): return
     if isinstance(error, CommandNotFound):
         cmdused = ctx.invoked_with
         match = difflib.get_close_matches(cmdused, all_commands, cutoff=0.7)
@@ -1545,7 +1534,6 @@ async def on_command_error(ctx, error):
     if isinstance(error, BadArgument):
         embed = discord.Embed(description=f'{economyerror} Bad/Incorrect argument(s)! Use `e.help {ctx.invoked_with}` for syntax.', color=error_embed)
         return await ctx.send(embed=embed)
-    if isinstance(error, UnboundLocalError): return
     code = hex(random.randint(1000, 9999))
 
     etype = type(error)
@@ -1582,6 +1570,9 @@ async def on_raw_reaction_add(payload):
         a.pop(errorcode)
         await update_errorfile(a)
 
+class IgnoreError(commands.CheckFailure):
+    pass
+
 @bot.command()
 @commands.check(general)
 async def report(ctx, code):
@@ -1606,9 +1597,11 @@ async def debug(ctx, code):
     a = await get_errorfile()
     if code not in a:
         return await ctx.send('No matching code found!')
-
+    desc = a[code]
+    if len(desc) > 2048:
+        desc = a[code][:2045] + '```'
     embed=discord.Embed(title=f'Error {code}',
-                        description=a[code],
+                        description=desc,
                         color=success_embed)
     await ctx.send(embed=embed)
 
@@ -1625,8 +1618,8 @@ async def dvm(ctx):
 @bot.command(aliases=["exit"],hidden=True)
 @commands.check(is_dev)
 async def _exit(ctx):
-    await bot.wait_until_ready()
     await bot.close()
+    sys.exit()
 
 @bot.command(hidden=True)
 @commands.check(is_dev)
@@ -1658,7 +1651,7 @@ async def logs(ctx, *, search:str=None):
         count += 1
     await ctx.send(f'**Requested by:** `{ctx.author.name}`\n```css\n{x.get_string()[:1900]}```')
 
-@bot.command(aliases=['eval'],hidden=True)  # DEV ONLY
+@bot.command(aliases=['eval'],hidden=True)  
 async def evaluate(ctx, *, expression):
     if ctx.author.id == 669816890163724288:
         try:
@@ -1678,7 +1671,7 @@ async def evaluate(ctx, *, expression):
             await ctx.send(
                 f"```py\n{''.join(traceback.format_exception(etype=type(ex), value=ex, tb=ex.__traceback__))}\n```")
 
-@bot.command(aliases=['exec'],hidden=True) #DEV ONLY
+@bot.command(aliases=['exec'],hidden=True) 
 async def execute(ctx, *, expression):
     if ctx.author.id != 669816890163724288: return
     try:
@@ -1805,6 +1798,8 @@ async def refresh(ctx=None):
     bot.shopc = data["shop"]["category"]
     bot.items = data["items"]
     bot.status = data["status"]
+    bot.cooldown = data["cooldown"]
+
     if ctx is not None:
         msg = await ctx.send(f'{ctx.author.mention} ⚠️Warning! Do you also want to rebuild the cache for items? This can take a long time',
                              components=[[Button(style=ButtonStyle.green, label="Yes"), Button(style=ButtonStyle.red, label="No")]])
@@ -2110,8 +2105,8 @@ async def estates(ctx, member:discord.Member=None):
     image_bytes = BytesIO()
     a.save(image_bytes, 'PNG')
     image_bytes.seek(0)
-    uri = (await bot.get_guild(826824650713595964).get_channel(837564505952747520).send(f'{level}', file=discord.File(image_bytes, filename="estate.png"))).attachments[0].url
-    embed.set_image(url=uri)
+    file = discord.File(image_bytes, filename="estate.png")
+    embed.set_image(url="attachment://estate.png")
 
     await ctx.send(embed=embed)
 
@@ -2557,7 +2552,8 @@ async def stocks(ctx):
     plt.xlabel('Time')
     plt.ylabel('Price')
     plt.rc('grid', linestyle="-", color='white')
-    plt.savefig('graph.png', transparent=True)
+    image_bytes = BytesIO()
+    plt.savefig(image_bytes, format='png', transparent=True)
     plt.close()
 
     left = datetime.timedelta(seconds=((len(stock_data) - config["line"]) * round(86400 / len(stock_data), 4)))
@@ -2565,16 +2561,13 @@ async def stocks(ctx):
     colon_format = str(final).split(" ")[1].split(':')
     p_data = await get_stocks()
     holdings = p_data.get(str(ctx.author.id), 0)
-    myfile = discord.File('graph.png','stock_graph.png')
     embed = discord.Embed(title='Today\'s Stock', description=f'```\n{x}```', color=embedcolor)
     embed.add_field(name='Your Holdings', value=f'`{await commait(holdings)}` stocks')
     embed.add_field(name='Current Value', value=f'`{await commait(int(holdings*float(details[3])))}` coins')
     embed.add_field(name='Time Left', value=f'`{colon_format[0]}h {colon_format[1]}m {colon_format[2]}s`')
 
     embed.set_image(url="attachment://graph.png")
-    image_bytes = open("graph.png", "rb")
-    #await upload_file(ctx.channel, image_bytes, "stock_graph.png", {"embed":embed})
-    await ctx.send(embed=embed, file=discord.File("graph.png"))
+    await ctx.send(embed=embed, file=discord.File(fp=image_bytes, filename="graph.png"))
 
 @bot.command()
 @commands.check(general)
@@ -2823,7 +2816,7 @@ async def rob(ctx, member:discord.Member):
 
     lock = 0
     inv = await get_inv()
-    userinv = inv.get(str(member.id), {"inv":[]})
+    userinv = inv.get(str(member.id), {"inv":[], "eq_lock":""})
     user = userinv["inv"]
     eq = userinv['eq_lock']
     if len(user) == 0: pass
@@ -2916,16 +2909,14 @@ async def shop(ctx, page:int=1):
         else:
             break
     storeimg = await createstore((page)*8,(page+1)*8)
-    await upload_file(ctx.channel, storeimg, "store.png")
-    #await ctx.send(file=storeimg)
+    await uploader.upload_file(ctx.channel, storeimg, "store.png")
 
 @bot.command(aliases=['inv'])
 @commands.check(general)
 async def inventory(ctx, member:discord.Member = None):
     if member is None: member = ctx.author
     inv = await inventory_image(member.id)
-    await upload_file(ctx.channel, inv, "inventory.png")
-    #await ctx.send(file=inv)
+    await uploader.upload_file(ctx.channel, inv, "inventory.png")
 
 @bot.command(aliases=['purchase'])
 @commands.check(general)
@@ -3054,9 +3045,6 @@ async def use(ctx, *, item:str):
         embed.set_footer(text='Type e.sell <item-name> to sell an item for coins\nType e.iteminfo <item-name> for info!', icon_url=bot.pfp)
         embed.set_author(name=f'{fetched.name} Unboxed: {item_name}', icon_url=fetched.avatar_url)
         embed.set_image(url="attachment://unboxing.gif")
-        #bytes = open(f"{bot.allitems[item_name]}", "rb")
-        #await uploader.upload_file(ctx.channel, bytes, "iteminfo.png", embed=embed)
-        #await upload_file(ctx.channel, bot.allitems[item_name], "unboxing.gif", {"embed":embed})
         await ctx.send(embed=embed, file=file)
 
         awards = await get_awards()
@@ -3210,7 +3198,6 @@ async def iteminfo(ctx, *, name:str, via:bool=False):
     file = discord.File(f"items/{item['name']}.png", filename="item.png")
     img_bytes = open(f"items/{item['name']}.png", "rb")
     if not via:
-        #await uploader.upload_file(ctx.channel, img_bytes, filename="item.png", embed=embed)
         await ctx.send(embed=embed, file=file)
     else:
         return {"embed":embed, "file":file}
@@ -3270,16 +3257,19 @@ async def items(ctx, *, everything=None):
                 if "info" in res.component.id:
                     via_iteminfo = await iteminfo(ctx, name=res.component.label, via=True)
                     resmsg = await ddb.send_component_msg(channel=ctx.channel, content='', embed=via_iteminfo["embed"], file=via_iteminfo["file"])
-                #await res.respond(type=InteractionType.ChannelMessageWithSource, embed=via_iteminfo["embed"], file=via_iteminfo["file"])
 
 @bot.command(aliases=["test"],hidden=True)
 @commands.check(is_dev)
 async def _test(ctx):
-    item1 = Option(label="This is 1", value="Value?")
-    item2 = Option(label="This is 2", value="IDK")
-    item3 = Option(label="This is 3", value="lmao")
-    dropdown = Select(options=[item1, item2, item3], placeholder="IDK bruh whats this", min_values=1, max_values=1)
-    await ctx.send("Select:", components=[dropdown])
+    await asyncio.sleep(10)
+    with ThreadPoolExecutor(max_workers=1) as executor:
+        await bot.loop.run_in_executor(executor, functools.partial(print, "Hello"))
+
+@bot.command(hidden=True)
+@commands.check(is_dev)
+async def sleep(ctx):
+    time.sleep(15)
+    print("done sleeping")
 
 @bot.command(pass_context=True)
 @commands.check(general)
@@ -3354,6 +3344,8 @@ async def games(ctx):
         except:
             await msg.edit(content="Timed Out! User didnt reply in time")
         person = c.mentions[0]
+        if person == ctx.author:
+            return await ctx.send(f"{person.mention} Lmao starting a game with yourself? How lonely..")
         if person.bot:
             return await ctx.send("You can't challenge a bot lmao. You'll always lose...")
         confirm_p = await ctx.send(f'{person.mention} Hey, {ctx.author.mention} wants to challenge you for a game of'
@@ -3552,28 +3544,28 @@ async def tictactoe(ctx, user:discord.Member, bet:int=100):
         tie = False
         gameover = False
         if moves >= 5:
-            if board[7] == board[8] == board[9] != '':  # across the top
+            if board[7] == board[8] == board[9] != '':
                 gameover = True
 
-            elif board[4] == board[5] == board[6] != '':  # across the middle
+            elif board[4] == board[5] == board[6] != '':
                 gameover = True
 
-            elif board[1] == board[2] == board[3] != '':  # across the bottom
+            elif board[1] == board[2] == board[3] != '':
                 gameover = True
 
-            elif board[1] == board[4] == board[7] != '':  # down the left side
+            elif board[1] == board[4] == board[7] != '':
                 gameover = True
 
-            elif board[2] == board[5] == board[8] != '':  # down the middle
+            elif board[2] == board[5] == board[8] != '':
                 gameover = True
 
-            elif board[3] == board[6] == board[9] != '':  # down the right side
+            elif board[3] == board[6] == board[9] != '':
                 gameover = True
 
-            elif board[7] == board[5] == board[3] != '':  # diagonal
+            elif board[7] == board[5] == board[3] != '':
                 gameover = True
 
-            elif board[1] == board[5] == board[9] != '':  # diagonal
+            elif board[1] == board[5] == board[9] != '':
                 gameover = True
         if moves >= 9:
             tie = True
@@ -3635,6 +3627,7 @@ bot.connected_ = False
 async def on_connect():
     if not bot.connected_:
         print("Entering on_connect()")
+        await uploader.recreate()
         bot.connected_ = True
         await create_stuff()
 

@@ -92,6 +92,15 @@
       "Well, what now?",
       "Dude why do you bother me with such useless things?",
       "Imagine trying to use what you don't own lmao"
+    ],
+    "cooldown": [
+      "Oi why in so much hurry? Come again after `{timeleft}`",
+      "I guess your mom is calling you, come after `{timeleft}`",
+      "Oh no, let me rest. I will look into it after `{timeleft}`",
+      "Please not now. Wait for `{timeleft}`",
+      "Yeah sure, but after `{timeleft}`, please!",
+      "I will be happy if you will retry after `{timeleft}`",
+      "All I would say is- wait `{timeleft}` for it. Thanks!"
     ]
   },
   "help": {
@@ -444,8 +453,8 @@
         "desc": "1 Rare Item + coins",
         "price": "3,500",
         "special": true,
-        "disc": "1,785",
-        "percent": 49
+        "disc": "2,905",
+        "percent": 17
       }
     ],
     "category": {
@@ -461,7 +470,7 @@
         "Gold Lock"
       ]
     },
-    "updated": 1622965993.2406876
+    "updated": 1623133250.4810345
   },
   "items": {
     "common": {
@@ -1021,5 +1030,171 @@
       "type": "p",
       "status": "\ud83c\udf25 Claim coins daily | e.daily"
     }
-  ]
+  ],
+  "cooldown": {
+    "maintain": {
+      "duration": 5,
+      "users": []
+    },
+    "items": {
+      "duration": 5,
+      "users": []
+    },
+    "list_chl": {
+      "duration": 2,
+      "users": []
+    },
+    "iteminfo": {
+      "duration": 2,
+      "users": []
+    },
+    "upgrade": {
+      "duration": 5,
+      "users": []
+    },
+    "minesweeper": {
+      "duration": 120,
+      "users": []
+    },
+    "reset_chl": {
+      "duration": 2,
+      "users": []
+    },
+    "alerts": {
+      "duration": 2,
+      "users": []
+    },
+    "uptime": {
+      "duration": 0,
+      "users": []
+    },
+    "rob": {
+      "duration": 60,
+      "users": []
+    },
+    "report": {
+      "duration": 30,
+      "users": []
+    },
+    "sell": {
+      "duration": 2,
+      "users": []
+    },
+    "transfer": {
+      "duration": 30,
+      "users": []
+    },
+    "find": {
+      "duration": 30,
+      "users": []
+    },
+    "games": {
+      "duration": 5,
+      "users": []
+    },
+    "statement": {
+      "duration": 5,
+      "users": []
+    },
+    "shop": {
+      "duration": 10,
+      "users": []
+    },
+    "profile": {
+      "duration": 5,
+      "users": []
+    },
+    "balance": {
+      "duration": 2,
+      "users": []
+    },
+    "inventory": {
+      "duration": 5,
+      "users": []
+    },
+    "stocks": {
+      "duration": 5,
+      "users": []
+    },
+    "deposit": {
+      "duration": 2,
+      "users": []
+    },
+    "tictactoe": {
+      "duration": 60,
+      "users": []
+    },
+    "buy": {
+      "duration": 5,
+      "users": []
+    },
+    "flip": {
+      "duration": 30,
+      "users": []
+    },
+    "buystocks": {
+      "duration": 3,
+      "users": []
+    },
+    "withdraw": {
+      "duration": 2,
+      "users": []
+    },
+    "server": {
+      "duration": 2,
+      "users": []
+    },
+    "sellstocks": {
+      "duration": 3,
+      "users": []
+    },
+    "mybank": {
+      "duration": 5,
+      "users": []
+    },
+    "invite": {
+      "duration": 2,
+      "users": []
+    },
+    "help": {
+      "duration": 2,
+      "users": []
+    },
+    "daily": {
+      "duration": 2,
+      "users": []
+    },
+    "use": {
+      "duration": 5,
+      "users": []
+    },
+    "give": {
+      "duration": 10,
+      "users": []
+    },
+    "set_chl": {
+      "duration": 2,
+      "users": []
+    },
+    "ping": {
+      "duration": 2,
+      "users": []
+    },
+    "estates": {
+      "duration": 5,
+      "users": []
+    },
+    "bank": {
+      "duration": 5,
+      "users": []
+    },
+    "del_chl": {
+      "duration": 2,
+      "users": []
+    },
+    "revenue": {
+      "duration": 10,
+      "users": []
+    }
+  }
 }

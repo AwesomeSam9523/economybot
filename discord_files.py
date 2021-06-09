@@ -60,7 +60,6 @@ class ConcurrentUploader:
                                                               )
         if response.status_code != 200:
             raise FileUploadError(f"Received Response: {response.status_code}")
-        await self.recreate()
         return discord.Message(
             state = self.client._get_state(),
             channel=channel,
