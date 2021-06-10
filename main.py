@@ -1408,8 +1408,8 @@ async def general(ctx):
 async def ttt_end(id1, id2, bet, ctx):
     data = await get_data()
     winner = data[str(id1.id)]
-    winner["wallet"] += 1.5*bet
-    data[str(id1)] = winner
+    winner["wallet"] += int(1.5*bet)
+    data[str(id1.id)] = winner
     awards = await get_awards()
     games = awards["games"]
     a = games.setdefault(str(id1.id), 0)
@@ -1808,6 +1808,31 @@ async def refresh(ctx=None):
         await bot.loop.run_in_executor(executor, functools.partial(cache_allitems))
 
     if ctx is not None: await ctx.message.add_reaction(economysuccess)
+
+@bot.command(hidden=True)
+@commands.check(is_dev)
+async def resetdb(ctx):
+    with open('files/accounts.json', 'w') as f:
+        f.write("{}")
+    with open('files/alerts.json', 'w') as f:
+        f.write("{}")
+    with open('files/average.json', 'w') as f:
+        f.write("{}")
+    with open('files/awards.json', 'w') as f:
+        f.write("{}")
+    with open('files/estates.json', 'w') as f:
+        f.write("{}")
+    with open('files/inventory.json', 'w') as f:
+        f.write("{}")
+    with open('files/statements.json', 'w') as f:
+        f.write("{}")
+    with open('files/stocks.json', 'w') as f:
+        f.write("{}")
+    with open('files/timeouts.json', 'w') as f:
+        f.write("{}")
+    with open('files/xp.json', 'w') as f:
+        f.write("{}")
+    await ctx.message.add_reaction(economysuccess)
 
 @bot.command(aliases=['bal'])
 @commands.check(general)
