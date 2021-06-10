@@ -1,6 +1,4 @@
 /venv/
 .idea/
 /emojis/
-graph.png
-/stocks/
-/files/
+__pycache__/
