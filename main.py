@@ -950,7 +950,7 @@ async def profile_image(member, level, userxp, xp, total_xp, guildid):
     draw.text((468 - (twidth / 2), 121 - (theight / 2)), f"{await commait(xp)}/{await commait(total_xp)}", (255, 255, 255), font=fonts, stroke_width=1, stroke_fill=(0, 0, 0))
 
     award_data = await get_awards()
-    achi = award_data["achievements"]
+    achi = award_data.get("achievements", {})
     user_a = achi.get(str(member.id), [])
     x_loc = 70
     x2_loc = 50
@@ -2810,6 +2810,8 @@ async def rob(ctx, member:discord.Member):
     if success > 50+lock:
         if member == ctx.author:
             walleta = a[str(ctx.author.id)]['wallet']
+            if walleta <= 0:
+                return await ctx.reply("Atleast rob someone who doesn't have an empty wallet bro")
             prize = random.randint(int(walleta / 5), int(walleta / 2))
             desc = random.choice(bot.phrases['selfrob_success']).format(prize=f'`{await commait(prize)}`')
         else:
