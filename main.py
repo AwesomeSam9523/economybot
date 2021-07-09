@@ -1,6 +1,7 @@
 import time
 t1 = time.time()
-import datetime, csv, threading, functools, asyncio, discord, requests, operator, json, random, os, traceback, difflib, sys
+import datetime, csv, threading, functools, asyncio, discord, requests, operator
+import shutil, json, random, os, traceback, difflib, sys, discord_files
 from discord.ext import commands
 from discord.ext.commands import *
 from prettytable import PrettyTable
@@ -10,7 +11,6 @@ from io import BytesIO
 from concurrent.futures import ThreadPoolExecutor
 from discord_components import Button, ButtonStyle, InteractionType, DiscordComponents, Select, Context, Option
 from asteval import Interpreter
-import discord_files
 aeval = Interpreter()
 print(f"Imports Complete in {float('{:.2f}'.format(time.time()-t1))} secs")
 tnew = time.time()
@@ -42,36 +42,36 @@ bank_details = {
     3: {"name":'International Bank of Finance Ltd.', "rate":7, "tier":"I"}
 }
 getestates_thumb = {
-    1:'https://media.discordapp.net/attachments/837564505952747520/837681898700537866/1.png',
-    2:'https://media.discordapp.net/attachments/837564505952747520/837682702450032660/2.png',
-    3:'https://media.discordapp.net/attachments/837564505952747520/837697702326042674/3.png',
-    4:'https://cdn.discordapp.com/attachments/837564505952747520/837565525143453716/unknown.png',
-    5:'https://cdn.discordapp.com/attachments/837564505952747520/837566247439695882/unknown.png',
-    6:'https://cdn.discordapp.com/attachments/837564505952747520/837566247439695882/unknown.png',
-    7:'https://cdn.discordapp.com/attachments/837564505952747520/837566473920577556/unknown.png',
-    8:'https://cdn.discordapp.com/attachments/837564505952747520/837567047754973234/unknown.png',
-    9:'https://cdn.discordapp.com/attachments/837564505952747520/837567047754973234/unknown.png',
-    10:'https://cdn.discordapp.com/attachments/837564505952747520/837567877103484938/unknown.png',
-    11:'https://cdn.discordapp.com/attachments/837564505952747520/837567877103484938/unknown.png',
-    12:'https://cdn.discordapp.com/attachments/837564505952747520/837568882892996628/unknown.png',
-    13:'https://cdn.discordapp.com/attachments/837564505952747520/837568882892996628/unknown.png',
-    14:'https://cdn.discordapp.com/attachments/837564505952747520/837569387220434974/unknown.png',
-    15:'https://cdn.discordapp.com/attachments/837564505952747520/837570918993100820/unknown.png',
-    16:'https://cdn.discordapp.com/attachments/837564505952747520/837570918993100820/unknown.png',
-    17:'https://cdn.discordapp.com/attachments/837564505952747520/837572907713691688/unknown.png',
-    18:'https://cdn.discordapp.com/attachments/837564505952747520/837574437389729802/unknown.png',
-    19:'https://cdn.discordapp.com/attachments/837564505952747520/837576416039403530/unknown.png',
-    20:'https://cdn.discordapp.com/attachments/837564505952747520/837577291898945546/unknown.png',
-    21:'https://cdn.discordapp.com/attachments/837564505952747520/837577291898945546/unknown.png',
-    22:'https://cdn.discordapp.com/attachments/837564505952747520/837577637349687306/unknown.png',
-    23:'https://cdn.discordapp.com/attachments/837564505952747520/837578058500276244/unknown.png',
-    24:'https://cdn.discordapp.com/attachments/837564505952747520/837578847456722995/unknown.png',
-    25:'https://cdn.discordapp.com/attachments/837564505952747520/837579030374776832/unknown.png',
-    26:'https://cdn.discordapp.com/attachments/837564505952747520/837579385330466827/unknown.png',
-    27:'https://cdn.discordapp.com/attachments/837564505952747520/837579988949008404/unknown.png',
-    28:'https://cdn.discordapp.com/attachments/837564505952747520/837580290977300530/unknown.png',
-    29:'https://cdn.discordapp.com/attachments/837564505952747520/837580694505914398/unknown.png',
-    30:'https://cdn.discordapp.com/attachments/837564505952747520/837581436407644190/unknown.png'
+  "1": "https://cdn.discordapp.com/attachments/837564505952747520/863096662813573160/file.png",
+  "2": "https://cdn.discordapp.com/attachments/837564505952747520/863096678865305620/file.png",
+  "3": "https://cdn.discordapp.com/attachments/837564505952747520/863096689282908201/file.png",
+  "4": "https://cdn.discordapp.com/attachments/837564505952747520/863096698753777715/file.png",
+  "5": "https://cdn.discordapp.com/attachments/837564505952747520/863096712674279464/file.png",
+  "6": "https://cdn.discordapp.com/attachments/837564505952747520/863096721550213120/file.png",
+  "7": "https://cdn.discordapp.com/attachments/837564505952747520/863096735307661328/file.png",
+  "8": "https://cdn.discordapp.com/attachments/837564505952747520/863096749349797939/file.png",
+  "9": "https://cdn.discordapp.com/attachments/837564505952747520/863096755993575424/file.png",
+  "10": "https://cdn.discordapp.com/attachments/837564505952747520/863096769843953694/file.png",
+  "11": "https://cdn.discordapp.com/attachments/837564505952747520/863096776131477514/file.png",
+  "12": "https://cdn.discordapp.com/attachments/837564505952747520/863096790915219456/file.png",
+  "13": "https://cdn.discordapp.com/attachments/837564505952747520/863096799425331200/file.png",
+  "14": "https://cdn.discordapp.com/attachments/837564505952747520/863096816592355328/file.png",
+  "15": "https://cdn.discordapp.com/attachments/837564505952747520/863096830647468082/file.png",
+  "16": "https://cdn.discordapp.com/attachments/837564505952747520/863096839246708786/file.png",
+  "17": "https://cdn.discordapp.com/attachments/837564505952747520/863096852215234640/file.png",
+  "18": "https://cdn.discordapp.com/attachments/837564505952747520/863096868589404170/file.png",
+  "19": "https://cdn.discordapp.com/attachments/837564505952747520/863096879696445470/file.png",
+  "20": "https://cdn.discordapp.com/attachments/837564505952747520/863096898818277436/file.png",
+  "21": "https://cdn.discordapp.com/attachments/837564505952747520/863096905348153374/file.png",
+  "22": "https://cdn.discordapp.com/attachments/837564505952747520/863096918074982460/file.png",
+  "23": "https://cdn.discordapp.com/attachments/837564505952747520/863096933940461588/file.png",
+  "24": "https://cdn.discordapp.com/attachments/837564505952747520/863096949799649280/file.png",
+  "25": "https://cdn.discordapp.com/attachments/837564505952747520/863096964958388245/file.png",
+  "26": "https://cdn.discordapp.com/attachments/837564505952747520/863096978476761128/file.png",
+  "27": "https://cdn.discordapp.com/attachments/837564505952747520/863096996974166037/file.png",
+  "28": "https://cdn.discordapp.com/attachments/837564505952747520/863097011842449458/file.png",
+  "29": "https://cdn.discordapp.com/attachments/837564505952747520/863097028343103508/file.png",
+  "30": "https://cdn.discordapp.com/attachments/837564505952747520/863097044230864896/file.png"
 }
 estates_tasks = {
     1:'Add a room',
@@ -2078,16 +2078,9 @@ async def estates(ctx, member:discord.Member=None):
     embed.timestamp = datetime.datetime.utcnow()
     embed.set_footer(text='Economy Bot', icon_url=bot.pfp)
     embed.set_author(name=f'{fetched.name} | {name} Hotel', icon_url=fetched.avatar_url)
-    a = Image.open(BytesIO(await get_url(getestates_thumb[level])))
-    h, w = a.size
-    a.resize((int(h*0.6), int(w*0.6)))
-    image_bytes = BytesIO()
-    a.save(image_bytes, 'PNG')
-    image_bytes.seek(0)
-    file = discord.File(image_bytes, filename="estate.png")
-    embed.set_image(url="attachment://estate.png")
-
-    await ctx.send(embed=embed, file=file)
+    url = getestates_thumb[str(level)]
+    embed.set_image(url=f"{url.replace('cdn.discordapp.com', 'media.discordapp.net')}?width=500&height=400")
+    await ctx.send(embed=embed)
 
 @bot.command(hidden=True)
 @commands.check(is_dev)
@@ -2259,7 +2252,8 @@ async def upgrade(ctx):
     embed.add_field(name='Upgrade Cost', value=f'`{await commait(cost)}` coins')
     embed.add_field(name='Confirm?', value=f'Click {economysuccess} to confirm or {economyerror} to cancel', inline=False)
     embed.add_field(name='\u200b', value='Here is the look after upgrade:', inline=False)
-    embed.set_image(url=getestates_thumb[level+1])
+    url = getestates_thumb[str(level+1)]
+    embed.set_image(url=f"{url.replace('cdn.discordapp.com', 'media.discordapp.net')}?width=500&height=400")
     fetched = bot.get_user(ctx.author.id)
     embed.timestamp = datetime.datetime.utcnow()
     embed.set_footer(text='Economy Bot', icon_url=bot.pfp)

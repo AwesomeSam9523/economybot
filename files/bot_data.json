@@ -441,15 +441,6 @@
   "shop": {
     "value": [
       {
-        "icon": "legendary_chest.png",
-        "name": "Legendary Chest",
-        "desc": "2 Rares & 0.1% for Epic + coins",
-        "price": "10,000",
-        "special": false,
-        "disc": "5,500",
-        "percent": 45
-      },
-      {
         "icon": "bronze_lock.png",
         "name": "Bronze Lock",
         "desc": "Increases rob protection by 10%",
@@ -459,27 +450,9 @@
         "percent": 10
       },
       {
-        "icon": "common_chest.png",
-        "name": "Common Chest",
-        "desc": "1 Common Item + coins",
-        "price": "1,000",
-        "special": false,
-        "disc": "730",
-        "percent": 27
-      },
-      {
-        "icon": "silver_lock.png",
-        "name": "Silver Lock",
-        "desc": "Increases rob protection by 25%",
-        "price": "6,000",
-        "special": false,
-        "disc": "3,540",
-        "percent": 41
-      },
-      {
         "icon": "rare_chest.png",
         "name": "Rare Chest",
-        "desc": "1 Rare Item + coins",
+        "desc": "50% Common, 40% Rare, 10% Leg.",
         "price": "3,500",
         "special": false,
         "disc": "2,905",
@@ -490,9 +463,36 @@
         "name": "Gold Lock",
         "desc": "Increases rob protection by 40%",
         "price": "15,000",
-        "special": true,
+        "special": false,
         "disc": "13,050",
         "percent": 13
+      },
+      {
+        "icon": "legendary_chest.png",
+        "name": "Legendary Chest",
+        "desc": "30% Common, 50% Rare, 20% Leg.",
+        "price": "10,000",
+        "special": false,
+        "disc": "5,000",
+        "percent": 50
+      },
+      {
+        "icon": "common_chest.png",
+        "name": "Common Chest",
+        "desc": "70% Common, 25% Rare, 5% Leg.",
+        "price": "1,000",
+        "special": false,
+        "disc": "520",
+        "percent": 48
+      },
+      {
+        "icon": "silver_lock.png",
+        "name": "Silver Lock",
+        "desc": "Increases rob protection by 25%",
+        "price": "6,000",
+        "special": true,
+        "disc": "4,680",
+        "percent": 22
       }
     ],
     "category": {
@@ -508,7 +508,7 @@
         "Gold Lock"
       ]
     },
-    "updated": 1623237938.070262
+    "updated": 1625848341.8565676
   },
   "items": {
     "common": {
