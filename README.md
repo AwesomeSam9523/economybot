@@ -10,6 +10,4 @@ You can get basic help command of bot by doing `e.help`
 Currently, bot is under checking process by [BlackThunder](https://discord.com/users/669816890163724288). After the inspection for bugs by him bot will be hosted as a sub branch of GameBot.
 
 # Credits
-Bot made by [AwesomeSam](https://discord.com/users/771601176155783198)
-Profile Picture made by [BlackThunder](https://discord.com/users/669816890163724288)
-Read me made by [Rishabh](https://discord.com/users/713056818972066140)
+Bot made by [AwesomeSam](https://discord.com/users/771601176155783198)\nProfile Picture made by [BlackThunder](https://discord.com/users/669816890163724288)\nRead me made by [Rishabh](https://discord.com/users/713056818972066140)
