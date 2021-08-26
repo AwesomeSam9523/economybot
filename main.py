@@ -1,9 +1,9 @@
 import copy
 import time
 t1 = time.time()
-import datetime, csv, threading, functools, asyncio, discord, requests, operator
-import shutil, json, random, os, traceback, difflib, sys, discord_files
-from discord.ext import commands
+import datetime, csv, threading, functools, asyncio, discord, operator
+import shutil, json, random, os, traceback, difflib, sys, discord_files, aiohttp
+from discord.ext import commands, tasks
 from discord.ext.commands import *
 from prettytable import PrettyTable
 import matplotlib.pyplot as plt
@@ -15,16 +15,48 @@ aeval = Interpreter()
 print(f"Imports Complete in {float('{:.2f}'.format(time.time()-t1))} secs")
 tnew = time.time()
 
-intents = discord.Intents.default()
-intents.members = True
-intents.presences = True
-bot = commands.Bot(command_prefix=["e.", "E."], intents=intents, case_insensitive=True)
+class EconomyBot(commands.Bot):
+    def __init__(self):
+        self.help_json = {}
+        self.phrases = {}
+        self.current_stock = []
+        self.total_lines = 0
+        self.pfp = ''
+        self.raw_status = ''
+        self.shopc = {}
+        self.items = {}
+        self.emotes = {}
+        self.unboxbgs = {}
+        self.allitems = {}
+        self.cachedinv = {}
+        self.used = {}
+        self.ms = {}
+        self.activems = {"users": []}
+        self.waitings = {}
+        self.status = []
+        self.random_status = True
+        self.maint = False
+        self.cooldown = {}
+        with open("files/average.json", "r") as f: self.avg = json.load(f)
+        with open("files/admin.json", "r") as f: self.admin = json.load(f)
+        with open("files/estates.json", "r") as f: self.estates = json.load(f)
+        with open("files/alerts.json", "r") as f: self.alertsinfo = json.load(f)
+        with open("files/xp.json", "r") as f: self.xp = json.load(f)
+        with open("files/statements.json", "r") as f: self.statements = json.load(f)
+        with open("files/stocks.json", "r") as f: self.stocks = json.load(f)
+        with open("files/accounts.json", "r") as f: self.accounts = json.load(f)
+        with open("files/badges.json", "r") as f: self.badges = json.load(f)
+        with open("files/inventory.json", "r") as f: self.inventory = json.load(f)
+        with open("files/awards.json", "r") as f: self.awards = json.load(f)
+
+        super().__init__(command_prefix=["e.", "E."], intents=discord.Intents.all(), case_insensitive=True)
+
+bot = EconomyBot()
 uploader = discord_files.ConcurrentUploader(bot)
 bot.launch_time = datetime.datetime.utcnow()
 bot.dev = 1
 bot.remove_command('help')
 bot.loop.set_debug(True)
-bot.accounts = {}
 bot.loop.slow_callback_duration = 0.3
 print(f'Bot Initialized in {float("{:.2f}".format(time.time()-tnew))} secs')
 tnew = time.time()
@@ -157,25 +189,6 @@ xp_levels = {
 850000:49,
 1000000:50
 }
-bot.help_json = {}
-bot.phrases = {}
-bot.current_stock = []
-bot.total_lines = 0
-bot.pfp = ''
-bot.shopc = {}
-bot.items = {}
-bot.emotes = {}
-bot.unboxbgs = {}
-bot.allitems = {}
-bot.cachedinv = {}
-bot.used = {}
-bot.ms = {}
-bot.activems = {"users":[]}
-bot.waitings = {}
-bot.status = []
-bot.random_status = True
-bot.maint = False
-bot.cooldown = {}
 
 usercmds = {}
 stock_names = ['Ava', 'Neil', 'Ryan', 'Anthony', 'Bernadette', 'Lauren', 'Justin', 'Matt', 'Wanda', 'James', 'Emily', 'Vanessa', 'Carl', 'Fiona', 'Stephanie', 'Pippa', 'Phil', 'Carol', 'Liam', 'Michael', 'Ella', 'Amanda', 'Caroline', 'Nicola', 'Sean', 'Oliver', 'Kylie', 'Rachel', 'Leonard', 'Julian', 'Richard', 'Peter', 'Irene', 'Dominic', 'Connor', 'Dorothy', 'Gavin', 'Isaac', 'Karen', 'Kimberly', 'Abigail', 'Yvonne', 'Steven', 'Felicity', 'Evan', 'Bella', 'Alison', 'Diane', 'Joan', 'Jan', 'Wendy', 'Nathan', 'Molly', 'Charles', 'Victor', 'Sally', 'Rose', 'Robert', 'Claire', 'Theresa', 'Grace', 'Keith', 'Stewart', 'Andrea', 'Alexander', 'Chloe', 'Nicholas', 'Edward', 'Deirdre', 'Anne', 'Joseph', 'Alan', 'Rebecca', 'Jane', 'Natalie', 'Cameron', 'Owen', 'Eric', 'Gabrielle', 'Sonia', 'Tim', 'Sarah', 'Madeleine', 'Megan', 'Lucas', 'Joe', 'Brandon', 'Brian', 'Jennifer', 'Alexandra', 'Adrian', 'John', 'Mary', 'Tracey', 'Jasmine', 'Penelope', 'Hannah', 'Thomas', 'Angela', 'Warren', 'Blake', 'Simon', 'Audrey', 'Frank', 'Samantha', 'Dan', 'Victoria', 'Paul', 'Jacob', 'Heather', 'Una', 'Lily', 'Carolyn', 'Jonathan', 'Ian', 'Piers', 'William', 'Gordon', 'Dylan', 'Olivia', 'Jake', 'Leah', 'Jessica', 'David', 'Katherine', 'Amelia', 'Benjamin', 'Boris', 'Sebastian', 'Lisa', 'Diana', 'Michelle', 'Emma', 'Sam', 'Stephen', 'Faith', 'Kevin', 'Austin', 'Jack', 'Ruth', 'Colin', 'Trevor', 'Joanne', 'Virginia', 'Anna', 'Max', 'Adam', 'Maria', 'Sophie', 'Sue', 'Andrew', 'Harry', 'Amy', 'Christopher', 'Donna', 'Melanie', 'Elizabeth', 'Lillian', 'Julia', 'Christian', 'Luke', 'Zoe', 'Joshua', 'Jason']
@@ -286,25 +299,9 @@ async def handle_disregard(userid):
     await asyncio.sleep(10*60)
     disregarded.remove(userid)
 
-async def get_avg():
-    with open('files/average.json', 'r') as avg:
-        return json.load(avg)
-
-async def get_admin():
-    with open('files/admin.json', 'r') as f:
-        return json.load(f)
-
-async def close_admin(a):
+async def close_admin():
     with open('files/admin.json', 'w') as f:
-        f.write(json.dumps(a, indent=2))
-
-async def get_estates():
-    with open('files/estates.json', 'r') as f:
-        return json.load(f)
-
-async def get_alert_info():
-    with open('files/alerts.json', 'r') as a:
-        return json.load(a)
+        f.write(json.dumps(bot.admin, indent=2))
 
 async def get_stockconfigs():
     with open('files/stock_config.json', 'r') as stc:
@@ -338,10 +335,6 @@ async def get_fees(user, amt):
 
     return int(a*fees[btype])
 
-async def get_xp():
-    with open('files/xp.json', 'r') as xp:
-        return json.load(xp)
-
 async def get_todays_stock():
     a = os.listdir('stocks')
     b = [f'{x}_today.csv' for x in range(1, 1001)]
@@ -358,87 +351,62 @@ async def get_todays_stock():
     os.rename(f'stocks/{choose}', f'stocks/{str(choose)[:-4]}_today.csv')
     return f'{str(choose)[:-4]}_today.csv'
 
-async def get_statements():
-    with open('files/statements.json', 'r') as s:
-        return json.load(s)
-
-async def get_stocks():
-    with open('files/stocks.json', 'r') as s:
-        return json.load(s)
-
-async def get_badges():
-    with open('files/badges.json', 'r') as b:
-        return json.load(b)
-
 async def get_data_stock(file):
     with open(f'stocks/{file}', 'r') as f:
         return list(csv.reader(f))
 
-async def get_url(url):
-    a = requests.get(url)
-    return a.content
-
-async def get_inv():
-    with open('files/inventory.json', 'r') as e:
-        return json.load(e)
-
-async def get_awards():
-    with open("files/awards.json", "r") as f:
-        return json.load(f)
-
-async def update_awards(data):
+async def update_awards():
     with open("files/awards.json", "w") as f:
-        f.write(json.dumps(data, indent=2))
+        f.write(json.dumps(bot.awards, indent=2))
 
-async def update_inv(a):
+async def update_inv():
     with open('files/inventory.json', 'w') as e:
-        e.write(json.dumps(a, indent=2))
+        e.write(json.dumps(bot.inventory, indent=2))
 
 async def update_stockinfo(data):
     with open('files/stock_config.json', 'w') as stc:
         stc.write(json.dumps(data, indent=2))
 
-async def update_stock_data(data):
+async def update_stock_data():
     with open('files/stocks.json', 'w') as avgbal:
-        avgbal.write(json.dumps(data, indent=2))
+        avgbal.write(json.dumps(bot.stocks, indent=2))
 
 async def update_badges(data):
     with open('files/badges.json', 'w') as b:
         b.write(json.dumps(data, indent=2))
 
-async def update_avg(avg):
+async def update_avg():
     with open('files/average.json', 'w') as avgbal:
-        avgbal.write(json.dumps(avg, indent=2))
+        avgbal.write(json.dumps(bot.avg, indent=2))
 
-async def update_est(data):
+async def update_est():
     with open('files/estates.json', 'w') as f:
-        f.write(json.dumps(data, indent=2))
+        f.write(json.dumps(bot.estates, indent=2))
 
-async def update_alerts(data):
+async def update_alerts():
     with open('files/alerts.json', 'w') as f:
-        f.write(json.dumps(data, indent=2))
+        f.write(json.dumps(bot.alertsinfo, indent=2))
 
 async def update_logs(stuff: str):
     with open('files/logs.txt', 'a') as logs:
         logs.write(f'\n{stuff}')
 
-async def update_data():
+async def update_accounts():
     with open('files/accounts.json', 'w') as f:
         print("Updating:", bot.accounts)
         dict(bot.accounts)
         f.write(json.dumps(bot.accounts, indent=2))
 
-async def update_statements(stat):
+async def update_statements():
     with open('files/statements.json', 'w') as w:
-        w.write(json.dumps(stat, indent=2))
+        w.write(json.dumps(bot.statements, indent=2))
 
-async def update_xp(data):
+async def update_xp():
     with open('files/xp.json', 'w') as w:
-        w.write(json.dumps(data, indent=2))
+        w.write(json.dumps(bot.xp, indent=2))
 
 async def update_sorted_inv(userid):
-    inv = await get_inv()
-    userinv = inv.get(userid)
+    userinv = bot.inventory.get(userid)
     if userinv is None:
         bot.cachedinv[userid] = ()
         return "userinv"
@@ -458,11 +426,10 @@ async def update_sorted_inv(userid):
     return bot.cachedinv[userid]
 
 async def clear_dues():
-    stock_data = await get_stocks()
 
-    for i in stock_data:
+    for i in bot.stocks:
         person = bot.accounts[str(i)]
-        value = stock_data[str(i)]
+        value = bot.stocks[str(i)]
         if value == 0:
             continue
         current_price = int(bot.current_stock[-1][5])
@@ -470,7 +437,7 @@ async def clear_dues():
         bulk = int(current_price*value)
         person['bank'] += bulk
         bot.accounts[str(i)] = person
-        stock_data[str(i)] = 0
+        bot.stocks[str(i)] = 0
         user = bot.get_user(i)
         if user is None:
             continue
@@ -481,8 +448,8 @@ async def clear_dues():
         await user.send(embed=embed)
         await create_statement(user, bot.user, bulk, f"Sold {value} Stocks", "Credit")
 
-    await update_data()
-    await update_stock_data(stock_data)
+    await update_accounts()
+    await update_stock_data()
     with open('files/stock_config.json', 'w') as stc:
         stc.write('{}')
     with open('files/stocks.json', 'w') as stc:
@@ -511,12 +478,12 @@ async def update_stocks():
         bot.current_stock.pop(0)
         bot.current_stock.pop(0)
 
+@tasks.loop(minutes=5)
 async def est_update():
-    est = await get_estates()
-    keys = [x for x in est.keys()]
+    keys = [x for x in bot.estates.keys()]
 
     for i in keys:
-        person = est[i]
+        person = bot.estates[i]
         lm = person['lm']
         pending = person['p']
 
@@ -524,8 +491,7 @@ async def est_update():
         diff = cur - lm
 
         if diff >= 172800:
-            aler = await get_alert_info()
-            persona = aler.get(i)
+            persona = bot.alertsinfo.get(i)
             if persona is None:
                 continue
 
@@ -533,8 +499,8 @@ async def est_update():
             dm_diff = cur - last
 
             person['p'] = diff - 172800
-            est[str(i)] = person
-            await update_est(est)
+            bot.estates[str(i)] = person
+            await update_est()
 
             if state == 'on' and dm_diff > 21600:
                 embed = discord.Embed(title='Maintenance Reminder',
@@ -549,21 +515,21 @@ async def est_update():
                 embed.set_footer(text='Economy Bot', icon_url=bot.pfp)
 
                 persona['last'] = cur
-                aler[str(i)] = persona
-                await update_alerts(aler)
+                bot.alertsinfo[str(i)] = persona
+                await update_alerts()
                 await fetched.send(embed=embed)
 
+@tasks.loop(minutes=5)
 async def avg_update():
-    avgbal = await get_avg()
     data_keys = bot.accounts.keys()
-    avg_keys = avgbal.keys()
+    avg_keys = bot.avg.keys()
 
     for key in data_keys:
         if key not in avg_keys:
-            avgbal[key] = {'sum': 0, 'avg': 0, 'i': 1, 'claimed':0}
+            bot.avg[key] = {'sum': 0, 'avg': 0, 'i': 1, 'claimed':0}
 
-    for x in avgbal:
-        person_avg = avgbal[x]
+    for x in bot.avg:
+        person_avg = bot.avg[x]
 
         newbal = bot.accounts[x]['bank']
         sum = person_avg['sum']
@@ -574,21 +540,11 @@ async def avg_update():
 
         person_avg['avg'] = int(newsum / i)
         person_avg['i'] = i + 1
-        avgbal[x] = person_avg
+        bot.avg[x] = person_avg
 
-    await update_avg(avgbal)
+    await update_avg()
 
-async def stock_update():
-    while True:
-        await update_stocks()
-        await perform_stuff(bot.current_stock)
-        await asyncio.sleep(86400/bot.total_lines)
-
-async def check_storetime():
-    with open('files/bot_data.json', 'r') as c:
-        config = json.load(c)
-    return config["shop"]["updated"]
-
+@tasks.loop(minutes=5)
 async def shop_update():
     with open('files/bot_data.json', 'r') as c:
         alldata = json.load(c)
@@ -615,25 +571,28 @@ async def shop_update():
     with open('files/bot_data.json', 'w') as c:
         c.write(json.dumps(alldata, indent=2))
 
-async def loops():
+async def stock_update():
     while True:
-        await avg_update()
-        await est_update()
-        await shop_update()
-        await asyncio.sleep(300)
+        await update_stocks()
+        await perform_stuff(bot.current_stock)
+        await asyncio.sleep(86400/bot.total_lines)
+
+async def check_storetime():
+    with open('files/bot_data.json', 'r') as c:
+        config = json.load(c)
+    return config["shop"]["updated"]
 
 async def open_account(userid):
     if bot.accounts.get(str(userid)) is None:
         bot.accounts[userid] = {'bank_type':1, 'wallet':0, 'bank':1000}
-        await update_data()
+        await update_accounts()
 
 async def open_estates(userid):
-    data = await get_estates()
-    if data.get(str(userid)) is None:
+    if bot.estates.get(str(userid)) is None:
         user = bot.get_user(userid)
-        data[f'{userid}'] = {'level':1, 'name':f'{user.name}', 'lm':time.time(), 'lr':time.time(), 'p':0, 'c':0}
+        bot.estates[f'{userid}'] = {'level':1, 'name':f'{user.name}', 'lm':time.time(), 'lr':time.time(), 'p':0, 'c':0}
 
-    await update_est(data)
+    await update_est()
 
 async def checktimeout(userid, event):
     with open('files/timeouts.json', 'r') as t:
@@ -659,16 +618,15 @@ async def add_timeout(userid, event):
         f.write(json.dumps(data, indent=2))
 
 async def alerts_state(userid, state:str):
-    aler = await get_alert_info()
     userid = str(userid)
-    person = aler.get(userid)
+    person = bot.alertsinfo.get(userid)
     if person is None:
         person = {'state':0, 'last':0}
 
     person['state'] = state
-    aler[userid] = person
+    bot.alertsinfo[userid] = person
 
-    await update_alerts(aler)
+    await update_alerts()
 
 async def commait(val):
     return "{:,}".format(val)
@@ -677,8 +635,7 @@ async def current_time():
     return datetime.datetime.today().replace(microsecond=0)
 
 async def create_statement(user, person, amount, reason, type):
-    states = await get_statements()
-    user_s = states.get(f'{user.id}')
+    user_s = bot.statements.get(f'{user.id}')
     if reason is None:
         reason = 'N.A.'
     if person != bot.user:
@@ -690,8 +647,8 @@ async def create_statement(user, person, amount, reason, type):
     else:
         user_s.append(entry)
 
-    states[str(user.id)] = user_s
-    await update_statements(states)
+    bot.statements[str(user.id)] = user_s
+    await update_statements()
 
 async def load_shop():
     with open('files/bot_data.json', 'r') as s:
@@ -699,29 +656,29 @@ async def load_shop():
     for i in config["shop"]["value"]:
         storeitems.append(i)
 
+@tasks.loop(minutes=10)
 async def bot_status():
-    raw_status = ""
+    current_status = random.choice(bot.status)
     while True:
-        if not bot.random_status: break
-        current_status = random.choice(bot.status)
-        if current_status["status"] == raw_status: continue
-        await bot.wait_until_ready()
-        guilds = len(bot.guilds)
-        users = len(bot.users)
-        s_type = current_status["type"]
-        raw_status = current_status["status"]
-        s_status = raw_status.format(users=await commait(users), guilds=await commait(guilds))
-        if s_type == "p":
-            await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.playing, name=s_status))
-        elif s_type == "w":
-            await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name=s_status))
-        elif s_type == "l":
-            await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name=s_status))
+        if current_status["status"] == bot.raw_status: continue
+        else: break
 
-        await asyncio.sleep(720)
+    guilds = len(bot.guilds)
+    users = len(bot.users)
+    s_type = current_status["type"]
+    bot.raw_status = current_status["status"]
+    s_status = bot.raw_status.format(users=await commait(users), guilds=await commait(guilds))
+    if s_type == "p":
+        await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.playing, name=s_status))
+    elif s_type == "w":
+        await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name=s_status))
+    elif s_type == "l":
+        await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name=s_status))
 
 async def create_stuff():
     tnew = time.time()
+    await bot.wait_until_ready()
+    print("Ready")
     mybot = bot.get_user(832083717417074689)
     bot.pfp = mybot.avatar.url
     tnew = time.time()
@@ -729,9 +686,11 @@ async def create_stuff():
     with open('files/bot_data.json', 'r') as c:
         data = json.load(c)
     bot.status = data["status"]
-    asyncio.create_task(bot_status())
-    asyncio.create_task(loops())
     asyncio.create_task(stock_update())
+    avg_update.start()
+    shop_update.start()
+    est_update.start()
+    bot_status.start()
     await refresh()
     print(f'Caching done in {float("{:.2f}".format(time.time() - tnew))} secs')
     print(f'Loops created! Boot Time: {float("{:.2f}".format(time.time()-t1))} secs')
@@ -757,12 +716,10 @@ async def calculate_networth(userid):
     user = bot.accounts.get(userid, {"wallet":0, "bank":0})
     networth += user["wallet"] + user["bank"]
 
-    est = await get_estates()
-    user = est.get(userid, {"level":1})
+    user = bot.estates.get(userid, {"level":1})
     networth += (user["level"]-1)*10000
 
-    inv = await get_inv()
-    user = inv.get(userid, {"inv":[], "items":[]})
+    user = bot.inventory.get(userid, {"inv":[], "items":[]})
     itemslist = user.get("items", [])
     invlist = user.get("inv", [])
 
@@ -787,8 +744,7 @@ async def calculate_networth(userid):
                 else:
                     break
 
-    stock = await get_stocks()
-    user = stock.get(userid, 0)
+    user = bot.stocks.get(userid, 0)
     networth += int(float(bot.current_stock[3]) * user)
     return networth
 
@@ -822,9 +778,8 @@ async def perform_stuff(data):
     if lowest > current:
         lowest = current
 
-    users = await get_stocks()
     volume = 0
-    for i in users.values():
+    for i in bot.stocks.values():
         volume += i
     stock_data['volume'] = volume
     stock_data['lowest'] = lowest
@@ -834,7 +789,7 @@ async def perform_stuff(data):
     return stock_data
 
 async def get_avatar(user):
-    return Image.open(BytesIO(await user.avatar.url_as(format="png").read())).resize((140, 140))
+    return Image.open(BytesIO(await user.avatar.read())).resize((140, 140))
 
 async def profile_image(member, level, userxp, xp, total_xp, guildid):
     font = ImageFont.truetype("badges/font2.ttf", 19)
@@ -865,8 +820,7 @@ async def profile_image(member, level, userxp, xp, total_xp, guildid):
     xpbar = xpbar.crop((0, 0, xpbar.width * (int(xp) / int(total_xp)), xpbar.height))
     img.paste(xpbar, (180, 105), xpbar)
 
-    badges = await get_badges()
-    if str(member.id) in badges['staff']: staff = True
+    if str(member.id) in bot.badges['staff']: staff = True
     else: staff = False
     location = 710
     if staff:
@@ -888,8 +842,7 @@ async def profile_image(member, level, userxp, xp, total_xp, guildid):
     newimg = Image.new('RGBA', img.size, (0,0,0,0))
     newdraw = ImageDraw.Draw(newimg)
 
-    invdata = await get_inv()
-    userinv = invdata.get(str(member.id), [])
+    userinv = bot.inventory.get(str(member.id), [])
     if len(userinv) != 0:
         eq_lock = userinv.get('eq_lock')
         eq_boost = userinv.get('eq_boost')
@@ -940,8 +893,7 @@ async def profile_image(member, level, userxp, xp, total_xp, guildid):
     twidth, theight = draw.textsize(f"{await commait(xp)}/{await commait(total_xp)}", fonts)
     draw.text((468 - (twidth / 2), 121 - (theight / 2)), f"{await commait(xp)}/{await commait(total_xp)}", (255, 255, 255), font=fonts, stroke_width=1, stroke_fill=(0, 0, 0))
 
-    award_data = await get_awards()
-    achi = award_data.get("achievements", {})
+    achi = bot.awards.get("achievements", {})
     user_a = achi.get(str(member.id), [])
     x_loc = 70
     x2_loc = 50
@@ -989,8 +941,7 @@ async def profile_image(member, level, userxp, xp, total_xp, guildid):
 
 async def xp_ranks(member, guild):
     userid = str(member)
-    xp = await get_xp()
-    xp_sorted_desc = sorted(xp.items(), key=operator.itemgetter(1), reverse=True)
+    xp_sorted_desc = sorted(bot.xp.items(), key=operator.itemgetter(1), reverse=True)
     guild = bot.get_guild(guild)
     guildmembers = guild.members
     member_list = [x.id for x in guildmembers]
@@ -1005,8 +956,7 @@ async def xp_ranks(member, guild):
     return guild_rank, global_rank
 
 async def check_channel(chlid, guildid):
-    a = await get_admin()
-    server = a.get(str(guildid))
+    server = bot.admin.get(str(guildid))
     if server is None: return True
     if len(server) == 0: return True
     if chlid in server: return True
@@ -1158,8 +1108,7 @@ async def createstore(start, page):
 
 async def inventory_image(userid):
     userid = str(userid)
-    invdata = await get_inv()
-    userinv = invdata.get(userid, {"inv":[]})
+    userinv = bot.inventory.get(userid, {"inv":[]})
     userinv = userinv["inv"]
     heading = ImageFont.truetype("badges/font2.ttf", 32)
     inv_font = ImageFont.truetype("badges/font2.ttf", 18)
@@ -1350,7 +1299,7 @@ async def stop_ms(minemsg, ctx, net):
     user = bot.accounts[str(ctx.author.id)]
     user["wallet"] += net
     bot.accounts[str(ctx.author.id)] = user
-    await update_data()
+    await update_accounts()
     await minemsg.edit(content=f"**The game ended**\nNet Profit: `{await commait(net)}`", components=[])
     await minemsg.clear_reactions()
 
@@ -1387,11 +1336,10 @@ async def general(ctx):
         bot.cooldown[ctx.command.name]["users"].append((ctx.author.id, time.time()))
     if ctx.author.id not in xp_timeout:
         userid = ctx.author.id
-        xps = await get_xp()
-        xp = xps.setdefault(str(userid), 0)
+        xp = bot.xp.setdefault(str(userid), 0)
         togive = random.randint(10, 25)
-        xps[str(userid)] = xp + togive
-        asyncio.create_task(update_xp(xps))
+        bot.xp[str(userid)] = xp + togive
+        await update_xp()
         asyncio.create_task(add_xp_tm(userid))
     return toreturn
 
@@ -1399,17 +1347,16 @@ async def ttt_end(id1, id2, bet, ctx):
     winner = bot.accounts[str(id1.id)]
     winner["wallet"] += int(1.5*bet)
     bot.accounts[str(id1.id)] = winner
-    awards = await get_awards()
-    games = awards["games"]
+    games = bot.awards["games"]
     a = games.setdefault(str(id1.id), 0)
     games[str(id1.id)] = a+1
-    awards["games"] = games
+    bot.awards["games"] = games
     if a+1 == 1000: await achievement(ctx, id1.id, "games")
 
     await create_statement(id1, bot.user, 0.5*bet, "Won Tic-Tac-Toe", 'Credit')
     await create_statement(id2, bot.user, bet, "Lost Tic-Tac-Toe", 'Debit')
-    await update_data()
-    await update_awards(awards)
+    await update_accounts()
+    await update_awards()
 
 async def ttt_tie(id1, id2, bet):
     winner1 = bot.accounts[str(id1)]
@@ -1420,7 +1367,7 @@ async def ttt_tie(id1, id2, bet):
     winner2["wallet"] += bet
     bot.accounts[str(id2)] = winner2
 
-    await update_data()
+    await update_accounts()
 
 async def achievement(ctx, userid, field):
     types = {
@@ -1428,15 +1375,14 @@ async def achievement(ctx, userid, field):
         "games":"Win 1000 games",
         "stocks":"Buy 1 million stocks"
     }
-    awards = await get_awards()
-    achi = awards["achievements"]
+    achi = bot.awards["achievements"]
     userid = str(userid)
 
     user_a = achi.setdefault(userid, [])
     user_a.append(field)
     achi[userid] = user_a
 
-    awards["achievements"] = achi
+    bot.awards["achievements"] = achi
     user_d = bot.accounts[userid]
     user_d["wallet"] += 25000
     bot.accounts[userid] = user_d
@@ -1445,8 +1391,8 @@ async def achievement(ctx, userid, field):
                                f"Reward: `25,000` coins", color=embedcolor)
     embed.set_footer(text="Type e.pf to check your new badge!")
     await ctx.send(embed=embed)
-    await update_awards(awards)
-    await update_data()
+    await update_awards()
+    await update_accounts()
 
 @bot.event
 async def on_message(message):
@@ -1472,7 +1418,7 @@ async def is_dm(ctx):
 async def if_allowed(ctx):
     return await check_channel(ctx.channel.id, ctx.guild.id)
 
-@bot.event
+#@bot.event
 async def on_command_error(ctx, error):
     if isinstance(error, UnboundLocalError) or isinstance(error, IgnoreError): return
     if isinstance(error, CommandNotFound):
@@ -1591,12 +1537,6 @@ async def dvm(ctx):
         await ctx.reply('Changed Dev Mode state to: **`On`**')
         bot.dev = 1
 
-@bot.command(aliases=["exit"],hidden=True)
-@commands.check(is_dev)
-async def _exit(ctx):
-    await bot.close()
-    sys.exit()
-
 @bot.command(hidden=True)
 @commands.check(is_dev)
 async def maint(ctx):
@@ -1671,7 +1611,7 @@ async def add(ctx, person:discord.Member, bal:int, *args):
         new_bal = toadd['wallet'] + bal
         toadd['wallet'] = new_bal
     bot.accounts[f'{person.id}'] = toadd
-    await update_data()
+    await update_accounts()
 
     await update_logs(f'{ctx.author}-!-add-!-[{person.id}; {await commait(bal)}]-!-{await current_time()}')
     await ctx.send(f'{ctx.author.mention} added `{await commait(bal)}` coins to {person.name}.')
@@ -1686,7 +1626,7 @@ async def clear(ctx, member:discord.Member):
     person['wallet'] = 0
 
     bot.accounts[userid] = person
-    await update_data()
+    await update_accounts()
     await update_logs(f'{ctx.author}-!-clear-!-[{member.id}]-!-{datetime.datetime.today().replace(microsecond=0)}')
     await ctx.send(f'{ctx.author.mention} Cleared data of `{member.name}#{member.discriminator}` successfully!')
 
@@ -1813,8 +1753,7 @@ async def balance(ctx, member:discord.Member = None):
     bank_type = person['bank_type']
     wallet = person['wallet']
     bank = person['bank']
-    s = await get_stocks()
-    stocks_num = s.get(str(userid), 0)
+    stocks_num = bot.stocks.get(str(userid), 0)
     embed = discord.Embed(title=f'__{bank_details[bank_type]["name"]}__', colour=embedcolor)
     embed.add_field(name=f'**<:wallet:836814969290358845> Wallet**', value=f'> `{await commait(wallet)}`', inline=False)
     embed.add_field(name=f'**🏦 Bank**', value=f'> `{await commait(bank)}`', inline=False)
@@ -1854,7 +1793,7 @@ async def deposit(ctx, amount:str = None):
     person['bank'] = newbal_b
     bot.accounts[f'{ctx.author.id}'] = person
 
-    await update_data()
+    await update_accounts()
     await ctx.send(f'{ctx.author.mention} Successfully deposited `{await commait(amount)}` coins.')
 
 @bot.command(aliases=['with'])
@@ -1886,7 +1825,7 @@ async def withdraw(ctx, amount: str = None):
     person['bank'] = newbal_b
     bot.accounts[f'{ctx.author.id}'] = person
 
-    await update_data()
+    await update_accounts()
     await ctx.send(f'{ctx.author.mention} Successfully withdrew `{await commait(amount)}` coins.')
 
 @bot.command()
@@ -1898,10 +1837,9 @@ async def mybank(ctx, member:discord.Member = None):
         userid = member.id
     await open_account(userid)
     await avg_update()
-    avgbal = await get_avg()
 
     person = bot.accounts.get(f'{userid}')
-    person2 = avgbal.get(f'{userid}')
+    person2 = bot.avg.get(f'{userid}')
     btype = person['bank_type']
 
     embed = discord.Embed(description='Here are your bank details:\n\u200b', color=embedcolor)
@@ -1925,9 +1863,7 @@ async def mybank(ctx, member:discord.Member = None):
 async def daily(ctx):
     await avg_update()
 
-    avg = await get_avg()
-
-    avg_p = avg.get(f'{ctx.author.id}')
+    avg_p = bot.avg.get(f'{ctx.author.id}')
     data_p = bot.accounts.get(f'{ctx.author.id}')
     if avg_p is not None:
         i = avg_p['i']
@@ -1946,15 +1882,15 @@ async def daily(ctx):
 
     newbal = bank_d + int(avgbal * multiplier)
     data_p['bank'] = newbal
-    data[f'{ctx.author.id}'] = data_p
+    bot.accounts[f'{ctx.author.id}'] = data_p
     avg_p['claimed'] = 1
     avg_p['sum'] = int(avgbal)
     avg_p['i'] = 1
 
-    avg[f'{ctx.author.id}'] = avg_p
+    bot.avg[f'{ctx.author.id}'] = avg_p
 
-    await update_avg(avg)
-    await update_data()
+    await update_avg()
+    await update_accounts()
     await add_timeout(ctx.author.id, 'daily')
     embed = discord.Embed(title=f'{economysuccess} Claimed Successfully!', description=f'Daily interest payout of `{await commait(int(avgbal * multiplier))}` coins credited successfully!', color=success_embed)
     await ctx.send(embed=embed)
@@ -1998,7 +1934,7 @@ async def give(ctx, member:discord.Member, amount:int):
     person['wallet'] = p_wallet + amount
     bot.accounts[f'{member.id}'] = person
 
-    await update_data()
+    await update_accounts()
 
     embed = discord.Embed(title=f'{economysuccess} Success!', color=embedcolor,
                           description=f'You gave `{await commait(amount)}` coin(s) to {member.mention}. What an act of generosity!')
@@ -2017,8 +1953,7 @@ async def estates(ctx, member:discord.Member=None):
         userid = member.id
 
     await open_estates(userid)
-    est = await get_estates()
-    person = est[f'{userid}']
+    person = bot.estates[f'{userid}']
     level = person['level']
     name = person['name']
     revenue = await get_revenue(level)
@@ -2056,8 +1991,7 @@ async def revenue(ctx):
     userid = ctx.author.id
     await open_estates(userid)
     await est_update()
-    est = await get_estates()
-    person = est[f'{ctx.author.id}']
+    person = bot.estates[f'{ctx.author.id}']
 
     level = person['level']
     name = person['name']
@@ -2108,10 +2042,10 @@ async def revenue(ctx):
     person['lr'] = time.time()
     person['pending'] = 0
     person['c'] = 1
-    est[f'{ctx.author.id}'] = person
+    bot.estates[f'{ctx.author.id}'] = person
 
-    await update_est(est)
-    await update_data()
+    await update_est()
+    await update_accounts()
     await ctx.send(embed=embed)
 
 @bot.command()
@@ -2119,11 +2053,10 @@ async def revenue(ctx):
 async def maintain(ctx):
     userid = ctx.author.id
     await open_estates(userid)
-    est = await get_estates()
     userid = str(ctx.author.id)
 
     persona = bot.accounts[userid]
-    person = est[userid]
+    person = bot.estates[userid]
 
     bank_bal = persona['bank']
     wal_bal = persona['wallet']
@@ -2158,10 +2091,10 @@ async def maintain(ctx):
 
         person['lm'] = time.time()
         person['p'] = 0
-        est[userid] = person
+        bot.estates[userid] = person
 
-        await update_data()
-        await update_est(est)
+        await update_accounts()
+        await update_est()
 
         embed = discord.Embed(title=f'{economysuccess} Success!',
                               description=f'`{cost_d}.00` coins have been deducted and your hotel looks shining new!\n```css\n{x}```',
@@ -2179,8 +2112,7 @@ async def maintain(ctx):
 async def upgrade(ctx):
     userid = ctx.author.id
     await open_estates(userid)
-    est = await get_estates()
-    eperson = est[f'{ctx.author.id}']
+    eperson = bot.estates[f'{ctx.author.id}']
     level = eperson['level']
     name = eperson['name']
     if level == 30:
@@ -2250,11 +2182,11 @@ async def upgrade(ctx):
             person['bank'] = new_bank
             eperson['level'] = level + 1
 
-            est[f'{ctx.author.id}'] = eperson
+            bot.estates[f'{ctx.author.id}'] = eperson
             bot.accounts[f'{ctx.author.id}'] = person
 
-            await update_data()
-            await update_est(est)
+            await update_accounts()
+            await update_est()
             embed = discord.Embed(title=f'{economysuccess} Success!', description='Wohoo! Your upgrade was successful! Use `e.estates` to see newly upgraded property!', color=success_embed)
             await msg.edit(embed=embed)
             if level+1 == 30: await achievement(ctx, ctx.author.id, "estates")
@@ -2273,8 +2205,7 @@ async def alerts(ctx, state:str = None):
                               description='Get Alerts on pending loans, hotel maintainance, robberies etc straight to your DMs\n'
                                           '```diff\n+ To turn on: e.alerts on\n- To turn off: e.alerts off\n```',
                               color=embedcolor)
-        aler = await get_alert_info()
-        if f'{ctx.author.id}' in aler:
+        if f'{ctx.author.id}' in bot.alertsinfo:
             current = 'On'
         else:
             current = 'Off'
@@ -2342,7 +2273,7 @@ async def transfer(ctx, togive:discord.Member = None, amount = None, *, reason =
     bot.accounts[f'{togive.id}'] = person
     bot.accounts[f'{ctx.author.id}'] = current
 
-    await update_data()
+    await update_accounts()
     await create_statement(ctx.author, togive, amount, reason, 'Debit')
     await create_statement(togive, ctx.author, amount, reason, 'Credit')
 
@@ -2373,8 +2304,7 @@ async def statement(ctx, *args):
                 index += 1
             member = bot.get_user(int(args[index]))
 
-    stats = await get_statements()
-    all_s = stats.get(str(member.id))
+    all_s = bot.statements.get(str(member.id))
     if all_s is None:
         desc = 'No Statements Yet..'
     else:
@@ -2424,8 +2354,7 @@ async def profile(ctx, member:discord.Member = None):
     if member is None:
         member = ctx.author
 
-    xpdata = await get_xp()
-    xp = xpdata.setdefault(f'{member.id}', 0)
+    xp = bot.xp.setdefault(f'{member.id}', 0)
     lev, newxp = await calculate_level(xp)
 
     max_xp = 0
@@ -2491,8 +2420,7 @@ async def stocks(ctx):
     left = datetime.timedelta(seconds=((len(stock_data) - config["line"]) * round(86400 / len(stock_data), 4)))
     final = datetime.datetime.strptime(str(left), '%H:%M:%S.%f').replace(microsecond=0)
     colon_format = str(final).split(" ")[1].split(':')
-    p_data = await get_stocks()
-    holdings = p_data.get(str(ctx.author.id), 0)
+    holdings = bot.stocks.get(str(ctx.author.id), 0)
     embed = discord.Embed(title='Today\'s Stock', description=f'```\n{x}```', color=embedcolor)
     embed.add_field(name='Your Holdings', value=f'`{await commait(holdings)}` stocks')
     embed.add_field(name='Current Value', value=f'`{await commait(int(holdings*float(details[3])))}` coins')
@@ -2504,10 +2432,9 @@ async def stocks(ctx):
 @bot.command()
 @commands.check(general)
 async def buystocks(ctx, amount):
-    stock_data = await get_stocks()
     userid = str(ctx.author.id)
     dperson = bot.accounts[userid]
-    sperson = stock_data.setdefault(userid, 0)
+    sperson = bot.stocks.setdefault(userid, 0)
     if dperson['bank'] == 0:
         return await ctx.send(f'{ctx.author.mention} You have an empty bank bro..')
     stock_price = float(bot.current_stock[3])
@@ -2535,10 +2462,10 @@ async def buystocks(ctx, amount):
 
     dperson['bank'] = dperson['bank'] - bulk
     bot.accounts[userid] = dperson
-    stock_data[userid] = sperson + amount
+    bot.stocks[userid] = sperson + amount
 
-    await update_data()
-    await update_stock_data(stock_data)
+    await update_accounts()
+    await update_stock_data()
     await create_statement(ctx.author, bot.user, bulk, f"Bought {amount} stock(s)", "Debit")
 
     embed = discord.Embed(title=f'{economysuccess} Success!',
@@ -2549,28 +2476,25 @@ async def buystocks(ctx, amount):
     embed.set_footer(text='Economy Bot', icon_url=bot.pfp)
     embed.set_author(name=f'{fetched.name}', icon_url=fetched.avatar.url)
     await ctx.send(embed=embed)
-    awards1 = await get_awards()
-    sto1 = awards1["stocks"]
+    sto1 = bot.awards["stocks"]
 
     user_sto1 = sto1.setdefault(str(ctx.author.id), 0)
     user_sto_upd = user_sto1 + amount
     if user_sto_upd >= 1000000 and user_sto1 < 1000000: await achievement(ctx, ctx.author.id, "stocks")
 
-    awards = await get_awards()
-    sto = awards["stocks"]
+    sto = bot.awards["stocks"]
     user_sto = sto.setdefault(str(ctx.author.id), 0)
     user_sto += amount
     sto[str(ctx.author.id)] = user_sto
-    awards["stocks"] = sto
-    await update_awards(awards)
+    bot.awards["stocks"] = sto
+    await update_awards()
 
 @bot.command()
 @commands.check(general)
 async def sellstocks(ctx, amount):
-    stock_data = await get_stocks()
     userid = str(ctx.author.id)
     dperson = bot.accounts[userid]
-    sperson = stock_data.setdefault(userid, 0)
+    sperson = bot.stocks.setdefault(userid, 0)
 
     stock_price = float(bot.current_stock[3])
     if amount == 'all':
@@ -2591,10 +2515,10 @@ async def sellstocks(ctx, amount):
 
     dperson['bank'] = dperson['bank'] + bulk
     bot.accounts[userid] = dperson
-    stock_data[userid] = sperson - amount
+    bot.stocks[userid] = sperson - amount
 
-    await update_data()
-    await update_stock_data(stock_data)
+    await update_accounts()
+    await update_stock_data()
     await create_statement(ctx.author, bot.user, bulk, f"Sold {amount} stock(s)", "Credit")
 
     embed = discord.Embed(title=f'{economysuccess} Success!',
@@ -2682,16 +2606,15 @@ async def help(ctx, specify=None):
 @commands.check(general)
 @commands.has_permissions(manage_channels=True)
 async def set_chl(ctx, channel:discord.TextChannel):
-    a = await get_admin()
-    server = a.get(str(ctx.guild.id), [])
+    server = bot.admin.get(str(ctx.guild.id), [])
     if channel.id in server:
         embed = discord.Embed(description=f'{economyerror} {channel.mention} is already in list of registered channels!', color=error_embed)
         return await ctx.send(embed=embed)
     server.append(channel.id)
     if ctx.channel.id not in server:
         server.append(ctx.channel.id)
-    a[str(ctx.guild.id)] = server
-    await close_admin(a)
+    bot.admin[str(ctx.guild.id)] = server
+    await close_admin()
     embed = discord.Embed(description=f'{economysuccess} {channel.mention} added to list of registered channels successfully!', color=success_embed)
     await ctx.send(embed=embed)
 
@@ -2699,14 +2622,13 @@ async def set_chl(ctx, channel:discord.TextChannel):
 @commands.check(general)
 @commands.has_permissions(manage_channels=True)
 async def del_chl(ctx, channel:discord.TextChannel):
-    a = await get_admin()
-    server = a.get(str(ctx.guild.id), [])
+    server = bot.admin.get(str(ctx.guild.id), [])
     if channel.id not in server:
         embed = discord.Embed(description=f'{economyerror} {channel.mention} not in list of registered channels!', color=error_embed)
         return await ctx.send(embed=embed)
     server.remove(channel.id)
-    a[str(ctx.guild.id)] = server
-    await close_admin(a)
+    bot.admin[str(ctx.guild.id)] = server
+    await close_admin()
     embed = discord.Embed(description=f'{economysuccess} {channel.mention} removed from list of registered channels successfully!', color=success_embed)
     await ctx.send(embed=embed)
 
@@ -2714,8 +2636,7 @@ async def del_chl(ctx, channel:discord.TextChannel):
 @commands.check(general)
 @commands.has_permissions(manage_channels=True)
 async def list_chl(ctx):
-    a = await get_admin()
-    server = a.get(str(ctx.guild.id), [])
+    server = bot.admin.get(str(ctx.guild.id), [])
     if len(server) == 0: channels = ['> No channels set']
     else: channels = [f'> <#{x}>' for x in server]
     embed = discord.Embed(title=f'{economysuccess} Allowed Channels for the bot:', description='\n'.join(channels), color=embedcolor)
@@ -2726,10 +2647,9 @@ async def list_chl(ctx):
 @commands.check(general)
 @commands.has_permissions(manage_channels=True)
 async def reset_chl(ctx):
-    a = await get_admin()
-    a[str(ctx.guild.id)] = []
+    bot.admin[str(ctx.guild.id)] = []
     embed = discord.Embed(title=f'{economysuccess} Done', description='Cleared Successfully!', color=embedcolor)
-    await close_admin(a)
+    await close_admin()
     embed.set_footer(text='Add a channel using e.set_chl <name>\nRemove a channel using e.del_chl <name>')
     await ctx.send(embed=embed)
 
@@ -2743,8 +2663,7 @@ async def rob(ctx, member:discord.Member):
     success = random.randint(0, 100)
 
     lock = 0
-    inv = await get_inv()
-    userinv = inv.get(str(member.id), {"inv":[], "eq_lock":""})
+    userinv = bot.inventory.get(str(member.id), {"inv":[], "eq_lock":""})
     user = userinv["inv"]
     eq = userinv['eq_lock']
     if len(user) == 0: pass
@@ -2772,11 +2691,10 @@ async def rob(ctx, member:discord.Member):
             walleta += prize
             bot.accounts[str(member.id)]['wallet'] = walletm
             bot.accounts[str(ctx.author.id)]['wallet'] = walleta
-            await update_data()
+            await update_accounts()
             desc = random.choice(bot.phrases['rob_success']).format(prize=f'`{await commait(prize)}`', whom=member.mention)
-            alert = await get_alert_info()
-            if str(member.id) in alert:
-                if alert[str(member.id)]['state'] == 'on':
+            if str(member.id) in bot.alertsinfo:
+                if bot.alertsinfo[str(member.id)]['state'] == 'on':
                     embed = discord.Embed(title=f'{economyerror} You were robbed!',
                                           description=f'You were robbed of `{await commait(prize)}` coins by `{ctx.author.name}#????` in `{ctx.guild.name}`!', color=error_embed)
                     await member.send(embed=embed)
@@ -2786,8 +2704,8 @@ async def rob(ctx, member:discord.Member):
                 elif lock == 40: user.remove('Gold Lock')
             userinv["inv"] = user
             userinv["eq_lock"] = ''
-            inv[str(member.id)] = userinv
-            await update_inv(inv)
+            bot.inventory[str(member.id)] = userinv
+            await update_inv()
         embed = discord.Embed(title=f'{economysuccess} Robbery Successful!', description=desc, color=success_embed)
     else:
         if member == ctx.author:
@@ -2796,14 +2714,14 @@ async def rob(ctx, member:discord.Member):
             desc = random.choice(bot.phrases['selfrob_failed']).format(prize=f'`{await commait(prize)}`')
             walleta -= prize
             bot.accounts[str(ctx.author.id)]['wallet'] = walleta
-            await update_data()
+            await update_accounts()
         else:
             walletm = bot.accounts[str(ctx.author.id)]['wallet']
             prize = random.randint(int(walletm / 5), int(walletm / 3))
             walleta = bot.accounts[str(ctx.author.id)]['wallet']
             walleta -= prize
             bot.accounts[str(ctx.author.id)]['wallet'] = walleta
-            await update_data()
+            await update_accounts()
             desc = random.choice(bot.phrases['rob_failed']).format(prize=f'`{await commait(prize)}`', whom=member.mention)
         embed = discord.Embed(title=f'{economyerror} Robbery Failed!', description=desc, color=error_embed)
     await ctx.send(embed=embed)
@@ -2825,7 +2743,7 @@ async def find(ctx):
         bot.accounts[str(ctx.author.id)]['wallet'] = wallet - c
     else:
         embed = discord.Embed(description=economyerror+ ' ' +random.choice(bot.phrases['find_neutral']), color=error_embed)
-    await update_data()
+    await update_accounts()
     await ctx.send(embed=embed)
 
 @bot.command(aliases=['store'])
@@ -2890,21 +2808,20 @@ async def buy(ctx, *, item):
                               description=f'{random.choice(bot.phrases["less_bal"])}',
                               color=error_embed)
         return await ctx.send(embed=embed)
-    inv = await get_inv()
-    member_inv = inv.get(str(ctx.author.id), {"inv":[]})
+    member_inv = bot.inventory.get(str(ctx.author.id), {"inv":[]})
     memberinv = member_inv["inv"]
     appends = 0
     while appends < qty:
         memberinv.append(store_item["name"])
         appends += 1
     member_inv["inv"] = memberinv
-    inv[str(ctx.author.id)] = member_inv
+    bot.inventory[str(ctx.author.id)] = member_inv
     user["wallet"] = wallet - (price*qty)
     bot.accounts[str(ctx.author.id)] = user
     embed = discord.Embed(description=f'{economysuccess} Done! `{qty}` quantity of `{store_item["name"]}` purchased successfully!',
                           color=success_embed)
-    await update_data()
-    await update_inv(inv)
+    await update_accounts()
+    await update_inv()
     await ctx.send(embed=embed)
 
 @bot.command()
@@ -2974,14 +2891,13 @@ async def use(ctx, *, item:str):
         embed.set_image(url="attachment://unboxing.gif")
         await ctx.send(embed=embed, file=file)
 
-        awards = await get_awards()
-        unbox = awards["unbox"]
+        unbox = bot.awards["unbox"]
         user_a = unbox.setdefault(str(ctx.author.id), [])
         if item_name not in user_a:
             user_a.append(item_name)
             unbox[str(ctx.author.id)] = user_a
-            awards["unbox"] = unbox
-            await update_awards(awards)
+            bot.awards["unbox"] = unbox
+            await update_awards()
 
             if len(user_a) == 50:
                 await achievement(ctx, str(ctx.author.id), "unbox")
@@ -2993,8 +2909,7 @@ async def use(ctx, *, item:str):
     def boost():
         pass
 
-    inv = await get_inv()
-    userinv = inv.get(str(ctx.author.id), {"inv":[]})
+    userinv = bot.inventory.get(str(ctx.author.id), {"inv":[]})
     allinv = userinv["inv"]
     user = [x.lower() for x in allinv]
     if item.lower() not in user:
@@ -3008,8 +2923,8 @@ async def use(ctx, *, item:str):
                     await chest(k)
                     allinv.remove(k)
                     userinv["inv"] = allinv
-    inv[str(ctx.author.id)] = userinv
-    await update_inv(inv)
+    bot.inventory[str(ctx.author.id)] = userinv
+    await update_inv()
 
 @bot.command()
 @commands.check(general)
@@ -3082,7 +2997,7 @@ async def bank(ctx, tier:int=None):
                 user["bank"] = user["bank"] - total
                 user["bank_type"] = tier
                 bot.accounts[str(ctx.author.id)] = user
-                await update_data()
+                await update_accounts()
                 embed = discord.Embed(title=f'{economysuccess} Success!', description=f'Bank upgraded to `Tier {tier}` successfully!', color=success_embed)
             await msg.edit(embed=embed)
         else:
@@ -3221,8 +3136,7 @@ async def sell(ctx, *, item):
             item = ' '.join(a)
     except: pass
     userid = str(ctx.author.id)
-    inv = await get_inv()
-    userinv = inv.get(userid)
+    userinv = bot.inventory.get(userid)
     if userinv is None:
         return await ctx.reply('You have an empty inventory bro..')
     itemsinv = userinv.get("items", [])
@@ -3251,9 +3165,9 @@ async def sell(ctx, *, item):
     datauser["wallet"] += value
     bot.accounts[userid] = datauser
 
-    await update_data()
+    await update_accounts()
     await ctx.send(embed=embed)
-    await update_inv(inv)
+    await update_inv()
 
 @bot.command()
 @commands.check(general)
@@ -3384,10 +3298,138 @@ async def minesweeper(ctx):
     bot.ms[ctx.author.id] = {"main":minesweeper, "count":count_sweeper}
     await start_ms(ctx)
 
+class TicTacToeButton(discord.ui.Button['TicTacToe']):
+    def __init__(self, x: int, y: int):
+        super().__init__(style=discord.ButtonStyle.secondary, label='\u200b', row=y)
+        self.x = x
+        self.y = y
+
+    async def callback(self, interaction: discord.Interaction):
+        assert self.view is not None
+        view: TicTacToe = self.view
+        state = view.board[self.y][self.x]
+
+        if view.current_player == view.X:
+            self.style = discord.ButtonStyle.red
+            self.emoji = "❌"
+            self.disabled = True
+            view.board[self.y][self.x] = 1
+            view.current_player = view.O
+            content = f"{view.O.mention} to move:"
+        else:
+            self.style = discord.ButtonStyle.green
+            self.emoji = "⭕"
+            self.disabled = True
+            view.board[self.y][self.x] = -1
+            view.current_player = view.X
+            content = f"{view.X.mention} to move:"
+
+        winner = view.check_board_winner()
+        if winner is not None:
+            if winner == view.X:
+                content = f'🏆 {view.X.mention} won! 🏆'
+            elif winner == view.O:
+                content = f'🏆 {view.Y.mention} won! 🏆'
+            else:
+                content = "It's a tie!"
+
+            for child in view.children:
+                child.disabled = True
+
+            view.stop()
+
+        await interaction.response.edit_message(content=content, view=view)
+
+
+class TicTacToe(discord.ui.View):
+    def __init__(self, p1: discord.Member, p2: discord.Member, move):
+        super().__init__()
+        self.X = p1
+        self.O = p2
+        self.Tie = 0
+        self.current_player = move
+        self.board = [
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+        ]
+
+        for x in range(3):
+            for y in range(3):
+                self.add_item(TicTacToeButton(x, y))
+
+    def check_board_winner(self):
+        for across in self.board:
+            value = sum(across)
+            if value == 3:
+                return self.O
+            elif value == -3:
+                return self.X
+
+        for line in range(3):
+            value = self.board[0][line] + self.board[1][line] + self.board[2][line]
+            if value == 3:
+                return self.O
+            elif value == -3:
+                return self.X
+
+        diag = self.board[0][2] + self.board[1][1] + self.board[2][0]
+        if diag == 3:
+            return self.O
+        elif diag == -3:
+            return self.X
+
+        diag = self.board[0][0] + self.board[1][1] + self.board[2][2]
+        if diag == 3:
+            return self.O
+        elif diag == -3:
+            return self.X
+
+        if all(i != 0 for row in self.board for i in row):
+            return self.Tie
+
+        return None
+
+class ConfirmTTT(discord.ui.View):
+    def __init__(self, user: discord.Member, bet: int):
+        super().__init__()
+        self.user = user
+        self.bet = bet
+        self.allowed = bot.waitings[self.user.id]
+
+    @discord.ui.button(label="Accept", style=discord.ButtonStyle.green)
+    async def accept(self, button, interaction: discord.Interaction):
+        if interaction.user not in self.allowed:
+            return await interaction.response.send_message("This is not your game. Use `e.help tictactoe` to start one")
+
+        per = bot.accounts[str(interaction.user.id)]
+        p = per["wallet"]
+        bet = self.bet
+
+        if p < bet:
+            cont = f"{interaction.user.mention} doesn't have enough coins!"
+            await interaction.response.edit_message(cont, view=None)
+        else:
+            per["wallet"] -= bet
+            bot.accounts[str(interaction.user.id)] = per
+            await update_accounts()
+
+            bot.waitings[self.user.id].remove(interaction.user)
+            if len(bot.waitings[self.user.id]) == 0:
+                move = random.choice([self.user, interaction.user])
+                await interaction.response.edit_message(content=f"**Game Begins!** {move.mention} to move first:",
+                                                        view=TicTacToe(self.user, interaction.user, move))
+            else:
+                cont = f"{self.user.mention} vs {interaction.user.mention}\n" \
+                       f"Bet Amount: `{await commait(bet)}`\n" \
+                       f"Click 'Accept' to start. Waiting on: {' '.join([x.mention for x in bot.waitings[self.user.id]])}"
+                await interaction.response.edit_message(content=cont)
+
+
 @bot.command(aliases=["ttt"])
 @commands.check(general)
 async def tictactoe(ctx, user:discord.Member, bet:int=100):
-    if user == ctx.author:
+    if user != ctx.author:
         return await ctx.send("Bruh you cant start a game with yourself")
     if user.bot:
         return await ctx.send("You can't challenge a bot lmao. You'll always lose...")
@@ -3400,130 +3442,7 @@ async def tictactoe(ctx, user:discord.Member, bet:int=100):
     cont = f"{ctx.author.mention} vs {user.mention}\n" \
            f"Bet Amount: `{await commait(bet)}`\n" \
            f"Click 'Accept' to start. Waiting on: {' '.join([x.mention for x in bot.waitings[ctx.author.id]])}"
-    pre = await ctx.send(cont, components=[Button(label='Accept', style=ButtonStyle.green)])
-    while True:
-        def check(res):
-            return res.user in [ctx.author, user]
-        try:
-            res = await bot.wait_for("button_click", check=check, timeout=60)
-        except:
-            await pre.edit(content=f"{' '.join([x.mention for x in bot.waitings[ctx.author.id]])} didn't respond in time", components=[])
-            return
-        if res.user in bot.waitings[ctx.author.id]:
-            per = bot.accounts[str(res.user.id)]
-            p = per["wallet"]
-            if p < bet:
-                cont = f"{res.user.mention} doesn't have enough coins!"
-                compo = []
-            else:
-                per["wallet"] -= bet
-                bot.accounts[str(res.user.id)] = per
-                await update_data()
-
-                bot.waitings[ctx.author.id].remove(res.user)
-                cont = f"{ctx.author.mention} vs {user.mention}\n" \
-                       f"Bet Amount: `{await commait(bet)}`\n" \
-                       f"Click 'Accept' to start. Waiting on: {' '.join([x.mention for x in bot.waitings[ctx.author.id]])}"
-                compo = [Button(label='Accept', style=ButtonStyle.green)]
-            await res.respond(type=7, content=cont, components=compo)
-        else:
-            await res.respond(type=InteractionType.DeferredUpdateMessage)
-
-        if len(bot.waitings[ctx.author.id]) == 0:
-            await pre.delete()
-            break
-
-    board = {1: "", 2: "", 3: "",
-             4: "", 5: "", 6: "",
-             7: "", 8: "", 9: ""}
-    row = []
-    cont = []
-    c = 0
-    for i in range(1, 10):
-        row.append(Button(style=2, label="\u200b", id=i))
-        c += 1
-        if c == 3:
-            cont.append(row)
-            row = []
-            c = 0
-    turn = random.choice([ctx.author, user])
-    msg = await ctx.send(f"{turn.mention} to move first:", components=cont)
-    emoji = "❌"
-    moves = 0
-    for i in range(10):
-        def check(res):
-            return res.user.id == turn.id and res.message.id == msg.id
-        try:
-            res = await bot.wait_for("button_click", check=check)
-        except:
-            await res.respond(type=7, content=f"**Game Over! The user didn't move in time**\nWinner: 🏆 {turn.mention} 🏆", components=[])
-            if turn == ctx.author: id2 = user
-            else: id2 = ctx.author
-            await ttt_end(turn, id2, bet, ctx)
-            return
-        cc = msg.components
-        resid = res.component.id
-        board[int(resid)] = emoji
-        count = 1
-        done = False
-        for j in cc:
-            for k in j:
-                if count == int(resid):
-                    k.emoji = emoji
-                    k.disabled = True
-                    done = True
-                if done: break
-                count += 1
-            if done: break
-        moves += 1
-        tie = False
-        gameover = False
-        if moves >= 5:
-            if board[7] == board[8] == board[9] != '':
-                gameover = True
-
-            elif board[4] == board[5] == board[6] != '':
-                gameover = True
-
-            elif board[1] == board[2] == board[3] != '':
-                gameover = True
-
-            elif board[1] == board[4] == board[7] != '':
-                gameover = True
-
-            elif board[2] == board[5] == board[8] != '':
-                gameover = True
-
-            elif board[3] == board[6] == board[9] != '':
-                gameover = True
-
-            elif board[7] == board[5] == board[3] != '':
-                gameover = True
-
-            elif board[1] == board[5] == board[9] != '':
-                gameover = True
-        if moves >= 9:
-            tie = True
-
-        if gameover:
-            await res.respond(type=7, content=f"**Game Over!**\nWinner: 🏆 {turn.mention} 🏆", components=[])
-            if turn == ctx.author: id2 = user
-            else: id2 = ctx.author
-            await ttt_end(turn, id2, bet, ctx)
-            break
-        elif tie:
-            await res.respond(type=7, content=f"**Game Tied!**\nWell Played!", components=[])
-            if turn == ctx.author: id2 = user
-            else: id2 = ctx.author
-            await ttt_tie(turn.id, id2.id, bet)
-            break
-        else:
-            if turn == ctx.author: turn = user
-            else: turn = ctx.author
-            if emoji == "❌": emoji = "⭕"
-            else: emoji = "❌"
-
-            await res.respond(type=7, content=f"{turn.mention} Your chance:", components=cc)
+    pre = await ctx.send(cont, view=ConfirmTTT(ctx.author, bet))
 
 class HeadTails(discord.ui.View):
     def __init__(self, member: discord.Member, bet: int):
@@ -3553,9 +3472,10 @@ class HeadTails(discord.ui.View):
             cont = f"You lose hahaha. Nothing for you!"
             color = error_embed
             bot.accounts[str(self.user.id)]["wallet"] -= self.bet
-        embed = discord.Embed(title=win,
+        embed = discord.Embed(title=f"I flipped {self.win}",
                               description=f"{cont}", color=color)
-        await update_data()
+        await interaction.response.edit_message(embed=embed, view=None)
+        await update_accounts()
 
 @bot.command()
 @commands.check(general)
@@ -3575,8 +3495,6 @@ async def on_connect():
         print("Entering on_connect()")
         await uploader.recreate()
         bot.connected_ = True
-        with open("files/accounts.json", "r") as f:
-            bot.accounts = json.load(f)
         await create_stuff()
 
 
