@@ -5,7 +5,7 @@ Copyright (c) 2021-present BlackThunder#4007
 """
 
 import discord
-import ujson
+import json as ujson
 from concurrent.futures import ThreadPoolExecutor
 import requests
 import functools
