@@ -31,7 +31,7 @@ class EconomyBot(commands.Bot):
         self.cachedinv = {}
         self.used = {}
         self.ms = {}
-        self.activems = {"users": []}
+        self.activems = {"users": [], "games":[]}
         self.waitings = {}
         self.status = []
         self.random_status = True
@@ -443,7 +443,7 @@ async def clear_dues():
             continue
         embed = discord.Embed(title='Stock Ended', description=f'The current stock ended and `{await commait(bulk)}` coins have been added to your bank.')
         embed.timestamp = datetime.datetime.utcnow()
-        embed.set_author(name=f'{user.name}', icon_url=user.avatar.url)
+        embed.set_author(name=f'{user.name}', icon_url=user.display_avatar.url)
         embed.set_footer(text='Economy Bot', icon_url=bot.pfp)
         await user.send(embed=embed)
         await create_statement(user, bot.user, bulk, f"Sold {value} Stocks", "Credit")
@@ -511,7 +511,7 @@ async def est_update():
                 if fetched is None:
                     continue
                 embed.timestamp = datetime.datetime.utcnow()
-                embed.set_author(name=f'{fetched.name}', icon_url=fetched.avatar.url)
+                embed.set_author(name=f'{fetched.name}', icon_url=fetched.display_avatar.url)
                 embed.set_footer(text='Economy Bot', icon_url=bot.pfp)
 
                 persona['last'] = cur
@@ -584,7 +584,7 @@ async def check_storetime():
 
 async def open_account(userid):
     if bot.accounts.get(str(userid)) is None:
-        bot.accounts[userid] = {'bank_type':1, 'wallet':0, 'bank':1000}
+        bot.accounts[str(userid)] = {'bank_type':1, 'wallet':0, 'bank':1000}
         await update_accounts()
 
 async def open_estates(userid):
@@ -680,7 +680,7 @@ async def create_stuff():
     await bot.wait_until_ready()
     print("Ready")
     mybot = bot.get_user(832083717417074689)
-    bot.pfp = mybot.avatar.url
+    bot.pfp = mybot.display_avatar.url
     tnew = time.time()
     await load_shop()
     with open('files/bot_data.json', 'r') as c:
@@ -789,7 +789,7 @@ async def perform_stuff(data):
     return stock_data
 
 async def get_avatar(user):
-    return Image.open(BytesIO(await user.avatar.read())).resize((140, 140))
+    return Image.open(BytesIO(await user.display_avatar.read())).resize((140, 140))
 
 async def profile_image(member, level, userxp, xp, total_xp, guildid):
     font = ImageFont.truetype("badges/font2.ttf", 19)
@@ -1179,130 +1179,6 @@ async def inventory_image(userid):
     bg.close()
     return image_bytes
 
-async def start_ms(ctx):
-    ifactive = ctx.author.id in bot.activems["users"]
-    if ifactive:
-        a = await ctx.send(f"You have already started a game earlier, please finish it.\n"
-                       f"If you want to discard that for `5,000` coins and start again, react with {economysuccess}")
-        await a.add_reaction(economysuccess)
-        def check(reaction, user):
-            if user == ctx.author and str(reaction.emoji) in [economysuccess]:
-                return True
-
-        try:
-            reaction, user = await bot.wait_for('reaction_add', timeout=60.0, check=check)
-            net = -5000
-            bot.activems["users"].remove(ctx.author.id)
-        except:
-            return
-    else:
-        net = 0
-    components = []
-    back_rows = []
-    count=0
-    for i in bot.ms[ctx.author.id]["main"]:
-        for j in i:
-            btn = Button(style=ButtonStyle.grey, label="\u200b", id=f'{j}_{count}')
-            back_rows.append(btn)
-            count += 1
-        components.append(back_rows)
-        back_rows = []
-    minemsg = await ctx.send("**Welcome to Minesweeper!**\n"
-                   "Rules:\n"
-                   "> For each correct move, you get `1,000` coins\n"
-                   "> For each incorrect move, `2,000` coins are taken away!\n"
-                   "> Your aim is to click on blocks avoiding any bombs. All the best!\n"
-                   f"`Note:` To end the game, react with {economyerror}\n\n"
-                   "Total Moves: `0`    Correct: `0`    Incorrect: `0`\n"
-                   f"Net Profit: `{net}`\n"
-                   "Here is your board:", components=components)
-    await minemsg.add_reaction(economyerror)
-    bot.activems["users"].append(ctx.author.id)
-    moves = 0
-    correct = 0
-    wrong = 0
-
-    bot.activems[minemsg.id] = (minemsg, ctx, net)
-    while True:
-        def check(res):
-            return res.user.id == ctx.author.id and res.message.id == minemsg.id
-        try:
-            res = await bot.wait_for("button_click", check=check, timeout=60)
-        except:
-            await stop_ms(minemsg, ctx, net)
-            break
-        btnid = str(res.component.id).split('_')
-        pos = int(btnid[1])
-        typ = btnid[0]
-        moves += 1
-
-        getbtn = 0
-        getrow = []
-        prec = res.message.components
-        change = prec[pos]
-        emojisetter = {
-            0: "0\N{variation selector-16}\N{combining enclosing keycap}",
-            1: "1\N{variation selector-16}\N{combining enclosing keycap}",
-            2: "2\N{variation selector-16}\N{combining enclosing keycap}",
-            3: "3\N{variation selector-16}\N{combining enclosing keycap}",
-            4: "4\N{variation selector-16}\N{combining enclosing keycap}",
-            5: "5\N{variation selector-16}\N{combining enclosing keycap}",
-            6: "6\N{variation selector-16}\N{combining enclosing keycap}",
-            7: "7\N{variation selector-16}\N{combining enclosing keycap}",
-            8: "8\N{variation selector-16}\N{combining enclosing keycap}"
-        }
-        if typ == "bomb":
-            wrong += 1
-            net -= 2000
-            change.emoji = "💣"
-            change.style = ButtonStyle.red
-        else:
-            correct += 1
-            net += 1000
-            cc = 0
-            done = False
-            for i in bot.ms[ctx.author.id]["count"]:
-                if done: break
-                for nxt in i:
-                    if pos == cc:
-                        change.emoji = emojisetter[nxt]
-                        change.style = ButtonStyle.green
-                        done = True
-                    else: cc += 1
-                    if done: break
-
-        change.disabled = True
-        prec.pop(pos)
-        prec.insert(pos, change)
-
-        fcom = []
-        for i in prec:
-            getrow.append(i)
-            getbtn += 1
-
-            if getbtn == 5:
-                fcom.append(getrow)
-                getrow = []
-                getbtn = 0
-        cntn = f"Total Moves: `{moves}`    Correct: `{correct}`    Incorrect: `{wrong}`\n" \
-               f"Net Profit: `{net}`\n"
-        bot.activems[minemsg.id] = (minemsg, ctx,  net)
-        if moves == 25:
-            await stop_ms(minemsg, ctx, net)
-            break
-        else:
-            await res.respond(type=InteractionType.UpdateMessage, content=cntn, components=fcom)
-
-async def stop_ms(minemsg, ctx, net):
-    try: bot.activems["users"].remove(ctx.author.id)
-    except: return
-    user = bot.accounts[str(ctx.author.id)]
-    user["wallet"] += net
-    bot.accounts[str(ctx.author.id)] = user
-    await update_accounts()
-    await minemsg.edit(content=f"**The game ended**\nNet Profit: `{await commait(net)}`", components=[])
-    await minemsg.clear_reactions()
-
 async def general(ctx):
     state = await spam_protect(ctx.author.id)
     toreturn = True
@@ -1478,9 +1354,6 @@ async def on_command_error(ctx, error):
 
 @bot.event
 async def on_raw_reaction_add(payload):
-    if payload.message_id in bot.activems.keys():
-        if payload.user_id != bot.activems[payload.message_id][1].author.id: return
-        await stop_ms(bot.activems[payload.message_id][0], bot.activems[payload.message_id][1],bot.activems[payload.message_id][2])
     if payload.channel_id != 844184710678577193: return
     if payload.user_id not in devs: return
     a = await get_errorfile()
@@ -1761,15 +1634,13 @@ async def balance(ctx, member:discord.Member = None):
     fetched = bot.get_user(userid)
     embed.timestamp = datetime.datetime.utcnow()
     embed.set_footer(text='Economy Bot', icon_url=bot.pfp)
-    embed.set_author(name=fetched.name, icon_url=fetched.avatar.url)
+    embed.set_author(name=fetched.name, icon_url=fetched.display_avatar.url)
 
     await ctx.send(embed=embed)
 
 @bot.command(aliases=['dep'])
 @commands.check(general)
-async def deposit(ctx, amount:str = None):
-    if amount is None:
-        await ctx.reply('`e.dep <amount>`, idiot.')
+async def deposit(ctx, amount:str):
     person = bot.accounts.get(f'{ctx.author.id}')
     wallet = person['wallet']
     bank = person['bank']
@@ -1780,11 +1651,11 @@ async def deposit(ctx, amount:str = None):
     else:
         amount = int(amount)
     if amount < 0:
-        return await ctx.send(f'{ctx.author.mention} No over-smartness with me.')
+        return await ctx.send(f'{ctx.author.mention} {random.choice(bot.phrases["negative"])}')
     if amount == 0:
-        return await ctx.send(f'{ctx.author.mention} `0` coins? Are you drunk or something?')
+        return await ctx.send(f'{ctx.author.mention} {random.choice(bot.phrases["zero"])}')
     if wallet < amount:
-        return await ctx.send(f'{ctx.author.mention} Want to deposit more you have? Nah not here.')
+        return await ctx.send(f'{ctx.author.mention} {random.choice(bot.phrases["less_bal"])}')
 
     newbal_w = wallet - amount
     newbal_b = bank + amount
@@ -1854,7 +1725,7 @@ async def mybank(ctx, member:discord.Member = None):
     fetched = bot.get_user(userid)
     embed.timestamp = datetime.datetime.utcnow()
     embed.set_footer(text='Economy Bot', icon_url=bot.pfp)
-    embed.set_author(name=f'{fetched.name} | 🏦 Know Your Bank!', icon_url=fetched.avatar.url)
+    embed.set_author(name=f'{fetched.name} | 🏦 Know Your Bank!', icon_url=fetched.display_avatar.url)
 
     await ctx.send(embed=embed)
 
@@ -1973,7 +1844,7 @@ async def estates(ctx, member:discord.Member=None):
     fetched = bot.get_user(userid)
     embed.timestamp = datetime.datetime.utcnow()
     embed.set_footer(text='Economy Bot', icon_url=bot.pfp)
-    embed.set_author(name=f'{fetched.name} | {name} Hotel', icon_url=fetched.avatar.url)
+    embed.set_author(name=f'{fetched.name} | {name} Hotel', icon_url=fetched.display_avatar.url)
     url = getestates_thumb[str(level)]
     embed.set_image(url=f"{url.replace('cdn.discordapp.com', 'media.discordapp.net')}?width=500&height=400")
     await ctx.send(embed=embed)
@@ -2033,7 +1904,7 @@ async def revenue(ctx):
     fetched = bot.get_user(ctx.author.id)
     embed.timestamp = datetime.datetime.utcnow()
     embed.set_footer(text='Economy Bot', icon_url=bot.pfp)
-    embed.set_author(name=f'{fetched.name} | {name} Hotel', icon_url=fetched.avatar.url)
+    embed.set_author(name=f'{fetched.name} | {name} Hotel', icon_url=fetched.display_avatar.url)
 
     persona = bot.accounts[f'{ctx.author.id}']
     bank_ = persona['bank']
@@ -2103,7 +1974,7 @@ async def maintain(ctx):
     fetched = bot.get_user(ctx.author.id)
     embed.timestamp = datetime.datetime.utcnow()
     embed.set_footer(text='Economy Bot', icon_url=bot.pfp)
-    embed.set_author(name=f'{fetched.name} | {name} Hotel', icon_url=fetched.avatar.url)
+    embed.set_author(name=f'{fetched.name} | {name} Hotel', icon_url=fetched.display_avatar.url)
 
     await ctx.send(embed=embed)
 
@@ -2122,7 +1993,7 @@ async def upgrade(ctx):
         fetched = bot.get_user(ctx.author.id)
         embed.timestamp = datetime.datetime.utcnow()
         embed.set_footer(text='Economy Bot', icon_url=bot.pfp)
-        embed.set_author(name=f'{fetched.name} | {name} Hotel', icon_url=fetched.avatar.url)
+        embed.set_author(name=f'{fetched.name} | {name} Hotel', icon_url=fetched.display_avatar.url)
 
         return await ctx.send(embed=embed)
 
@@ -2148,7 +2019,7 @@ async def upgrade(ctx):
     fetched = bot.get_user(ctx.author.id)
     embed.timestamp = datetime.datetime.utcnow()
     embed.set_footer(text='Economy Bot', icon_url=bot.pfp)
-    embed.set_author(name=f'{fetched.name} | {name} Hotel', icon_url=fetched.avatar.url)
+    embed.set_author(name=f'{fetched.name} | {name} Hotel', icon_url=fetched.display_avatar.url)
 
     msg = await ctx.send(embed=embed)
     await msg.add_reaction(economysuccess)
@@ -2213,7 +2084,7 @@ async def alerts(ctx, state:str = None):
         embed.add_field(name='Current State', value=current)
         fetched = bot.get_user(ctx.author.id)
         embed.timestamp = datetime.datetime.utcnow()
-        embed.set_author(name=f'{fetched.name}', icon_url=fetched.avatar.url)
+        embed.set_author(name=f'{fetched.name}', icon_url=fetched.display_avatar.url)
         embed.set_footer(text='Economy Bot', icon_url=bot.pfp)
         return await ctx.send(embed=embed)
 
@@ -2285,7 +2156,7 @@ async def transfer(ctx, togive:discord.Member = None, amount = None, *, reason =
     fetched = bot.get_user(ctx.author.id)
     embed.timestamp = datetime.datetime.utcnow()
     embed.set_footer(text='Economy Bot', icon_url=bot.pfp)
-    embed.set_author(name=f'{fetched.name}', icon_url=fetched.avatar.url)
+    embed.set_author(name=f'{fetched.name}', icon_url=fetched.display_avatar.url)
 
     await ctx.send(embed=embed)
 
@@ -2474,7 +2345,7 @@ async def buystocks(ctx, amount):
     fetched = bot.get_user(ctx.author.id)
     embed.timestamp = datetime.datetime.utcnow()
     embed.set_footer(text='Economy Bot', icon_url=bot.pfp)
-    embed.set_author(name=f'{fetched.name}', icon_url=fetched.avatar.url)
+    embed.set_author(name=f'{fetched.name}', icon_url=fetched.display_avatar.url)
     await ctx.send(embed=embed)
     sto1 = bot.awards["stocks"]
 
@@ -2527,9 +2398,16 @@ async def sellstocks(ctx, amount):
     fetched = bot.get_user(ctx.author.id)
     embed.timestamp = datetime.datetime.utcnow()
     embed.set_footer(text='Economy Bot', icon_url=bot.pfp)
-    embed.set_author(name=f'{fetched.name}', icon_url=fetched.avatar.url)
+    embed.set_author(name=f'{fetched.name}', icon_url=fetched.display_avatar.url)
 
     await ctx.send(embed=embed)
+
+class Help(discord.ui.View):
+    def __init__(self):
+        super().__init__()
+        btns = [discord.ui.Button(label="Support Server", url=support_server),
+                discord.ui.Button(label="Invite URL", url=invite_url)]
+        for i in btns: self.add_item(i)
 
 @bot.command()
 @commands.check(general)
@@ -2562,14 +2440,12 @@ async def help(ctx, specify=None):
         embed.add_field(name='\u200b', value=f'For more support, visit our Support Server (click button) or use `e.server`\n'
                                              f'`<>` and `[]` are **not** required while using commands\n\n'
                                              f'Syntax: `<>` = Required `[]` = Optional')
-        components = [[Button(style=ButtonStyle.URL, label="Support Server", url=support_server),
-                      Button(style=ButtonStyle.URL, label="Invite URL", url=invite_url)]]
         try:
-            await ctx.author.send(embed=embed, components=components)
+            await ctx.author.send(embed=embed, view=Help())
             embed = discord.Embed(title=f'{economysuccess} You received a mail!', color=success_embed)
             await ctx.reply(embed=embed)
         except:
-            await ctx.send(embed=embed, components=components)
+            await ctx.send(embed=embed, view=Help())
         return
     x = bot.help_json.values()
     notfound = True
@@ -2887,7 +2763,7 @@ async def use(ctx, *, item:str):
         embed = discord.Embed(color=chestcol)
         fetched = bot.get_user(ctx.author.id)
         embed.set_footer(text='Type e.sell <item-name> to sell an item for coins\nType e.iteminfo <item-name> for info!', icon_url=bot.pfp)
-        embed.set_author(name=f'{fetched.name} Unboxed: {item_name}', icon_url=fetched.avatar.url)
+        embed.set_author(name=f'{fetched.name} Unboxed: {item_name}', icon_url=fetched.display_avatar.url)
         embed.set_image(url="attachment://unboxing.gif")
         await ctx.send(embed=embed, file=file)
 
@@ -2949,7 +2825,7 @@ async def bank(ctx, tier:int=None):
         fetched = bot.get_user(ctx.author.id)
         embed.timestamp = datetime.datetime.utcnow()
         embed.set_footer(text='Economy Bot', icon_url=bot.pfp)
-        embed.set_author(name=fetched.name, icon_url=fetched.avatar.url)
+        embed.set_author(name=fetched.name, icon_url=fetched.display_avatar.url)
         return await ctx.send(embed=embed)
     user = bot.accounts[str(ctx.author.id)]
 
@@ -3085,7 +2961,7 @@ async def items(ctx, *, everything=None):
                           description=f"Items Owned: `{len(sorted_inv)}/50`\n"
                                       "Click on the item for item info!",
                           color=0x2f3136)
-    embed.set_author(name=ctx.author.name, icon_url=ctx.author.avatar.url)
+    embed.set_author(name=ctx.author.name, icon_url=ctx.author.display_avatar.url)
     embed.set_footer(text=f'Page {user_page_orignal} of {max_pages}')
     a = await ctx.send(embed=embed, components=components)
     while True:
@@ -3098,29 +2974,6 @@ async def items(ctx, *, everything=None):
                 if "info" in res.component.id:
                     via_iteminfo = await iteminfo(ctx, name=res.component.label, via=True)
                     resmsg = await ddb.send_component_msg(channel=ctx.channel, content='', embed=via_iteminfo["embed"], file=via_iteminfo["file"])
-
-@bot.command(aliases=["test"],hidden=True)
-@commands.check(is_dev)
-async def _test(ctx):
-    newjson = {}
-    for i in bot.help_json.keys():
-        cat = bot.help_json[i]
-        for j in cat.keys():
-            if j == "category": continue
-            cool = bot.cooldown[j[2:]]["duration"]
-            cat[j]["cooldown"] = cool
-        newjson[i] = cat
-    with open('files/bot_data.json', 'r') as r:
-        data = json.load(r)
-    data["help"] = newjson
-    with open('files/bot_data.json', 'w') as f:
-        f.write(json.dumps(data, indent=2))
-
-@bot.command(hidden=True)
-@commands.check(is_dev)
-async def sleep(ctx):
-    time.sleep(15)
-    print("done sleeping")
 
 @bot.command(pass_context=True)
 @commands.check(general)
@@ -3169,61 +3022,121 @@ async def sell(ctx, *, item):
     await ctx.send(embed=embed)
     await update_inv()
 
-@bot.command()
-@commands.check(general)
-async def games(ctx):
-    ttt = Button(style=ButtonStyle.green, label="Tic-Tac-Toe", emoji="👀", id="ttt")
-    mine = Button(style=ButtonStyle.green, label="Minesweeper", emoji="💣", id="mine")
+class BetButtons(discord.ui.Button):
+    def __init__(self, x: int, y: int):
+        super().__init__(style=discord.ButtonStyle.secondary, label=str(y), row=x)
+        self.x = x
+        self.y = y
 
-    msg = await ctx.send(f"**Welcome to Gamebot Arcade <:gamepad:849117058875916308>**\nChoose your game below:", components=[ttt, mine])
-    def check(res):
-        return res.user == ctx.author
-    res = await bot.wait_for("button_click", check=check)
+    async def callback(self, interaction: discord.Interaction):
+        assert self.view is not None
+        view: InteractiveTTT = self.view
+        if interaction.user != view.ctx.author:
+            return await interaction.response.send_message(
+                random.choice(bot.phrases["inter"]).format(usertag=str(view.ctx.author)),
+                ephemeral=True)
+        for i in view.children: i.disabled = True
+        view.stop()
+        bot.waitings[view.ctx.author.id] = [view.ctx.author, view.person]
+        await interaction.response.edit_message(content=f"{view.ctx.author.mention} vs {view.person.mention}\n" \
+           f"Bet Amount: `{await commait(int(self.label))}`\n" \
+           f"Click 'Accept' to start. Waiting on: {' '.join([x.mention for x in bot.waitings[view.ctx.author.id]])}",
+                                                view=ConfirmTTT(view.ctx.author, view.person, int(self.label)))
 
-    if res.component.id == "mine":
-        await res.respond(type=InteractionType.DeferredUpdateMessage)
-        await msg.delete()
-        await minesweeper(ctx)
-    elif res.component.id == "ttt":
-        await res.respond(type=7, content="Tag your friend with whom you will like to play")
+class InteractiveTTT(discord.ui.View):
+    def __init__(self, ctx: Context, person: discord.Member):
+        super().__init__()
+        self.ctx = ctx
+        self.person = person
+        self.confirm_p = None
+
+    @discord.ui.button(label="Accept", style=discord.ButtonStyle.green)
+    async def accept(self, button, interaction: discord.Interaction):
+        if interaction.user != self.person:
+            return await interaction.response.send_message(
+                random.choice(bot.phrases["inter"]).format(usertag=str(self.person)),
+                ephemeral=True)
+        self.clear_items()
+        options = [[100, 200, 250, 500, 1000],
+                        [2000, 2500, 5000, 10000, 20000]]
+        for i in range(2):
+            for j in options[i]:
+                self.add_item(BetButtons(i, j))
+        await interaction.response.edit_message(content=f"Challenge Accepted! "
+                                          f"{self.ctx.author.mention} to select betting amount:",
+                                                view=self)
+
+    @discord.ui.button(label="Decline", style=discord.ButtonStyle.red)
+    async def decline(self, button, interaction: discord.Interaction):
+        if interaction.user != self.person:
+            return await interaction.response.send_message(
+                random.choice(bot.phrases["inter"]).format(usertag=str(self.person)),
+                ephemeral=True)
+        for i in self.children: i.disabled = True
+        self.stop()
+        await interaction.response.edit_message(content="LOL the man declined!", view=self)
+
+class Games(discord.ui.View):
+    def __init__(self, ctx: Context):
+        super().__init__()
+        self.ctx = ctx
+
+    @discord.ui.button(label="Minesweeper", emoji="💣", style=discord.ButtonStyle.blurple)
+    async def mine(self, button, interaction: discord.Interaction):
+        await interaction.response.defer()
+        await minesweeper(self.ctx)
+        self.stop()
+
+    @discord.ui.button(label="Tic-Tac-Toe", emoji="⭕", style=discord.ButtonStyle.blurple)
+    async def tic(self, button, interaction: discord.Interaction):
+        ctx = self.ctx
+        await interaction.response.send_message("Tag your friend with whom you will like to play")
+
         def check(c):
             return c.author == ctx.author and c.channel == ctx.channel and len(c.mentions) != 0
         try:
             c = await bot.wait_for("message", timeout=60, check=check)
         except:
-            await msg.edit(content="Timed Out! User didnt reply in time")
+            return
+
         person = c.mentions[0]
         if person == ctx.author:
             return await ctx.send(f"{person.mention} Lmao starting a game with yourself? How lonely..")
         if person.bot:
             return await ctx.send("You can't challenge a bot lmao. You'll always lose...")
+
+        confirming = InteractiveTTT(ctx, person)
         confirm_p = await ctx.send(f'{person.mention} Hey, {ctx.author.mention} wants to challenge you for a game of'
-                                   f' Tic-Tac-Toe. Click "Accept" to start!', components=[Button(label="Accept", style=ButtonStyle.green)])
-        def check(res):
-            return res.user == person and res.message.id == confirm_p.id
-        try:
-            res = await bot.wait_for("button_click", check=check, timeout=120)
-        except:
-            await confirm_p.edit(content="User didn't accept the challenge. What a coward lmfao", components=[])
-            return
-        await res.respond(type=7, content=f"Challenge Accepted! "
-                                          f"{ctx.author.mention} to select betting amount:",
-                          components=[[Button(label=x, style=ButtonStyle.grey) for x in [100, 200, 250, 500, 1000]],
-                                      [Button(label=x, style=ButtonStyle.grey) for x in [2000, 2500, 5000, 10000, 20000]]])
-        def check(res):
-            return res.user == ctx.author
-        try:
-            res = await bot.wait_for("button_click", check=check, timeout=60)
-        except:
-            await confirm_p.edit(content="Timed Out! User didn't reply in time", components=[])
-            return
-        await res.respond(type=InteractionType.DeferredUpdateMessage)
-        await confirm_p.delete()
-        await tictactoe(ctx, bot.get_user(person.id), int(res.component.label))
+                                   f' Tic-Tac-Toe. Click "Accept" to proceed!', view=confirming)
+        confirming.confirm_p = confirm_p
+
+@bot.command()
+@commands.check(general)
+async def games(ctx):
+    msg = await ctx.send(f"**Welcome to Gamebot Arcade <:gamepad:849117058875916308>**\nChoose your game below:",
+                         view=Games(ctx))
 
 @bot.command(aliases=["ms", "mine"], pass_context=True, invoke_without_command=True)
 @commands.check(general)
 async def minesweeper(ctx):
+    ifactive = ctx.author.id in bot.activems["users"]
+    if ifactive:
+        a = await ctx.send(f"You have already started a game earlier, please finish it.\n"
+                           f"If you want to discard that for `5,000` coins and start again, react with {economysuccess}")
+        await a.add_reaction(economysuccess)
+
+        def check(reaction, user):
+            if user == ctx.author and str(reaction.emoji) in [economysuccess]:
+                return True
+
+        try:
+            reaction, user = await bot.wait_for('reaction_add', timeout=60.0, check=check)
+            net = -5000
+            bot.activems["users"].remove(ctx.author.id)
+        except:
+            return
+    else:
+        net = 0
     bomb_count = random.randint(5, 10)
     mainlist = ["empty" for i in range(25)]
 
@@ -3296,50 +3209,115 @@ async def minesweeper(ctx):
                 count_row = []
                 final_count = 0
     bot.ms[ctx.author.id] = {"main":minesweeper, "count":count_sweeper}
-    await start_ms(ctx)
 
-class TicTacToeButton(discord.ui.Button['TicTacToe']):
+    back_rows = []
+    count = 0
+    board = Minesweeper(ctx.author, net)
+    minemsg = await ctx.send("**Welcome to Minesweeper!**\n"
+                             "Rules:\n"
+                             "> For each correct move, you get `1,000` coins\n"
+                             "> For each incorrect move, `2,000` coins are taken away!\n"
+                             "> Your aim is to click on blocks avoiding any bombs. All the best!\n"
+                             f"`Note:` To end the game, react with {economyerror}\n\n"
+                             "Total Moves: `0`    Correct: `0`    Incorrect: `0`\n"
+                             f"Net Profit: `{net}`\n"
+                             "Here is your board:", view=board)
+    await minemsg.add_reaction(economyerror)
+    bot.activems["users"].append(ctx.author.id)
+
+    def check(reaction, user):
+        if user == ctx.author and str(reaction.emoji) == economyerror:
+            return True
+
+    try:
+        reaction, user = await bot.wait_for('reaction_add', check=check)
+        await board.end(minemsg)
+    except:
+        pass
+
+class Minesweeper(discord.ui.View):
+    moves = 0
+    correct = 0
+    wrong = 0
+
+    def __init__(self, player: discord.Member, net):
+        super().__init__()
+        self.player = player
+        self.board = bot.ms[player.id]["main"]
+        self.count = bot.ms[player.id]["count"]
+        self.net = net
+
+        for x in range(5):
+            for y in range(5):
+                self.add_item(MinesweeperButton(x, y))
+
+    async def end(self, msg: discord.Message):
+        try: bot.activems["users"].remove(self.player.id)
+        except: pass
+        bot.accounts[str(self.player.id)]["wallet"] += self.net
+        await update_accounts()
+        cont = f"**The game ended**\nNet Profit: `{await commait(self.net)}`"
+        for i in self.children:
+            i.disabled = True
+        self.stop()
+        await msg.edit(content=cont, view=self)
+
+class MinesweeperButton(discord.ui.Button['Minesweeper']):
     def __init__(self, x: int, y: int):
         super().__init__(style=discord.ButtonStyle.secondary, label='\u200b', row=y)
         self.x = x
         self.y = y
+        self.emojisetter = {
+            0: "0\N{variation selector-16}\N{combining enclosing keycap}",
+            1: "1\N{variation selector-16}\N{combining enclosing keycap}",
+            2: "2\N{variation selector-16}\N{combining enclosing keycap}",
+            3: "3\N{variation selector-16}\N{combining enclosing keycap}",
+            4: "4\N{variation selector-16}\N{combining enclosing keycap}",
+            5: "5\N{variation selector-16}\N{combining enclosing keycap}",
+            6: "6\N{variation selector-16}\N{combining enclosing keycap}",
+            7: "7\N{variation selector-16}\N{combining enclosing keycap}",
+            8: "8\N{variation selector-16}\N{combining enclosing keycap}"
+        }
 
     async def callback(self, interaction: discord.Interaction):
         assert self.view is not None
-        view: TicTacToe = self.view
+        view: Minesweeper = self.view
+
+        if interaction.user != view.player:
+            await interaction.response.send_message(random.choice(bot.phrases["inter"]).format(usertag=str(view.player)),
+                                                    ephemeral=True)
+            return
+
         state = view.board[self.y][self.x]
-
-        if view.current_player == view.X:
+        emojis = self.emojisetter
+        view.moves += 1
+        if state == "bomb":
             self.style = discord.ButtonStyle.red
-            self.emoji = "❌"
+            self.emoji = "💣"
             self.disabled = True
-            view.board[self.y][self.x] = 1
-            view.current_player = view.O
-            content = f"{view.O.mention} to move:"
+            view.wrong += 1
+            view.net -= 2000
         else:
-            self.style = discord.ButtonStyle.green
-            self.emoji = "⭕"
+            self.style = discord.ButtonStyle.blurple
             self.disabled = True
-            view.board[self.y][self.x] = -1
-            view.current_player = view.X
-            content = f"{view.X.mention} to move:"
+            coun = view.count[self.y][self.x]
+            self.emoji = emojis[coun]
+            view.correct += 1
+            view.net += 1000
 
-        winner = view.check_board_winner()
-        if winner is not None:
-            if winner == view.X:
-                content = f'🏆 {view.X.mention} won! 🏆'
-            elif winner == view.O:
-                content = f'🏆 {view.Y.mention} won! 🏆'
-            else:
-                content = "It's a tie!"
-
-            for child in view.children:
-                child.disabled = True
-
+        if view.moves == 25:
+            try:
+                bot.activems["users"].remove(view.player.id)
+            except:
+                pass
+            bot.accounts[str(view.player.id)]["wallet"] += view.net
+            await update_accounts()
+            cont = f"**The game ended**\nNet Profit: `{await commait(view.net)}`"
             view.stop()
-
-        await interaction.response.edit_message(content=content, view=view)
-
+        else:
+            cont = f"Total Moves: `{view.moves}`    Correct: `{view.correct}`    Incorrect: `{view.wrong}`\n" \
+                   f"Net Profit: `{view.net}`\n"
+        await interaction.response.edit_message(content=cont, view=view)
 
 class TicTacToe(discord.ui.View):
     def __init__(self, p1: discord.Member, p2: discord.Member, move):
@@ -3390,17 +3368,67 @@ class TicTacToe(discord.ui.View):
 
         return None
 
+class TicTacToeButton(discord.ui.Button['TicTacToe']):
+    def __init__(self, x: int, y: int):
+        super().__init__(style=discord.ButtonStyle.secondary, label='\u200b', row=y)
+        self.x = x
+        self.y = y
+
+    async def callback(self, interaction: discord.Interaction):
+        assert self.view is not None
+        view: TicTacToe = self.view
+        if interaction.user not in [view.X, view.O]:
+            return await interaction.response.send_message(
+                random.choice(bot.phrases["inter"]).format(usertag=" or ".join([str(view.X), str(view.O)])),
+            ephemeral=True)
+        if interaction.user != view.current_player:
+            return await interaction.response.send_message("Its not your turn. HaVe PaTiEnCe!", ephemeral=True)
+        state = view.board[self.y][self.x]
+        if view.current_player == view.X:
+            self.style = discord.ButtonStyle.red
+            self.emoji = "❌"
+            self.disabled = True
+            view.board[self.y][self.x] = -1
+            view.current_player = view.O
+            content = f"{view.O.mention} to move:"
+        else:
+            self.style = discord.ButtonStyle.green
+            self.emoji = "⭕"
+            self.disabled = True
+            view.board[self.y][self.x] = +1
+            view.current_player = view.X
+            content = f"{view.X.mention} to move:"
+
+        winner = view.check_board_winner()
+        if winner is not None:
+            if winner == view.X:
+                content = f'🏆 {view.X.mention} won! 🏆'
+            elif winner == view.O:
+                content = f'🏆 {view.O.mention} won! 🏆'
+            else:
+                content = "It's a tie!"
+
+            for child in view.children:
+                child.disabled = True
+
+            view.stop()
+
+        await interaction.response.edit_message(content=content, view=view)
+
 class ConfirmTTT(discord.ui.View):
-    def __init__(self, user: discord.Member, bet: int):
+    def __init__(self, user: discord.Member, user2: discord.Member, bet: int):
         super().__init__()
         self.user = user
         self.bet = bet
         self.allowed = bot.waitings[self.user.id]
+        self.p1 = user
+        self.p2 = user2
 
     @discord.ui.button(label="Accept", style=discord.ButtonStyle.green)
     async def accept(self, button, interaction: discord.Interaction):
         if interaction.user not in self.allowed:
-            return await interaction.response.send_message("This is not your game. Use `e.help tictactoe` to start one")
+            return await interaction.response.send_message(random.choice(bot.phrases["inter"]).format(usertag=" or ".join(self.allowed)),
+                                                           ephemeral=True)
 
         per = bot.accounts[str(interaction.user.id)]
         p = per["wallet"]
@@ -3408,7 +3436,7 @@ class ConfirmTTT(discord.ui.View):
 
         if p < bet:
             cont = f"{interaction.user.mention} doesn't have enough coins!"
-            await interaction.response.edit_message(cont, view=None)
+            await interaction.response.edit_message(content=cont, view=None)
         else:
             per["wallet"] -= bet
             bot.accounts[str(interaction.user.id)] = per
@@ -3418,18 +3446,17 @@ class ConfirmTTT(discord.ui.View):
             if len(bot.waitings[self.user.id]) == 0:
                 move = random.choice([self.user, interaction.user])
                 await interaction.response.edit_message(content=f"**Game Begins!** {move.mention} to move first:",
-                                                        view=TicTacToe(self.user, interaction.user, move))
+                                                        view=TicTacToe(self.p1, self.p2, move))
             else:
-                cont = f"{self.user.mention} vs {interaction.user.mention}\n" \
+                cont = f"{self.p1.mention} vs {self.p2.mention}\n" \
                        f"Bet Amount: `{await commait(bet)}`\n" \
                        f"Click 'Accept' to start. Waiting on: {' '.join([x.mention for x in bot.waitings[self.user.id]])}"
                 await interaction.response.edit_message(content=cont)
 
-
 @bot.command(aliases=["ttt"])
 @commands.check(general)
 async def tictactoe(ctx, user:discord.Member, bet:int=100):
-    if user != ctx.author:
+    if user == ctx.author:
         return await ctx.send("Bruh you cant start a game with yourself")
     if user.bot:
         return await ctx.send("You can't challenge a bot lmao. You'll always lose...")
@@ -3442,7 +3469,7 @@ async def tictactoe(ctx, user:discord.Member, bet:int=100):
     cont = f"{ctx.author.mention} vs {user.mention}\n" \
            f"Bet Amount: `{await commait(bet)}`\n" \
            f"Click 'Accept' to start. Waiting on: {' '.join([x.mention for x in bot.waitings[ctx.author.id]])}"
-    pre = await ctx.send(cont, view=ConfirmTTT(ctx.author, bet))
+    pre = await ctx.send(cont, view=ConfirmTTT(ctx.author, user, bet))
 
 class HeadTails(discord.ui.View):
     def __init__(self, member: discord.Member, bet: int):
@@ -3454,13 +3481,15 @@ class HeadTails(discord.ui.View):
     @discord.ui.button(label="Heads", style=discord.ButtonStyle.green)
     async def heads(self, button: discord.ui.Button, interaction: discord.Interaction):
         if interaction.user != self.user:
-            return await interaction.response.send_message("Lol this is not for you. Use `e.flip` yourself", ephemeral=True)
+            return await interaction.response.send_message(random.choice(bot.phrases["inter"]).format(usertag=str(self.user)),
+                                                    ephemeral=True)
         await self.checkfor("Heads", interaction)
 
     @discord.ui.button(label="Tails", style=discord.ButtonStyle.green)
     async def tails(self, button: discord.ui.Button, interaction: discord.Interaction):
         if interaction.user != self.user:
-            return await interaction.response.send_message("Lol this is not for you. Use `e.flip` yourself", ephemeral=True)
+            return await interaction.response.send_message(random.choice(bot.phrases["inter"]).format(usertag=str(self.user)),
+                                                    ephemeral=True)
         await self.checkfor("Tails", interaction)
 
     async def checkfor(self, win, interaction):
@@ -3496,7 +3525,6 @@ async def on_connect():
         await uploader.recreate()
         bot.connected_ = True
         await create_stuff()
-
 
 for i in bot.commands:
     if i.hidden: continue
