@@ -189,6 +189,7 @@ xp_levels = {
 850000:49,
 1000000:50
 }
+items_imgs = {'A wallet': 'https://cdn.discordapp.com/attachments/839080243485736970/881416732621819954/A_wallet.PNG', 'Antique Painting': 'https://cdn.discordapp.com/attachments/839080243485736970/881416745473146920/Antique_Painting.png', 'Black Pen': 'https://cdn.discordapp.com/attachments/839080243485736970/881416749159940096/Black_Pen.png', 'Book Stand': 'https://cdn.discordapp.com/attachments/839080243485736970/881416752653807677/Book_Stand.png', 'Broken CD': 'https://cdn.discordapp.com/attachments/839080243485736970/881416761101156383/Broken_CD.PNG', 'Broken Mouse': 'https://cdn.discordapp.com/attachments/839080243485736970/881416764582408212/Broken_Mouse.PNG', 'Broken String': 'https://cdn.discordapp.com/attachments/839080243485736970/881416769489739796/Broken_String.PNG', 'Broken Television': 'https://cdn.discordapp.com/attachments/839080243485736970/881416771985371146/Broken_Television.png', 'Bronze Spoon': 'https://cdn.discordapp.com/attachments/839080243485736970/881416774883622973/Bronze_Spoon.PNG', 'Charger': 'https://cdn.discordapp.com/attachments/839080243485736970/881416789026811964/Charger.PNG', 'Cloth Piece': 'https://cdn.discordapp.com/attachments/839080243485736970/881416792302555186/Cloth_Piece.PNG', 'Coffee Mug': 'https://cdn.discordapp.com/attachments/839080243485736970/881416796933062727/Coffee_Mug.png','Copper Wire': 'https://cdn.discordapp.com/attachments/839080243485736970/881416805887918130/Copper_Wire.PNG', 'Dead Calculator': 'https://cdn.discordapp.com/attachments/839080243485736970/881416811512487936/Dead_Calculator.PNG', 'Eaten Chocolate': 'https://cdn.discordapp.com/attachments/839080243485736970/881416814901477406/Eaten_Chocolate.PNG', 'Electric Drums': 'https://cdn.discordapp.com/attachments/839080243485736970/881416826326753350/Electric_Drums.png', 'Electric Guitar': 'https://cdn.discordapp.com/attachments/839080243485736970/881416831989088336/Electric_Guitar.PNG', 'Flower Vase': 'https://cdn.discordapp.com/attachments/839080243485736970/881416836938350602/Flower_Vase.PNG', 'Gaming Chair': 'https://cdn.discordapp.com/attachments/839080243485736970/881416841984081950/Gaming_Chair.png', 'Gold Brick': 'https://cdn.discordapp.com/attachments/839080243485736970/881416848481062982/Gold_Brick.png', 'Gold Chain': 'https://cdn.discordapp.com/attachments/839080243485736970/881416854814482472/Gold_Chain.PNG', 'Gold Spectacles': 'https://cdn.discordapp.com/attachments/839080243485736970/881416858589339668/Gold_Spectacles.png', 'Headphones': 'https://cdn.discordapp.com/attachments/839080243485736970/881416862645252117/Headphones.PNG', 'Hourglass': 'https://cdn.discordapp.com/attachments/839080243485736970/881416864968896522/Hourglass.PNG', 'Laptop': 'https://cdn.discordapp.com/attachments/839080243485736970/881416869666512926/Laptop.png', 'Laser Printer': 'https://cdn.discordapp.com/attachments/839080243485736970/881416872342462514/Laser_Printer.png', 'Leather Shoes': 'https://cdn.discordapp.com/attachments/839080243485736970/881416883201536000/Leather_Shoes.PNG', 'Lighter': 'https://cdn.discordapp.com/attachments/839080243485736970/881416891137159258/Lighter.PNG', 'Lollipop': 'https://cdn.discordapp.com/attachments/839080243485736970/881416896375828510/Lollipop.PNG', 'Magnifying Glass': 'https://cdn.discordapp.com/attachments/839080243485736970/881416901983612988/Magnifying_Glass.PNG', 'Maths Book': 'https://cdn.discordapp.com/attachments/839080243485736970/881416909491404820/Maths_Book.PNG', 'Mini Boom Box': 'https://cdn.discordapp.com/attachments/839080243485736970/881416916013551677/Mini_Boom_Box.png', 'Mobile Phone': 'https://cdn.discordapp.com/attachments/839080243485736970/881416920623099924/Mobile_Phone.PNG', 'Money Bag': 'https://cdn.discordapp.com/attachments/839080243485736970/881416925425569792/Money_Bag.PNG', 'Mouse Pad': 'https://cdn.discordapp.com/attachments/839080243485736970/881416932576878602/Mouse_Pad.PNG', 'N95 Mask': 'https://cdn.discordapp.com/attachments/839080243485736970/881416936993460254/N95_Mask.PNG', 'Office Bag': 'https://cdn.discordapp.com/attachments/839080243485736970/881416941741436938/Office_Bag.PNG', 'Party Speakers': 'https://cdn.discordapp.com/attachments/839080243485736970/881416946749431848/Party_Speakers.PNG', 'Pen Stand': 'https://cdn.discordapp.com/attachments/839080243485736970/881416951916802068/Pen_Stand.PNG', 'Piano': 'https://cdn.discordapp.com/attachments/839080243485736970/881416959286181978/Piano.png', 'RC Drone': 'https://cdn.discordapp.com/attachments/839080243485736970/881416970019414056/RC_Drone.PNG', 'Rotten Tomato': 'https://cdn.discordapp.com/attachments/839080243485736970/881416973660082236/Rotten_Tomato.PNG', 'Rubics Cube': 'https://cdn.discordapp.com/attachments/839080243485736970/881416977443323934/Rubics_Cube.PNG', 'Spray Can': 'https://cdn.discordapp.com/attachments/839080243485736970/881416986448523284/Spray_Can.PNG', 'Tennis Ball': 'https://cdn.discordapp.com/attachments/839080243485736970/881416990139490384/Tennis_Ball.png', 'Travel Bag': 'https://cdn.discordapp.com/attachments/839080243485736970/881416993671114752/Travel_Bag.PNG', 'Wall Clock': 'https://cdn.discordapp.com/attachments/839080243485736970/881416997743788032/Wall_Clock.PNG', 'War Sword': 'https://cdn.discordapp.com/attachments/839080243485736970/881417004106539028/War_Sword.png', 'WIFI Router': 'https://cdn.discordapp.com/attachments/839080243485736970/881417011522064405/WIFI_Router.png', 'Wooden Stick': 'https://cdn.discordapp.com/attachments/839080243485736970/881417017154998372/Wooden_Stick.PNG'}
 
 usercmds = {}
 stock_names = ['Ava', 'Neil', 'Ryan', 'Anthony', 'Bernadette', 'Lauren', 'Justin', 'Matt', 'Wanda', 'James', 'Emily', 'Vanessa', 'Carl', 'Fiona', 'Stephanie', 'Pippa', 'Phil', 'Carol', 'Liam', 'Michael', 'Ella', 'Amanda', 'Caroline', 'Nicola', 'Sean', 'Oliver', 'Kylie', 'Rachel', 'Leonard', 'Julian', 'Richard', 'Peter', 'Irene', 'Dominic', 'Connor', 'Dorothy', 'Gavin', 'Isaac', 'Karen', 'Kimberly', 'Abigail', 'Yvonne', 'Steven', 'Felicity', 'Evan', 'Bella', 'Alison', 'Diane', 'Joan', 'Jan', 'Wendy', 'Nathan', 'Molly', 'Charles', 'Victor', 'Sally', 'Rose', 'Robert', 'Claire', 'Theresa', 'Grace', 'Keith', 'Stewart', 'Andrea', 'Alexander', 'Chloe', 'Nicholas', 'Edward', 'Deirdre', 'Anne', 'Joseph', 'Alan', 'Rebecca', 'Jane', 'Natalie', 'Cameron', 'Owen', 'Eric', 'Gabrielle', 'Sonia', 'Tim', 'Sarah', 'Madeleine', 'Megan', 'Lucas', 'Joe', 'Brandon', 'Brian', 'Jennifer', 'Alexandra', 'Adrian', 'John', 'Mary', 'Tracey', 'Jasmine', 'Penelope', 'Hannah', 'Thomas', 'Angela', 'Warren', 'Blake', 'Simon', 'Audrey', 'Frank', 'Samantha', 'Dan', 'Victoria', 'Paul', 'Jacob', 'Heather', 'Una', 'Lily', 'Carolyn', 'Jonathan', 'Ian', 'Piers', 'William', 'Gordon', 'Dylan', 'Olivia', 'Jake', 'Leah', 'Jessica', 'David', 'Katherine', 'Amelia', 'Benjamin', 'Boris', 'Sebastian', 'Lisa', 'Diana', 'Michelle', 'Emma', 'Sam', 'Stephen', 'Faith', 'Kevin', 'Austin', 'Jack', 'Ruth', 'Colin', 'Trevor', 'Joanne', 'Virginia', 'Anna', 'Max', 'Adam', 'Maria', 'Sophie', 'Sue', 'Andrew', 'Harry', 'Amy', 'Christopher', 'Donna', 'Melanie', 'Elizabeth', 'Lillian', 'Julia', 'Christian', 'Luke', 'Zoe', 'Joshua', 'Jason']
@@ -405,7 +406,7 @@ async def update_xp():
     with open('files/xp.json', 'w') as w:
         w.write(json.dumps(bot.xp, indent=2))
 
-async def update_sorted_inv(userid):
+def update_sorted_inv(userid):
     userinv = bot.inventory.get(userid)
     if userinv is None:
         bot.cachedinv[userid] = ()
@@ -417,8 +418,7 @@ async def update_sorted_inv(userid):
         return "itemsinv"
 
     done = []
-    for items in userinv["items"]:
-        done.append(items)
+    for items in userinv["items"]: done.append(items)
     invdict = {}
     for i in set(done):
         invdict[i] = done.count(i)
@@ -734,8 +734,7 @@ async def calculate_networth(userid):
     for i in invlist:
         networth += chestnetworths[i]
 
-    for i in bot.items.keys():
-        rar = bot.items[i]
+    for i, rar in bot.items.items():
         for j in rar["items"]:
             while True:
                 if j["name"] in itemslist:
@@ -965,43 +964,6 @@ async def check_channel(chlid, guildid):
 async def get_errorfile():
     with open('files/errors.json', 'r') as f:
         return json.load(f)
-
-async def inv_components(userid, user_page_orignal, rarity):
-    user_page = (user_page_orignal - 1) * 6
-    components = []
-    sorted_inv = await update_sorted_inv(userid)
-    item_count = 0
-    maxlen = 0
-    while True:
-        try:
-            current_item = sorted_inv[user_page][0]
-        except:
-            break
-        for i in bot.items.keys():
-            if rarity is not None:
-                i = rarity
-            for j in bot.items[i]["items"]:
-                if j["name"] == current_item:
-                    if item_count == 5: break
-                    itemname = j['name']
-                    emojis = {"common":847687974414319626, "rare":847687973202165841, "legendary":847687925596160002}
-                    rarity_emoji = emojis[i]
-                    emoji = j["emoji"].split(':')[-1].replace('>', '')
-                    qty_userhas = sorted_inv[user_page][1]
-                    if len(itemname) > maxlen: maxlen = len(itemname)
-                    """name = Button(style=ButtonStyle.green, label=itemname,
-                                  emoji=bot.get_emoji(int(emoji)), id="info")
-                    rarity_qty = Button(style=ButtonStyle.grey, label=str(qty_userhas) + "x",
-                                        emoji=bot.get_emoji(rarity_emoji))
-                    components.append([rarity_qty, name])"""
-                    item_count += 1
-                    user_page += 1
-            if rarity is not None:
-                user_page+=1
-                break
-            if item_count == 5: break
-        if item_count == 5: break
-    return components
 
 async def update_errorfile(a):
     with open('files/errors.json', 'w') as f:
@@ -2887,21 +2849,23 @@ async def bank(ctx, tier:int=None):
 @commands.check(general)
 async def iteminfo(ctx, *, name:str, via:bool=False):
     found = False
-    for i in bot.items.keys():
-        for j in bot.items[i]["items"]:
+    mychest, item = "", {}
+    for k, v in bot.items.items():
+        for j in v["items"]:
             if name.lower() == j["name"].lower():
                 found = True
                 item = j
-                mychest = i
+                mychest = k
                 break
     if not found:
         embed = discord.Embed(description=f'{economyerror} The item `{name}` doesn\'t exist.', color=error_embed)
-        return await ctx.send(embed=embed)
+        if not via: return await ctx.send(embed=embed)
+        else: return {"embed":embed}
     if mychest == 'common':
         chestcol = 183398
     elif mychest == 'rare':
         chestcol = 5164244
-    elif mychest == 'legendary':
+    else:
         chestcol = 16475796
     embed = discord.Embed(title="Item Info", color=chestcol)
     embed.add_field(name="Name", value=f'{item["name"]}', inline=False)
@@ -2911,13 +2875,11 @@ async def iteminfo(ctx, *, name:str, via:bool=False):
         embed.add_field(name="Est. Value", value=f"`{await commait(item['value'][0])}` coins", inline=False)
     else:
         embed.add_field(name="Est. Value", value=f"`{await commait(item['value'][0])} - {await commait(item['value'][1])}` coins", inline=False)
-    embed.set_thumbnail(url=f"attachment://item.png")
-    file = discord.File(f"items/{item['name']}.png", filename="item.png")
-    img_bytes = open(f"items/{item['name']}.png", "rb")
+    embed.set_thumbnail(url=items_imgs[item["name"]])
     if not via:
-        await ctx.send(embed=embed, file=file)
+        await ctx.send(embed=embed)
     else:
-        return {"embed":embed, "file":file}
+        return {"embed":embed}
 
 @bot.command(aliases=['itemsinv'])
 @commands.check(general)
@@ -2937,18 +2899,18 @@ async def items(ctx, *, everything=None):
             user_page_orignal = 1
             rarity = everything[0]
 
-    updinv = await update_sorted_inv(str(ctx.author.id))
+    updinv = update_sorted_inv(str(ctx.author.id))
     if updinv == "userinv": return await ctx.reply('You have an empty inventory bro..')
     if updinv == "itemsinv": return await ctx.reply('You don\'t own any items yet. Why not go and unbox?')
 
     sorted_inv = updinv
+    del updinv
     item_count = 0
-    max_pages = 1
+    max_pages = 0
     while True:
         if max_pages < len(sorted_inv)/6: max_pages += 1
         else: break
-    max_pages -= 1
-    if max_pages == 0: max_pages += 1
+    if max_pages == 0: max_pages = 1
     if user_page_orignal <= 0: user_page_orignal = 1
     if user_page_orignal > max_pages: user_page_orignal = max_pages
     user_page = (user_page_orignal-1)*6
@@ -2956,24 +2918,144 @@ async def items(ctx, *, everything=None):
         rarity = rarity.lower()
         if rarity not in ["common", "rare", "legendary"]:
             return await ctx.reply("The rarity can be `common`, `rare` or `legendary` only.")
-    components= await inv_components(str(ctx.author.id), user_page_orignal, rarity)
     embed = discord.Embed(title=f"{economysuccess} Your Inventory:",
                           description=f"Items Owned: `{len(sorted_inv)}/50`\n"
                                       "Click on the item for item info!",
                           color=0x2f3136)
     embed.set_author(name=ctx.author.name, icon_url=ctx.author.display_avatar.url)
     embed.set_footer(text=f'Page {user_page_orignal} of {max_pages}')
-    a = await ctx.send(embed=embed, components=components)
-    while True:
-        res = await bot.wait_for("button_click")
-        if res.channel == ctx.channel:
-            if res.user != ctx.author:
-                await res.respond(type = InteractionType.ChannelMessageWithSource, content="Oops! You cant sell other's items lol")
-            else:
-                await res.respond(type=InteractionType.DeferredUpdateMessage)
-                if "info" in res.component.id:
-                    via_iteminfo = await iteminfo(ctx, name=res.component.label, via=True)
-                    resmsg = await ddb.send_component_msg(channel=ctx.channel, content='', embed=via_iteminfo["embed"], file=via_iteminfo["file"])
+    a = await ctx.send(embed=embed, view=ItemsInventory(ctx, user_page_orignal, rarity))
+
+class InventoryButton(discord.ui.Button['ItemsInventory']):
+    def __init__(self, y: int, foritem: str):
+        super().__init__(style=discord.ButtonStyle.green, row=y, label="Info")
+        self.item = foritem
+
+    async def callback(self, interaction: discord.Interaction):
+        assert self.view is not None
+        view: ItemsInventory = self.view
+        data = await iteminfo(view.ctx, name=self.item, via=True)
+        embed = data["embed"]
+        await interaction.response.send_message(embed=embed, ephemeral=True)
+
+class UselessButton(discord.ui.Button):
+    def __init__(self, label: str, row: int, emoji: str):
+        super().__init__(style=discord.ButtonStyle.blurple, label=label, row=row, emoji=emoji)
+
+    async def callback(self, interaction: discord.Interaction):
+        assert self.view is not None
+        view: ItemsInventory = self.view
+        await interaction.response.defer()
+
+class ItemsInventory(discord.ui.View):
+    def __init__(self, ctx: Context, page: int, rarity: list):
+        super().__init__()
+        self.ctx = ctx
+        self.page = page
+        self.emojis = {
+            "common":"<:Common:847687974414319626>",
+            "rare":"<:Rare:847687973202165841>",
+            "legendary":"<:Legendary:847687925596160002>"
+        }
+        self.userid = str(ctx.author.id)
+        self.data = []
+        if rarity is None: rarity = []
+        self.filldata(rarity, [])
+        self.addbuttons()
+
+    def filldata(self, rarity, filters):
+        inv = bot.cachedinv[self.userid]
+        emojis = self.emojis
+        self.data.clear()
+        print(f"Rarity: {rarity}")
+        for k, v in bot.items.items():
+            if (len(rarity) != 0) and (k not in rarity): continue
+            for i, j in v.items():
+                for item in j:
+                    for i in inv:
+                        if item["name"] == i[0]:
+                            self.data.append((item["name"], item["emoji"], i[1], emojis[k]))
+
+    def addbuttons(self, filters=None):
+        self.clear_items()
+        row = 0
+        page = self.page
+        sortlist = []
+        print("Data", self.data)
+        final_data = []
+
+        if filters is not None:
+            for i in range(50):
+                try: d = self.data[i]
+                except: break
+                sortlist.append(d[2])
+
+            if filters == "desc": sortlist.sort(reverse=True)
+            else: sortlist.sort()
+
+            for count, i in enumerate(sortlist):
+                for j in range(50):
+                    try:
+                        d = self.data[j]
+                    except:
+                        break
+                    if d[0] in [x[0] for x in final_data]: continue
+                    if d[2] == i:
+                        final_data.append(d)
+                        break
+                if count == 3: break
+
+        else:
+            for i in range((page - 1) * 4, page * 4):
+                try: d = self.data[i]
+                except: break
+                final_data.append(d)
+
+        print(f"Sorted List: {sortlist}")
+        print("Final Data", final_data)
+
+        for i in range(4):
+            try: d = final_data[i]
+            except: break
+            self.add_item(UselessButton(d[2], row, d[3]))
+            self.add_item(UselessButton(d[0], row, d[1]))
+            self.add_item(InventoryButton(row, d[0]))
+            row += 1
+        self.add_item(InventoryFilters())
+
+    async def filter(self, interaction: discord.Interaction, rarities, filters):
+        self.filldata(rarities, filters)
+        self.addbuttons(filters)
+        await interaction.response.edit_message(view=self)
+
+
+class InventoryFilters(discord.ui.Select):
+    def __init__(self):
+        options = [
+            discord.SelectOption(label='Rarity: Common', emoji='🇷'),
+            discord.SelectOption(label='Rarity: Rare', emoji='🇷'),
+            discord.SelectOption(label='Rarity: Legendary', emoji='🇷'),
+            discord.SelectOption(label='Sortby: Quantity Descending', emoji='🇸'),
+            discord.SelectOption(label='Sortby: Quantity Ascending', emoji='🇸'),
+        ]
+        super().__init__(placeholder='Select field(s) to add', min_values=1, max_values=len(options),
+                         options=options, row=4)
+
+    async def callback(self, interaction: discord.Interaction):
+        assert self.view is not None
+        view: ItemsInventory = self.view
+
+        rarities = []
+        filters = None
+        for i in self.values:
+            if 'Common' in i: rarities.append("common")
+            if 'Rare' in i: rarities.append("rare")
+            if 'Legendary' in i: rarities.append("legendary")
+            if 'Descending' in i: filters = "desc"
+            elif 'Ascending' in i: filters = "asc"
+
+        await view.filter(interaction, rarities, filters)
+
 
 @bot.command(pass_context=True)
 @commands.check(general)
@@ -3009,7 +3091,7 @@ async def sell(ctx, *, item):
         return await ctx.send(embed=embed)
     itemsinv.remove(item_main["name"])
     userinv["items"] = itemsinv
-    inv[userid] = userinv
+    bot.inventory[userid] = userinv
     value = random.randint(item_main["value"][0], item_main["value"][1])*qty
     embed = discord.Embed(title=f'{economysuccess} Success!',
                           description=f'You sold `{qty}` {item_main["name"]} for {await commait(value)} coins!',
