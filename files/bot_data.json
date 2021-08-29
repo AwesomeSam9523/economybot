@@ -101,6 +101,15 @@
       "Yeah sure, but after `{timeleft}`, please!",
       "I will be happy if you will retry after `{timeleft}`",
       "All I would say is- wait `{timeleft}` for it. Thanks!"
+    ],
+    "inter": [
+      "Smh are you `{usertag}`? No. So stop clicking buttons!",
+      "Bruh man this isn't for you",
+      "Dude, why are you poking nose in things which ain't yours.",
+      "Hey hey, shoo. This isn't for you",
+      "Hi `{usertag}`! No, as it was for him only..",
+      "Idk man why you touching things with aren't yours",
+      "Ok ok, I know its interesting but ||THIS IS NOT FOR YOU!!||"
     ]
   },
   "help": {
@@ -441,15 +450,6 @@
   "shop": {
     "value": [
       {
-        "icon": "bronze_lock.png",
-        "name": "Bronze Lock",
-        "desc": "Increases rob protection by 10%",
-        "price": "2,500",
-        "special": false,
-        "disc": "2,250",
-        "percent": 10
-      },
-      {
         "icon": "rare_chest.png",
         "name": "Rare Chest",
         "desc": "50% Common, 40% Rare, 10% Leg.",
@@ -468,15 +468,6 @@
         "percent": 13
       },
       {
-        "icon": "legendary_chest.png",
-        "name": "Legendary Chest",
-        "desc": "30% Common, 50% Rare, 20% Leg.",
-        "price": "10,000",
-        "special": false,
-        "disc": "5,000",
-        "percent": 50
-      },
-      {
         "icon": "common_chest.png",
         "name": "Common Chest",
         "desc": "70% Common, 25% Rare, 5% Leg.",
@@ -490,9 +481,27 @@
         "name": "Silver Lock",
         "desc": "Increases rob protection by 25%",
         "price": "6,000",
-        "special": true,
+        "special": false,
         "disc": "4,680",
         "percent": 22
+      },
+      {
+        "icon": "bronze_lock.png",
+        "name": "Bronze Lock",
+        "desc": "Increases rob protection by 10%",
+        "price": "2,500",
+        "special": false,
+        "disc": "2,150",
+        "percent": 14
+      },
+      {
+        "icon": "legendary_chest.png",
+        "name": "Legendary Chest",
+        "desc": "30% Common, 50% Rare, 20% Leg.",
+        "price": "10,000",
+        "special": true,
+        "disc": "7,200",
+        "percent": 28
       }
     ],
     "category": {
@@ -508,7 +517,7 @@
         "Gold Lock"
       ]
     },
-    "updated": 1625848341.8565676
+    "updated": 1630212514.758919
   },
   "items": {
     "common": {
