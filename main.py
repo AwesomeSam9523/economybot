@@ -1,7 +1,6 @@
-import copy
 import time
 t1 = time.time()
-import datetime, csv, threading, functools, asyncio, discord, operator
+import datetime, csv, threading, functools, asyncio, discord, operator, copy, math
 import shutil, json, random, os, traceback, difflib, sys, discord_files, aiohttp
 from discord.ext import commands, tasks
 from discord.ext.commands import *
@@ -394,8 +393,6 @@ async def update_logs(stuff: str):
 
 async def update_accounts():
     with open('files/accounts.json', 'w') as f:
-        print("Updating:", bot.accounts)
-        dict(bot.accounts)
         f.write(json.dumps(bot.accounts, indent=2))
 
 async def update_statements():
@@ -1406,7 +1403,7 @@ async def logs(ctx, *, search:str=None):
         count += 1
     await ctx.send(f'**Requested by:** `{ctx.author.name}`\n```css\n{x.get_string()[:1900]}```')
 
-@bot.command(aliases=['eval'],hidden=True)  
+@bot.command(aliases=['eval'],hidden=True)
 async def evaluate(ctx, *, expression):
     if ctx.author.id == 669816890163724288:
         try:
@@ -1426,7 +1423,7 @@ async def evaluate(ctx, *, expression):
             await ctx.send(
                 f"```py\n{''.join(traceback.format_exception(etype=type(ex), value=ex, tb=ex.__traceback__))}\n```")
 
-@bot.command(aliases=['exec'],hidden=True) 
+@bot.command(aliases=['exec'],hidden=True)
 async def execute(ctx, *, expression):
     if ctx.author.id != 669816890163724288: return
     try:
@@ -2883,50 +2880,59 @@ async def iteminfo(ctx, *, name:str, via:bool=False):
 
 @bot.command(aliases=['itemsinv'])
 @commands.check(general)
-async def items(ctx, *, everything=None):
-    if everything is None:
-        rarity = None
-        user_page_orignal = 1
-    else:
-        everything = str(everything).split(' ')
-        try:
-            user_page_orignal = int(everything[-1])
-            rarity = everything[0]
+async def items(ctx, user:discord.User = None):
+    if user is None: user = ctx.author
 
-            if str(user_page_orignal) == rarity:
-                rarity = None
-        except:
-            user_page_orignal = 1
-            rarity = everything[0]
-
-    updinv = update_sorted_inv(str(ctx.author.id))
+    user_page_orignal = 1
+    updinv = update_sorted_inv(str(user.id))
     if updinv == "userinv": return await ctx.reply('You have an empty inventory bro..')
     if updinv == "itemsinv": return await ctx.reply('You don\'t own any items yet. Why not go and unbox?')
 
     sorted_inv = updinv
     del updinv
     item_count = 0
-    max_pages = 0
-    while True:
-        if max_pages < len(sorted_inv)/6: max_pages += 1
-        else: break
+    max_pages = math.ceil(len(sorted_inv)/4)
     if max_pages == 0: max_pages = 1
-    if user_page_orignal <= 0: user_page_orignal = 1
-    if user_page_orignal > max_pages: user_page_orignal = max_pages
-    user_page = (user_page_orignal-1)*6
-    if rarity is not None:
-        rarity = rarity.lower()
-        if rarity not in ["common", "rare", "legendary"]:
-            return await ctx.reply("The rarity can be `common`, `rare` or `legendary` only.")
     embed = discord.Embed(title=f"{economysuccess} Your Inventory:",
                           description=f"Items Owned: `{len(sorted_inv)}/50`\n"
-                                      "Click on the item for item info!",
+                                      "Click on `Info` for item info!\n"
+                                      "Click on `Sell` to sell the item",
                           color=0x2f3136)
     embed.set_author(name=ctx.author.name, icon_url=ctx.author.display_avatar.url)
-    embed.set_footer(text=f'Page {user_page_orignal} of {max_pages}')
-    a = await ctx.send(embed=embed, view=ItemsInventory(ctx, user_page_orignal, rarity))
+    embed.set_footer(text=f"Page #{user_page_orignal}/{max_pages}")
+    view = ItemsInventory(ctx, user_page_orignal, [], max_pages, user, len(sorted_inv))
+    a = await ctx.send(embed=embed, view=view)
+    view.msg = a
+    right = "▶️"
+    left = "◀️"
+    stop = "⏹️"
+    await a.add_reaction(left)
+    await a.add_reaction(stop)
+    await a.add_reaction(right)
 
-class InventoryButton(discord.ui.Button['ItemsInventory']):
+    while True:
+        def check(reaction, user):
+            return user == ctx.author and str(reaction.emoji) in [right, left, stop]
+
+        try:
+            reaction, user_ = await bot.wait_for('reaction_add', check=check)
+            reaction = str(reaction.emoji)
+            if reaction == right:
+                await a.remove_reaction(right, user_)
+                await view.next_page()
+            elif reaction == left:
+                await a.remove_reaction(left, user_)
+                await view.prev_page()
+            else:
+                await a.clear_reaction(right)
+                await a.clear_reaction(left)
+                await a.clear_reaction(stop)
+                view.stop()
+                break
+        except:
+            pass
+
+class InfoButton(discord.ui.Button['ItemsInventory']):
     def __init__(self, y: int, foritem: str):
         super().__init__(style=discord.ButtonStyle.green, row=y, label="Info")
         self.item = foritem
@@ -2938,6 +2944,49 @@ class InventoryButton(discord.ui.Button['ItemsInventory']):
         embed = data["embed"]
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
+class ItemsSeller(discord.ui.Select):
+    def __init__(self, item: str, user: discord.Member):
+        self.item = item
+        self.user = user
+
+        userinv = bot.inventory.get(str(user.id))
+        itemsinv = userinv.get("items", [])
+        invlower = [x.lower() for x in itemsinv]
+        userqty = invlower.count(item.lower())
+
+        options = []
+        for i in range(1, userqty+1):
+            options.append((discord.SelectOption(label=str(i))))
+        super().__init__(placeholder='Click here to select value', min_values=1, max_values=1,
+                         options=options, row=4)
+
+    async def callback(self, interaction: discord.Interaction):
+        value = int(self.values[0])
+        assert self.view is not None
+        view: ItemsInventory = self.view
+        if interaction.user != view.ctx.author:
+            return await interaction.response.send_message(
+                random.choice(bot.phrases["inter"]).format(usertag=str(view.ctx.author)))
+
+        embed = await sell(view.ctx, item=f"{self.item} {value}", via=True)
+        await interaction.response.send_message(embed=embed, ephemeral=True)
+        await view.upd_page()
+
+class SellButton(discord.ui.Button['ItemsInventory']):
+    def __init__(self, y: int, foritem: str, disabled: bool):
+        super().__init__(style=discord.ButtonStyle.red, row=y, label="Sell", disabled=disabled)
+        self.item = foritem
+
+    async def callback(self, interaction: discord.Interaction):
+        assert self.view is not None
+        view: ItemsInventory = self.view
+        if interaction.user != view.ctx.author:
+            return await interaction.response.send_message(
+                random.choice(bot.phrases["inter"]).format(usertag=str(view.ctx.author)))
+        view.clear_items()
+        view.add_item(ItemsSeller(self.item, view.user))
+        await interaction.response.send_message(content="Select sell quantity:", view=view, ephemeral=True)
+
 class UselessButton(discord.ui.Button):
     def __init__(self, label: str, row: int, emoji: str):
         super().__init__(style=discord.ButtonStyle.blurple, label=label, row=row, emoji=emoji)
@@ -2945,11 +2994,16 @@ class UselessButton(discord.ui.Button):
     async def callback(self, interaction: discord.Interaction):
         assert self.view is not None
         view: ItemsInventory = self.view
+        if interaction.user != view.ctx.author:
+            return await interaction.response.send_message(
+                random.choice(bot.phrases["inter"]).format(usertag=str(view.ctx.author)))
         await interaction.response.defer()
 
 class ItemsInventory(discord.ui.View):
-    def __init__(self, ctx: Context, page: int, rarity: list):
+    def __init__(self, ctx: Context, page: int, rarity: list, max_pages: int, user: discord.Member, owned: int):
         super().__init__()
+        if rarity is None: rarity = []
+        self.user = user
         self.ctx = ctx
         self.page = page
         self.emojis = {
@@ -2957,17 +3011,54 @@ class ItemsInventory(discord.ui.View):
             "rare":"<:Rare:847687973202165841>",
             "legendary":"<:Legendary:847687925596160002>"
         }
-        self.userid = str(ctx.author.id)
+        self.max_page = max_pages
+        self.userid = str(user.id)
         self.data = []
-        if rarity is None: rarity = []
-        self.filldata(rarity, [])
+        self.rarity = rarity
+        self.filters = None
+        self.owned = owned
+        self.msg = None
+
+        self.embed = discord.Embed(title=f"{economysuccess} Your Inventory:",
+                          description=f"Items Owned: `{owned}/50`\n"
+                                      "Click on `Info` for item info!\n"
+                                      "Click on `Sell` to sell the item",
+                          color=0x2f3136)
+        self.embed.set_author(name=ctx.author.name, icon_url=ctx.author.display_avatar.url)
+        self.embed.set_footer(text=f"Page #{page}/{max_pages}")
+
+        self.filldata()
         self.addbuttons()
 
-    def filldata(self, rarity, filters):
-        inv = bot.cachedinv[self.userid]
+    async def next_page(self):
+        if self.page == self.max_page: return
+
+        self.page += 1
+        self.filldata()
+        self.addbuttons()
+
+        await self.msg.edit(view=self, embed=self.embed)
+
+    async def prev_page(self):
+        if self.page == 1: return
+
+        self.page -= 1
+        self.filldata()
+        self.addbuttons()
+
+        await self.msg.edit(view=self, embed=self.embed)
+
+    async def upd_page(self):
+        self.filldata()
+        self.addbuttons()
+
+        await self.msg.edit(view=self, embed=self.embed)
+
+    def filldata(self):
+        rarity = self.rarity
+        inv = update_sorted_inv(self.userid)
         emojis = self.emojis
         self.data.clear()
-        print(f"Rarity: {rarity}")
         for k, v in bot.items.items():
             if (len(rarity) != 0) and (k not in rarity): continue
             for i, j in v.items():
@@ -2975,59 +3066,63 @@ class ItemsInventory(discord.ui.View):
                     for i in inv:
                         if item["name"] == i[0]:
                             self.data.append((item["name"], item["emoji"], i[1], emojis[k]))
+        self.max_pages = math.ceil(len(self.data) / 4)
+        self.embed.set_footer(text=f"Page #{self.page}/{self.max_pages}")
 
-    def addbuttons(self, filters=None):
+    def addbuttons(self):
         self.clear_items()
-        row = 0
         page = self.page
+
         sortlist = []
-        print("Data", self.data)
         final_data = []
+        filters = self.filters
 
         if filters is not None:
-            for i in range(50):
-                try: d = self.data[i]
+            for i in self.data:
+                sortlist.append(i[2])
+
+            if filters == "desc":
+                sortlist.sort(reverse=True)
+            else:
+                sortlist.sort()
+
+            for i in range((page - 1) * 4, page * 4):
+                try: qty = sortlist[i]
                 except: break
-                sortlist.append(d[2])
 
-            if filters == "desc": sortlist.sort(reverse=True)
-            else: sortlist.sort()
-
-            for count, i in enumerate(sortlist):
-                for j in range(50):
-                    try:
-                        d = self.data[j]
-                    except:
-                        break
-                    if d[0] in [x[0] for x in final_data]: continue
-                    if d[2] == i:
-                        final_data.append(d)
-                        break
-                if count == 3: break
-
+                for index, j in enumerate(self.data):
+                    if index < i: continue
+                    if j in final_data: continue
+                    if j[2] == qty:
+                        final_data.append(j)
         else:
             for i in range((page - 1) * 4, page * 4):
                 try: d = self.data[i]
                 except: break
                 final_data.append(d)
 
-        print(f"Sorted List: {sortlist}")
-        print("Final Data", final_data)
-
-        for i in range(4):
-            try: d = final_data[i]
-            except: break
+        if len(final_data) == 0 and self.page != 1:
+            self.page -= 1
+            self.addbuttons()
+        if self.ctx.author == self.user: disable = False
+        else: disable = True
+        for row, d in enumerate(final_data):
             self.add_item(UselessButton(d[2], row, d[3]))
             self.add_item(UselessButton(d[0], row, d[1]))
-            self.add_item(InventoryButton(row, d[0]))
-            row += 1
+            self.add_item(InfoButton(row, d[0]))
+            self.add_item(SellButton(row, d[0], disable))
+            if row == 3:
+                break
         self.add_item(InventoryFilters())
 
     async def filter(self, interaction: discord.Interaction, rarities, filters):
-        self.filldata(rarities, filters)
-        self.addbuttons(filters)
-        await interaction.response.edit_message(view=self)
+        self.rarity = rarities
+        self.filters = filters
+        self.page = 1
+        self.filldata()
+        self.addbuttons()
 
+        await interaction.response.edit_message(view=self, embed=self.embed)
 
 class InventoryFilters(discord.ui.Select):
     def __init__(self):
@@ -3038,13 +3133,15 @@ class InventoryFilters(discord.ui.Select):
             discord.SelectOption(label='Sortby: Quantity Descending', emoji='🇸'),
             discord.SelectOption(label='Sortby: Quantity Ascending', emoji='🇸'),
         ]
-        super().__init__(placeholder='Select field(s) to add', min_values=1, max_values=len(options),
+        super().__init__(placeholder='Click here to add filter(s)', min_values=1, max_values=len(options),
                          options=options, row=4)
 
     async def callback(self, interaction: discord.Interaction):
         assert self.view is not None
         view: ItemsInventory = self.view
-
+        if interaction.user != view.ctx.author:
+            return await interaction.response.send_message(
+                random.choice(bot.phrases["inter"]).format(usertag=str(view.ctx.author)))
         rarities = []
         filters = None
         for i in self.values:
@@ -3059,7 +3156,7 @@ class InventoryFilters(discord.ui.Select):
 
 @bot.command(pass_context=True)
 @commands.check(general)
-async def sell(ctx, *, item):
+async def sell(ctx, *, item, via=False):
     a = str(item).split(' ')
     qty = 1
     try:
@@ -3080,6 +3177,7 @@ async def sell(ctx, *, item):
         embed = discord.Embed(description=f"{economyerror} You don\'t own `{item}`", color=error_embed)
         return await ctx.send(embed=embed)
     userqty = invlower.count(item.lower())
+    item_main = {}
     for i in bot.items.keys():
         for j in bot.items[i]["items"]:
             if j["name"].lower() == item.lower():
@@ -3089,7 +3187,7 @@ async def sell(ctx, *, item):
     if qty > userqty:
         embed = discord.Embed(description=f"{economyerror} Dude, you don\'t own `{qty}` quantity of `{item_main['name']}`. What are you even thinking?", color=error_embed)
         return await ctx.send(embed=embed)
-    itemsinv.remove(item_main["name"])
+    for i in range(qty): itemsinv.remove(item_main["name"])
     userinv["items"] = itemsinv
     bot.inventory[userid] = userinv
     value = random.randint(item_main["value"][0], item_main["value"][1])*qty
@@ -3101,8 +3199,9 @@ async def sell(ctx, *, item):
     bot.accounts[userid] = datauser
 
     await update_accounts()
-    await ctx.send(embed=embed)
     await update_inv()
+    if not via: await ctx.send(embed=embed)
+    else: return embed
 
 class BetButtons(discord.ui.Button):
     def __init__(self, x: int, y: int):
