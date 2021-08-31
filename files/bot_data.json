@@ -500,8 +500,8 @@
         "desc": "Increases rob protection by 10%",
         "price": "2,500",
         "special": true,
-        "disc": "1,750",
-        "percent": 30
+        "disc": "1,925",
+        "percent": 23
       }
     ],
     "category": {
@@ -517,7 +517,7 @@
         "Gold Lock"
       ]
     },
-    "updated": 1630298924.9085667
+    "updated": 1630385611.2111664
   },
   "items": {
     "common": {

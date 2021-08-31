@@ -1,1 +1,25 @@
-{}
+{
+  "771601176155783198": [
+    {
+      "person": "System",
+      "type": "Debit",
+      "amount": 67,
+      "time": "2021-08-31 08:29:19",
+      "reason": "Bought 1 stock(s)"
+    },
+    {
+      "person": "System",
+      "type": "Credit",
+      "amount": 69,
+      "time": "2021-08-31 08:43:07",
+      "reason": "Sold 1 stock(s)"
+    },
+    {
+      "person": "System",
+      "type": "Debit",
+      "amount": 692,
+      "time": "2021-08-31 08:43:16",
+      "reason": "Bought 10 stock(s)"
+    }
+  ]
+}
