@@ -2259,6 +2259,15 @@ async def stocks(ctx):
     embed.set_image(url="attachment://graph.png")
     await ctx.send(embed=embed, file=discord.File('graph.png', filename="graph.png"))
 
+class StocksBuySell(discord.ui.View):
+    def __init__(self):
+        super().__init__(timeout=180)
+
+    @discord.ui.button(label="Buy", style=discord.ButtonStyle.green)
+    async def buy(self, button, interaction: discord.Interaction):
+        await interaction.response.send_message("Enter amount to buy", ephemeral=True)
+
+
 @bot.command()
 @commands.check(general)
 async def buystocks(ctx, amount):
@@ -3152,7 +3161,6 @@ class InventoryFilters(discord.ui.Select):
             elif 'Ascending' in i: filters = "asc"
 
         await view.filter(interaction, rarities, filters)
-
 
 @bot.command(pass_context=True)
 @commands.check(general)
