@@ -1924,7 +1924,112 @@ async def estates(ctx, member:discord.Member=None):
     embed.set_author(name=f'{fetched.name} | {name} Hotel', icon_url=fetched.display_avatar.url)
     url = getestates_thumb[str(level)]
     embed.set_image(url=f"{url.replace('cdn.discordapp.com', 'media.discordapp.net')}?width=500&height=400")
-    await ctx.send(embed=embed)
+    view = Estates(ctx)
+    msg = await ctx.send(embed=embed, view=view)
+    view.msg = msg
+
+class Estates(discord.ui.View):
+    def __init__(self, ctx: Context):
+        super().__init__()
+        self.ctx = ctx
+        self.msg = None
+    
+    @discord.ui.button(label="Upgrade", style=discord.ButtonStyle.blurple)
+    async def upgrade(self, button, interaction: discord.Interaction):
+        ctx = self.ctx
+        userid = ctx.author.id
+        await open_estates(userid)
+        eperson = bot.estates[f'{ctx.author.id}']
+        level = eperson['level']
+        name = eperson['name']
+        if level == 30:
+            embed = discord.Embed(title='Maxed Out!',
+                                  description='You are already at the maximum level, Chill down mate!',
+                                  color=embedcolor)
+            fetched = bot.get_user(ctx.author.id)
+            embed.timestamp = datetime.datetime.utcnow()
+            embed.set_footer(text='Economy Bot', icon_url=bot.pfp)
+            embed.set_author(name=f'{fetched.name} | {name} Hotel', icon_url=fetched.display_avatar.url)
+
+            return await interaction.response.send_message(embed=embed, ephemeral=True)
+
+        rev_now = await get_revenue(level)
+        rev_after = await get_revenue(level + 1)
+        main_now = await get_maint(level)
+        main_after = await get_maint(level + 1)
+
+        cost = await get_cost(level)
+
+        embed = discord.Embed(title='Upgrade Hotel', colour=embedcolor)
+        if level < 30:
+            embed.add_field(name='Level Change', value=f'`{level} => {level + 1}`')
+        else:
+            embed.add_field(name='Level Change', value=f'``{level} => Maxed Out!`')
+        embed.add_field(name='Revenue Boost',
+                        value=f'`{await commait(rev_now)} + {await commait(rev_after - rev_now)}` coins')
+        embed.add_field(name='Maintainance Increase',
+                        value=f'`{await commait(main_now)} + {await commait(main_after - main_now)}` coins')
+        embed.add_field(name='Upgrade Cost', value=f'`{await commait(cost)}` coins')
+        embed.add_field(name='Confirm?', value=f'Click {economysuccess} to confirm or {economyerror} to cancel',
+                        inline=False)
+        embed.add_field(name='\u200b', value='Here is the look after upgrade:', inline=False)
+        url = getestates_thumb[str(level + 1)]
+        embed.set_image(url=f"{url.replace('cdn.discordapp.com', 'media.discordapp.net')}?width=500&height=400")
+        fetched = bot.get_user(ctx.author.id)
+        embed.timestamp = datetime.datetime.utcnow()
+        embed.set_footer(text='Economy Bot', icon_url=bot.pfp)
+        embed.set_author(name=f'{fetched.name} | {name} Hotel', icon_url=fetched.display_avatar.url)
+
+        msg = await interaction.response.send_message(embed=embed, ephemeral=True, view=EstatesUpgrade(ctx, self.msg, cost, level))
+
+class EstatesUpgrade(discord.ui.View):
+    def __init__(self, ctx: Context, msg: discord.Message, cost: int, level: int):
+        super().__init__()
+        self.ctx, self.msg = ctx, msg
+        self.cost, self.level = cost, level
+
+    @discord.ui.button(label="Accept", style=discord.ButtonStyle.green)
+    async def accept(self, button, interaction: discord.Interaction):
+        ctx = self.ctx
+        cost = self.cost
+        level = self.level
+        person = bot.accounts[f'{ctx.author.id}']
+        wallet = person['wallet']
+        bank = person['bank']
+
+        if cost > wallet:
+            left = cost - wallet
+            new_wallet = 0
+            if left > bank:
+                embed = discord.Embed(title=f'{economyerror} Oopsie!',
+                                      description='Looks like there aren\'t enough coins in your bank. Please deposit or earn more.',
+                                      color=error_embed)
+                return await interaction.response.edit_message(embed=embed)
+            new_bank = bank - left
+        else:
+            new_wallet = wallet - cost
+            new_bank = bank
+
+        eperson = bot.estates[f'{ctx.author.id}']
+        person['wallet'] = new_wallet
+        person['bank'] = new_bank
+        eperson['level'] = level + 1
+
+        bot.estates[f'{ctx.author.id}'] = eperson
+        bot.accounts[f'{ctx.author.id}'] = person
+
+        await update_accounts()
+        await update_est()
+        embed = discord.Embed(title=f'{economysuccess} Success!',
+                              description='Wohoo! Your upgrade was successful! Use `e.estates` to see newly upgraded property!',
+                              color=success_embed)
+        await interaction.response.edit_message(embed=embed)
+        if level + 1 == 30: await achievement(ctx, ctx.author.id, "estates")
+
+    @discord.ui.button(label="Decline", style=discord.ButtonStyle.red)
+    async def decline(self, button, interaction: discord.Interaction):
+        embed = discord.Embed(title=f'{economyerror} Cancelled!', color=error_embed)
+        await interaction.response.edit_message(embed=embed)
 
 @bot.command(hidden=True)
 @commands.check(is_dev)
@@ -2054,96 +2159,6 @@ async def maintain(ctx):
     embed.set_author(name=f'{fetched.name} | {name} Hotel', icon_url=fetched.display_avatar.url)
 
     await ctx.send(embed=embed)
-
-@bot.command()
-@commands.check(general)
-async def upgrade(ctx):
-    userid = ctx.author.id
-    await open_estates(userid)
-    eperson = bot.estates[f'{ctx.author.id}']
-    level = eperson['level']
-    name = eperson['name']
-    if level == 30:
-        embed = discord.Embed(title='Maxed Out!',
-                              description='You are already at the maximum level, Chill down mate!',
-                              color=embedcolor)
-        fetched = bot.get_user(ctx.author.id)
-        embed.timestamp = datetime.datetime.utcnow()
-        embed.set_footer(text='Economy Bot', icon_url=bot.pfp)
-        embed.set_author(name=f'{fetched.name} | {name} Hotel', icon_url=fetched.display_avatar.url)
-
-        return await ctx.send(embed=embed)
-
-    rev_now = await get_revenue(level)
-    rev_after = await get_revenue(level+1)
-    main_now = await get_maint(level)
-    main_after = await get_maint(level+1)
-
-    cost = await get_cost(level)
-
-    embed = discord.Embed(title='Upgrade Hotel', colour=embedcolor)
-    if level < 30:
-        embed.add_field(name='Level Change', value=f'`{level} => {level+1}`')
-    else:
-        embed.add_field(name='Level Change', value=f'``{level} => Maxed Out!`')
-    embed.add_field(name='Revenue Boost', value=f'`{await commait(rev_now)} + {await commait(rev_after-rev_now)}` coins')
-    embed.add_field(name='Maintainance Increase', value=f'`{await commait(main_now)} + {await commait(main_after-main_now)}` coins')
-    embed.add_field(name='Upgrade Cost', value=f'`{await commait(cost)}` coins')
-    embed.add_field(name='Confirm?', value=f'Click {economysuccess} to confirm or {economyerror} to cancel', inline=False)
-    embed.add_field(name='\u200b', value='Here is the look after upgrade:', inline=False)
-    url = getestates_thumb[str(level+1)]
-    embed.set_image(url=f"{url.replace('cdn.discordapp.com', 'media.discordapp.net')}?width=500&height=400")
-    fetched = bot.get_user(ctx.author.id)
-    embed.timestamp = datetime.datetime.utcnow()
-    embed.set_footer(text='Economy Bot', icon_url=bot.pfp)
-    embed.set_author(name=f'{fetched.name} | {name} Hotel', icon_url=fetched.display_avatar.url)
-
-    msg = await ctx.send(embed=embed)
-    await msg.add_reaction(economysuccess)
-    await msg.add_reaction(economyerror)
-
-    def check(reaction, user):
-        if user == ctx.author and str(reaction.emoji) in [economyerror, economysuccess]:
-            return True
-    try:
-        reaction, user = await bot.wait_for('reaction_add', timeout=60.0, check=check)
-        await msg.clear_reactions()
-        if str(reaction) == economysuccess:
-            person = bot.accounts[f'{ctx.author.id}']
-            wallet = person['wallet']
-            bank = person['bank']
-
-            if cost > wallet:
-                left = cost-wallet
-                new_wallet = 0
-                if left > bank:
-                    embed = discord.Embed(title=f'{economyerror} Oopsie!',
-                                          description='Looks like there aren\'t enough coins in your bank. Please deposit or earn more.',
-                                          color=error_embed)
-                    return await ctx.send(embed=embed)
-                new_bank = bank - left
-            else:
-                new_wallet = wallet - cost
-                new_bank = bank
-
-            person['wallet'] = new_wallet
-            person['bank'] = new_bank
-            eperson['level'] = level + 1
-
-            bot.estates[f'{ctx.author.id}'] = eperson
-            bot.accounts[f'{ctx.author.id}'] = person
-
-            await update_accounts()
-            await update_est()
-            embed = discord.Embed(title=f'{economysuccess} Success!', description='Wohoo! Your upgrade was successful! Use `e.estates` to see newly upgraded property!', color=success_embed)
-            await msg.edit(embed=embed)
-            if level+1 == 30: await achievement(ctx, ctx.author.id, "estates")
-        else:
-            embed=discord.Embed(title=f'{economyerror} Cancelled!', color=error_embed)
-            await msg.edit(embed=embed)
-    except asyncio.TimeoutError:
-        await msg.clear_reactions()
-        await msg.edit(embed=discord.Embed(description=f'{economyerror} Timed Out!', color=error_embed))
 
 @bot.command()
 @commands.check(general)
