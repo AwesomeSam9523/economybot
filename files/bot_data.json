@@ -486,22 +486,22 @@
         "percent": 22
       },
       {
-        "icon": "legendary_chest.png",
-        "name": "Legendary Chest",
-        "desc": "30% Common, 50% Rare, 20% Leg.",
-        "price": "10,000",
-        "special": false,
-        "disc": "7,200",
-        "percent": 28
-      },
-      {
         "icon": "bronze_lock.png",
         "name": "Bronze Lock",
         "desc": "Increases rob protection by 10%",
         "price": "2,500",
-        "special": true,
+        "special": false,
         "disc": "1,925",
         "percent": 23
+      },
+      {
+        "icon": "legendary_chest.png",
+        "name": "Legendary Chest",
+        "desc": "30% Common, 50% Rare, 20% Leg.",
+        "price": "10,000",
+        "special": true,
+        "disc": "8,000",
+        "percent": 20
       }
     ],
     "category": {
@@ -517,7 +517,7 @@
         "Gold Lock"
       ]
     },
-    "updated": 1630385611.2111664
+    "updated": 1630503989.4712055
   },
   "items": {
     "common": {
@@ -1100,7 +1100,7 @@
       "users": []
     },
     "minesweeper": {
-      "duration": 120,
+      "duration": 60,
       "users": []
     },
     "reset_chl": {
@@ -1132,7 +1132,7 @@
       "users": []
     },
     "find": {
-      "duration": 30,
+      "duration": 10,
       "users": []
     },
     "games": {
@@ -1176,7 +1176,7 @@
       "users": []
     },
     "flip": {
-      "duration": 30,
+      "duration": 3,
       "users": []
     },
     "buystocks": {

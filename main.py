@@ -211,7 +211,6 @@ def cache_allitems():
     t = time.time()
     bot.allitems = {}
     for i in bot.items.keys():
-        continue
         mychest = i
         for j in bot.items[i]["items"]:
             item_name = j["name"]
@@ -1465,8 +1464,7 @@ async def clear(ctx, member:discord.Member):
 
 @bot.command(hidden=True)
 @commands.is_owner()
-async def release(ctx, title:str, fake:int):
-    if ctx.author.id != 771601176155783198: return
+async def release(ctx, title:str, fake:int=0):
     with open('files/updates.json', 'r') as upd:
         updates = json.load(upd)
 
@@ -2186,36 +2184,50 @@ async def maintain(ctx, via=False):
 
 @bot.command()
 @commands.check(general)
-async def alerts(ctx, state:str = None):
-    if state is None:
-        embed = discord.Embed(title='Alerts System',
-                              description='Get Alerts on pending loans, hotel maintainance, robberies etc straight to your DMs\n'
-                                          '```diff\n+ To turn on: e.alerts on\n- To turn off: e.alerts off\n```',
-                              color=embedcolor)
-        if f'{ctx.author.id}' in bot.alertsinfo:
-            current = 'On'
-        else:
-            current = 'Off'
+async def alerts(ctx):
+    embed = discord.Embed(title='Alerts System',
+                          description='Get Alerts on pending loans, hotel maintainance, robberies etc straight to your DMs',
+                          color=embedcolor)
+    current = bot.alertsinfo.get(str(ctx.author.id), 'off')
 
-        embed.add_field(name='Current State', value=current)
-        fetched = bot.get_user(ctx.author.id)
-        embed.timestamp = datetime.datetime.utcnow()
-        embed.set_author(name=f'{fetched.name}', icon_url=fetched.display_avatar.url)
-        embed.set_footer(text='Economy Bot', icon_url=bot.pfp)
-        return await ctx.send(embed=embed)
+    embed.add_field(name='Current State', value=current)
+    fetched = bot.get_user(ctx.author.id)
+    embed.timestamp = datetime.datetime.utcnow()
+    embed.set_author(name=f'{fetched.name}', icon_url=fetched.display_avatar.url)
+    embed.set_footer(text='Economy Bot', icon_url=bot.pfp)
+    view = Alerts(ctx)
+    msg = await ctx.send(embed=embed, view=view)
+    view.msg = msg
 
-    if state == 'on':
-        embed = discord.Embed(title=f'{economysuccess} Success!', description='Alerts are switched **On**. Make sure you have your DMs open', colour=success_embed)
-        await ctx.send(embed=embed)
+class Alerts(discord.ui.View):
+    def __init__(self, ctx: Context):
+        super().__init__()
+        self.ctx = ctx
+        self.msg = None
+
+    async def on_timeout(self) -> None:
+        for i in self.children:
+            i.disabled = True
+        await self.msg.edit(view=self)
+
+    @discord.ui.button(label="Turn On", style=discord.ButtonStyle.green)
+    async def turnOn(self, button, interaction: discord.Interaction):
+        ctx = self.ctx
+        embed = discord.Embed(title=f'{economysuccess} Success!',
+                              description='Alerts are switched **On**. Make sure you have your DMs open',
+                              colour=success_embed)
+
+        await interaction.response.send_message(embed=embed, ephemeral=True)
         await alerts_state(ctx.author.id, 'on')
-    elif state == 'off':
+
+    @discord.ui.button(label="Turn Off", style=discord.ButtonStyle.red)
+    async def turnOff(self, button, interaction: discord.Interaction):
+        ctx = self.ctx
         embed = discord.Embed(title=f'{economysuccess} Success!',
                               description='Alerts are switched **Off**. "Yay no more DMs" huh?',
                               colour=success_embed)
-        await ctx.send(embed=embed)
+        await interaction.response.send_message(embed=embed, ephemeral=True)
         await alerts_state(ctx.author.id, 'off')
-    else:
-        await ctx.send(f'{ctx.author.mention} Incorrect Option. Use `e.alerts` to see help.')
 
 @bot.command()
 @commands.check(general)
@@ -3346,10 +3358,11 @@ async def sell(ctx, *, item, via=False):
     else: return embed
 
 class BetButtons(discord.ui.Button):
-    def __init__(self, x: int, y: int):
+    def __init__(self, x: int, y: int, ctx):
         super().__init__(style=discord.ButtonStyle.secondary, label=str(y), row=x)
         self.x = x
         self.y = y
+        self.ctx = ctx
 
     async def callback(self, interaction: discord.Interaction):
         assert self.view is not None
@@ -3364,7 +3377,7 @@ class BetButtons(discord.ui.Button):
         await interaction.response.edit_message(content=f"{view.ctx.author.mention} vs {view.person.mention}\n" \
            f"Bet Amount: `{await commait(int(self.label))}`\n" \
            f"Click 'Accept' to start. Waiting on: {' '.join([x.mention for x in bot.waitings[view.ctx.author.id]])}",
-                                                view=ConfirmTTT(view.ctx.author, view.person, int(self.label)))
+                                                view=ConfirmTTT(view.ctx.author, view.person, int(self.label), self.ctx))
 
 class InteractiveTTT(discord.ui.View):
     def __init__(self, ctx: Context, person: discord.Member):
@@ -3384,7 +3397,7 @@ class InteractiveTTT(discord.ui.View):
                         [2000, 2500, 5000, 10000, 20000]]
         for i in range(2):
             for j in options[i]:
-                self.add_item(BetButtons(i, j))
+                self.add_item(BetButtons(i, j, self.ctx))
         await interaction.response.edit_message(content=f"Challenge Accepted! "
                                           f"{self.ctx.author.mention} to select betting amount:",
                                                 view=self)
@@ -3651,7 +3664,7 @@ class MinesweeperButton(discord.ui.Button['Minesweeper']):
         await interaction.response.edit_message(content=cont, view=view)
 
 class TicTacToe(discord.ui.View):
-    def __init__(self, p1: discord.Member, p2: discord.Member, move, bet:int):
+    def __init__(self, p1: discord.Member, p2: discord.Member, move, bet:int, ctx):
         super().__init__()
         self.X = p1
         self.O = p2
@@ -3664,6 +3677,7 @@ class TicTacToe(discord.ui.View):
             [0, 0, 0],
         ]
         self.bet = bet
+        self.ctx = ctx
 
         for x in range(3):
             for y in range(3):
@@ -3752,12 +3766,12 @@ class TicTacToeButton(discord.ui.Button['TicTacToe']):
         if winner is not None:
             if winner == view.X:
                 content = f'🏆 {view.X.mention} won! 🏆'
-                bot.accounts[str(view.X.id)]["wallet"] += view.bet * 2
+                await ttt_end(view.X, view.O, view.bet, view.ctx)
             elif winner == view.O:
                 content = f'🏆 {view.O.mention} won! 🏆'
-                bot.accounts[str(view.O.id)]["wallet"] += view.bet * 2
+                await ttt_end(view.O, view.X, view.bet, view.ctx)
             else:
-                content = "It's a tie!"
+                await ttt_tie(view.X.id, view.O.id, view.bet)
 
             for child in view.children:
                 child.disabled = True
@@ -3767,7 +3781,7 @@ class TicTacToeButton(discord.ui.Button['TicTacToe']):
         await interaction.response.edit_message(content=content, view=view)
 
 class ConfirmTTT(discord.ui.View):
-    def __init__(self, user: discord.Member, user2: discord.Member, bet: int):
+    def __init__(self, user: discord.Member, user2: discord.Member, bet: int, ctx):
         super().__init__()
         self.user = user
         self.bet = bet
@@ -3775,6 +3789,7 @@ class ConfirmTTT(discord.ui.View):
         self.p1 = user
         self.p2 = user2
         self.msg = None
+        self.ctx = ctx
 
     async def on_timeout(self):
         for i in self.children:
@@ -3804,7 +3819,7 @@ class ConfirmTTT(discord.ui.View):
 
             if len(bot.waitings[self.user.id]) == 0:
                 move = random.choice([self.user, interaction.user])
-                view = TicTacToe(self.p1, self.p2, move, bet)
+                view = TicTacToe(self.p1, self.p2, move, bet, self.ctx)
                 view.msg = self.msg
                 await interaction.response.edit_message(content=f"**Game Begins!** {move.mention} to move first:",
                                                         view=view)
@@ -3830,10 +3845,9 @@ async def tictactoe(ctx, user:discord.Member, bet:int=100):
     cont = f"{ctx.author.mention} vs {user.mention}\n" \
            f"Bet Amount: `{await commait(bet)}`\n" \
            f"Click 'Accept' to start. Waiting on: {' '.join([x.mention for x in bot.waitings[ctx.author.id]])}"
-    view = ConfirmTTT(ctx.author, user, bet)
+    view = ConfirmTTT(ctx.author, user, bet, ctx)
     pre = await ctx.send(cont, view=view)
     view.msg = pre
-
 
 class HeadTails(discord.ui.View):
     def __init__(self, member: discord.Member, bet: int):
@@ -3878,9 +3892,16 @@ class HeadTails(discord.ui.View):
 
 @bot.command(aliases=["bet"])
 @commands.check(general)
-async def flip(ctx, bet:int):
-    if bet < 50:
-        return await ctx.reply("Minimum bet amount is 50 coins")
+async def flip(ctx, bet:int=None):
+    if bet is None:
+        def check(msg):
+            return msg.author == ctx.author and msg.channel == ctx.channel
+        try:
+            msg = await bot.wait_for("message", timeout=60, check=check)
+            bet = int(msg.content)
+        except asyncio.TimeoutError: return
+        except:
+            await ctx.reply("Bruh thats not a valid integer...")
 
     if bet > bot.accounts[str(ctx.author.id)]["wallet"]:
         return await ctx.send(f"{ctx.author.mention} Imagine betting more than you have in your pockets..")
