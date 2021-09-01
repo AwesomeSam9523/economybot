@@ -142,5 +142,19 @@
     "- Added timeouts to all the games",
     "- Tic-Tac-Toe auto ends if user doesn't reply in a specific time",
     "- Added cooldowns to all the commands (Can be viewed using `e.help <cmd>`)"
+  ],
+  "3.0": [
+    "- This update brings buttons and dropdowns to the bot! Converted whole bot code to `d.py v2`",
+    "\u200b",
+    "- Removed old command `e.bank` (for tiers) and added it via buttons in `e.mybank`",
+    "- Added `e.bank` as alias to `e.mybank`",
+    "- Enhanced `e.daily` and `e.stocks` with new timestamps",
+    "- Added buttons to `e.estates` and removed `e.upgrade`",
+    "- Improved `e.alerts` command",
+    "- Stocks can now be bought and sold from `e.stocks` command directly",
+    "- Added buttons to `e.help` embed",
+    "- Gave a major overhaul to `e.items`~ You can now sell items and click item for its info",
+    "- Improved `e.tictactoe` and `e.minesweeper`~ Commands are now less prone to 'This Interaction Failed' bug",
+    "- Improved `e.flip command`"
   ]
 }
