@@ -48,7 +48,7 @@ class EconomyBot(commands.Bot):
         with open("files/inventory.json", "r") as f: self.inventory = json.load(f)
         with open("files/awards.json", "r") as f: self.awards = json.load(f)
 
-        super().__init__(command_prefix=["e.", "E."], intents=discord.Intents.all(), case_insensitive=True)
+        super().__init__(command_prefix=bot.when_mentioned_or("e.", "E."), intents=discord.Intents.all(), case_insensitive=True)
 
 bot = EconomyBot()
 uploader = discord_files.ConcurrentUploader(bot)
@@ -528,7 +528,8 @@ async def avg_update():
     for x in bot.avg:
         person_avg = bot.avg[x]
 
-        newbal = bot.accounts[x]['bank']
+        newbal = bot.accounts.get(x, {"bank":None}).get('bank')
+        if newbal is None: continue
         sum = person_avg['sum']
 
         newsum = sum + newbal
@@ -581,7 +582,7 @@ async def check_storetime():
 
 async def open_account(userid):
     if bot.accounts.get(str(userid)) is None:
-        bot.accounts[str(userid)] = {'bank_type':1, 'wallet':0, 'bank':1000}
+        bot.accounts[str(userid)] = {'bank_type':1, 'wallet':0, 'bank':1000, 'joined':datetime.date.today().strftime('%d-%m-%Y')}
         await update_accounts()
 
 async def open_estates(userid):
@@ -855,7 +856,7 @@ async def profile_image(member, level, userxp, xp, total_xp, guildid):
     newdraw.text((120, 250), f'#{server_r}', font=font_rank, fill='#000000')
     newdraw.text((530, 250), f'{global_r}', font=font_rank, fill='#000000')
     newdraw.text((50, 355), f"Net Worth:  {await commait(networth)} coins", font=gadugi_b, fill='#000000')
-    newdraw.text((50, 395), f"Global Rank: #{await networth_lb(networth)}", font=gadugi_b, fill='#000000')
+    newdraw.text((50, 395), f"Join Date: {bot.accounts[str(member.id)]['joined']}", font=gadugi_b, fill='#000000')
 
     awards = {"estates": 'badges/awards/estates_{colortype}.png',
               "games":'badges/awards/games_{colortype}.png',
@@ -884,7 +885,7 @@ async def profile_image(member, level, userxp, xp, total_xp, guildid):
     draw.text((120, 250), f'#{server_r}', (255, 243, 0), font=font_rank)
     draw.text((530, 250), f'{global_r}', (255, 243, 0), font=font_rank)
     draw.text((50, 355), f"Net Worth:  {await commait(networth)} coins", font=gadugi_b)
-    draw.text((50, 395), f"Global Rank: #{await networth_lb(networth)}", font=gadugi_b)
+    draw.text((50, 395), f"Join Date: {bot.accounts[str(member.id)]['joined']}", font=gadugi_b)
 
     twidth, theight = draw.textsize(f"{await commait(xp)}/{await commait(total_xp)}", fonts)
     draw.text((468 - (twidth / 2), 121 - (theight / 2)), f"{await commait(xp)}/{await commait(total_xp)}", (255, 255, 255), font=fonts, stroke_width=1, stroke_fill=(0, 0, 0))
@@ -1504,9 +1505,8 @@ async def stockinfo(ctx):
     embed.add_field(name='Total Rows', value=f'{len(stock)}')
     embed.add_field(name='Current Row', value=f'{config["line"]}')
     embed.add_field(name='Approx Refresh Time', value=f'{round(86400/len(stock), 4)} secs')
-    left = datetime.timedelta(seconds=((len(stock)-config["line"])*round(86400/len(stock), 4)))
-    final = datetime.datetime.strptime(str(left), '%H:%M:%S.%f').replace(microsecond=0)
-    embed.add_field(name='Ending Time', value=f'`{str(final).split(" ")[1]}` (HH:MM:SS)')
+    secs = int((len(stock)-config["line"])*round(86400/len(stock), 4) + time.time())
+    embed.add_field(name='Ending Time', value=f'<t:{secs}:f> (<t:{secs}:R>)')
 
     await ctx.send(embed=embed)
 
@@ -1820,9 +1820,8 @@ async def daily(ctx):
     check = await checktimeout(ctx.author.id, 'daily')
     time_gap = 86400 - check
     if time_gap > 0 and check != 0:
-        left = datetime.timedelta(seconds=time_gap)
-        final = datetime.datetime.strptime(str(left).split(" ")[-1], '%H:%M:%S.%f').replace(microsecond=0)
-        return await ctx.reply(f'You have to wait for `{str(final).split(" ")[-1]}` (HH:MM:SS) time more before you can claim daily interest.')
+        left = int(time_gap + time.time())
+        return await ctx.reply(f'You can claim next daily interest at <t:{left}:f> (<t:{left}:R>).')
     btype = data_p['bank_type']
     avgbal = avg_p['avg']
     bank_d = data_p['bank']
@@ -1937,6 +1936,10 @@ class Estates(discord.ui.View):
     @discord.ui.button(label="Upgrade", style=discord.ButtonStyle.blurple)
     async def upgrade(self, button, interaction: discord.Interaction):
         ctx = self.ctx
+        if interaction.user != ctx.author:
+            return await interaction.response.send_message(
+                random.choice(bot.phrases["inter"]).format(usertag=str(ctx.author)),
+                ephemeral=True)
         userid = ctx.author.id
         await open_estates(userid)
         eperson = bot.estates[f'{ctx.author.id}']
@@ -1982,6 +1985,26 @@ class Estates(discord.ui.View):
 
         msg = await interaction.response.send_message(embed=embed, ephemeral=True, view=EstatesUpgrade(ctx, self.msg, cost, level))
 
+    @discord.ui.button(label="Collect Revenue", style=discord.ButtonStyle.green)
+    async def revenue(self, button, interaction: discord.Interaction):
+        ctx = self.ctx
+        if interaction.user != ctx.author:
+            return await interaction.response.send_message(
+                random.choice(bot.phrases["inter"]).format(usertag=str(ctx.author)),
+                ephemeral=True)
+        embed = await revenue(ctx, via=True)
+        await interaction.response.send_message(embed=embed, ephemeral=True)
+
+    @discord.ui.button(label="Maintain", style=discord.ButtonStyle.red)
+    async def maintain(self, button, interaction: discord.Interaction):
+        ctx = self.ctx
+        if interaction.user != ctx.author:
+            return await interaction.response.send_message(
+                random.choice(bot.phrases["inter"]).format(usertag=str(ctx.author)),
+                ephemeral=True)
+        embed = await maintain(ctx, via=True)
+        await interaction.response.send_message(embed=embed, ephemeral=True)
+
 class EstatesUpgrade(discord.ui.View):
     def __init__(self, ctx: Context, msg: discord.Message, cost: int, level: int):
         super().__init__()
@@ -2023,13 +2046,13 @@ class EstatesUpgrade(discord.ui.View):
         embed = discord.Embed(title=f'{economysuccess} Success!',
                               description='Wohoo! Your upgrade was successful! Use `e.estates` to see newly upgraded property!',
                               color=success_embed)
-        await interaction.response.edit_message(embed=embed)
+        await interaction.response.edit_message(embed=embed, view=None)
         if level + 1 == 30: await achievement(ctx, ctx.author.id, "estates")
 
     @discord.ui.button(label="Decline", style=discord.ButtonStyle.red)
     async def decline(self, button, interaction: discord.Interaction):
         embed = discord.Embed(title=f'{economyerror} Cancelled!', color=error_embed)
-        await interaction.response.edit_message(embed=embed)
+        await interaction.response.edit_message(embed=embed, view=None)
 
 @bot.command(hidden=True)
 @commands.check(is_dev)
@@ -2040,7 +2063,7 @@ async def disregard(ctx, member:discord.Member):
 
 @bot.command()
 @commands.check(general)
-async def revenue(ctx):
+async def revenue(ctx, via=False):
     userid = ctx.author.id
     await open_estates(userid)
     await est_update()
@@ -2099,11 +2122,12 @@ async def revenue(ctx):
 
     await update_est()
     await update_accounts()
+    if via: return embed
     await ctx.send(embed=embed)
 
 @bot.command()
 @commands.check(general)
-async def maintain(ctx):
+async def maintain(ctx, via=False):
     userid = ctx.author.id
     await open_estates(userid)
     userid = str(ctx.author.id)
@@ -2157,7 +2181,7 @@ async def maintain(ctx):
     embed.timestamp = datetime.datetime.utcnow()
     embed.set_footer(text='Economy Bot', icon_url=bot.pfp)
     embed.set_author(name=f'{fetched.name} | {name} Hotel', icon_url=fetched.display_avatar.url)
-
+    if via: return embed
     await ctx.send(embed=embed)
 
 @bot.command()
@@ -2380,14 +2404,12 @@ async def stocks(ctx):
     plt.savefig('graph.png', transparent=True)
     plt.close()
 
-    left = datetime.timedelta(seconds=((len(stock_data) - config["line"]) * round(86400 / len(stock_data), 4)))
-    final = datetime.datetime.strptime(str(left), '%H:%M:%S.%f').replace(microsecond=0)
-    colon_format = str(final).split(" ")[1].split(':')
+    secs = int((len(stock_data) - config["line"]) * round(86400 / len(stock_data), 4))
     holdings = bot.stocks.get(str(ctx.author.id), 0)
     embed = discord.Embed(title='Today\'s Stock', description=f'```\n{x}```', color=embedcolor)
     embed.add_field(name='Your Holdings', value=f'`{await commait(holdings)}` stocks')
     embed.add_field(name='Current Value', value=f'`{await commait(int(holdings*float(details[3])))}` coins')
-    embed.add_field(name='Time Left', value=f'`{colon_format[0]}h {colon_format[1]}m {colon_format[2]}s`')
+    embed.add_field(name='Time Left', value=f'<t:{secs}:f> (<t:{secs}:R>)')
 
     embed.set_image(url="attachment://graph.png")
     view = StocksBuySell(ctx)
