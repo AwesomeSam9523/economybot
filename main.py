@@ -208,6 +208,7 @@ def is_staff(ctx):
     return ctx.author.id in staff
 
 def cache_allitems():
+    return
     t = time.time()
     bot.allitems = {}
     for i in bot.items.keys():
@@ -3909,6 +3910,266 @@ async def flip(ctx, bet:int=None):
     view = HeadTails(ctx.author, bet)
     msg = await ctx.send(embed=embed, view=view)
     view.msg = msg
+    
+@bot.command()
+@commands.check(general)
+async def trade(ctx, user: discord.Member= None):
+    if user is None:
+        await ctx.reply("Mention the user you would like to trade with:")
+        def check(msg):
+            return msg.author == ctx.author and msg.channel == ctx.channel and len(msg.mentions) != 0
+        try:
+            msg = await bot.wait_for("message", timeout=60, check=check)
+            user = msg.mentions[0]
+        except:
+            return
+    view = Trade(ctx, user)
+    embed = discord.Embed(title="Trade")
+    embed.add_field(name=str(ctx.author), value="```\nNo items added```")
+    embed.add_field(name="\u200b", value="```\n⇔```")
+    embed.add_field(name=str(user), value="```\nNo items added```")
+    embed.add_field(name="\\❌ Not Ready \\❌", value="\u200b")
+    embed.add_field(name="\u200b", value="\u200b")
+    embed.add_field(name="\\❌ Not Ready \\❌", value="\u200b")
+    msg = await ctx.send(embed=embed, view=view)
+    view.msg = msg
+
+class Trade(discord.ui.View):
+    def __init__(self, ctx: Context, user: discord.Member):
+        super().__init__()
+        self.ctx = ctx
+        self.user = user
+        self.msg = None
+        self.embed = discord.Embed(title="Trade")
+        self.adder = TradeAdd(ctx.author, user, "add")
+
+    @discord.ui.button(label="Add Item(s)", style=discord.ButtonStyle.blurple)
+    async def add(self, button, interaction: discord.Interaction):
+        ctx = self.ctx
+        user = self.user
+        if interaction.user not in [self.ctx.author, self.user]:
+           return  await interaction.response.send_message(
+                random.choice(bot.phrases["inter"]).format(usertag=" or ".join([str(ctx.author), str(user)])),
+           ephemeral=True)
+        self.adder.msg = self.msg
+        if self.adder.performing: self.adder.interrupt = (True, interaction.user.id)
+        await self.adder.new_opts(interaction.user, "add")
+        await interaction.response.send_message("Add Items:", view=self.adder, ephemeral=True)
+
+    @discord.ui.button(label="Remove Item(s)", style=discord.ButtonStyle.blurple)
+    async def remove(self, button, interaction: discord.Interaction):
+        ctx = self.ctx
+        user = self.user
+        if interaction.user not in [self.ctx.author, self.user]:
+            return await interaction.response.send_message(
+                random.choice(bot.phrases["inter"]).format(usertag=" or ".join([str(ctx.author), str(user)])),
+                ephemeral=True)
+        self.adder.msg = self.msg
+        if self.adder.performing: self.adder.interrupt = (True, interaction.user.id)
+        await self.adder.new_opts(interaction.user, "rem")
+        await interaction.response.send_message("Remove Items:", view=self.adder, ephemeral=True)
+
+    @discord.ui.button(label="Ready", style=discord.ButtonStyle.green)
+    async def accept(self, button, interaction: discord.Interaction):
+        ctx = self.ctx
+        user = self.user
+        if interaction.user not in [self.ctx.author, self.user]:
+            return await interaction.response.send_message(
+                random.choice(bot.phrases["inter"]).format(usertag=" or ".join([str(ctx.author), str(user)])),
+                ephemeral=True)
+        self.adder.msg = self.msg
+        await interaction.response.defer()
+        await self.adder.userready(interaction.user.id)
+
+    @discord.ui.button(label="Cancel", style=discord.ButtonStyle.red)
+    async def cancel(self, button, interaction: discord.Interaction):
+        ctx = self.ctx
+        user = self.user
+        if interaction.user not in [self.ctx.author, self.user]:
+            return await interaction.response.send_message(
+                random.choice(bot.phrases["inter"]).format(usertag=" or ".join([str(ctx.author), str(user)])),
+                ephemeral=True)
+        self.adder.msg = self.msg
+        await interaction.response.defer()
+        await self.adder.usercancel(interaction.user.id)
+
+class TradeAdd(discord.ui.View):
+    def __init__(self, user1: discord.Member, user2: discord.Member, type:str):
+        super().__init__()
+        self.user1 = user1
+        self.user2 = user2
+        self.type = type
+        self.options_pg1 = []
+        self.options_pg2 = []
+        self.page1 = True
+
+        self.items = {user1.id:[], user2.id:[]}
+        self.embed = discord.Embed(title="Trade")
+        self.msg = None
+
+        self.ready = []
+        self.performing = False
+        self.interrupt = (False, 0)
+
+    async def userready(self, userid):
+        #if userid in self.ready: return
+        self.ready.append(userid)
+        await self.update_embed()
+        await self.update_msg()
+        await self.perform_trade()
+
+    async def usercancel(self, userid):
+        if userid not in self.ready: return
+        self.ready.remove(userid)
+        if self.performing:
+            self.interrupt = (True, userid)
+            self.ready.remove(userid)
+        await self.update_embed()
+        await self.update_msg()
+
+    async def perform_trade(self):
+        if len(self.ready) != 2: return
+        self.performing = True
+        await asyncio.sleep(0)
+        for i in range(5, -1, -1):
+            await self.update_embed()
+            if self.interrupt[0]:
+                self.ready.remove(self.interrupt[1])
+                self.interrupt = (False, 0)
+                self.performing = False
+                await self.update_embed()
+                await self.update_msg()
+                return
+
+            self.embed.add_field(name="\u200b", value="\u200b")
+            self.embed.add_field(name=f"Trading in {i} secs...", value="\u200b")
+            self.embed.add_field(name="\u200b", value="\u200b")
+            await self.update_msg()
+            await asyncio.sleep(1)
+        await self.update_embed()
+        self.embed.add_field(name="\u200b", value="\u200b")
+        self.embed.add_field(name=f"Trade Successful", value="\u200b")
+        self.embed.add_field(name="\u200b", value="\u200b")
+        await self.msg.edit(embed=self.embed, view=None)
+
+    async def new_opts(self, user, type):
+        userinv = []
+        if type == "add":
+            itemsinv = update_sorted_inv(str(user.id))
+            for i in itemsinv:
+                userinv.append(i[0])
+
+            for i in self.items[user.id]:
+                if i[1] in userinv:
+                    print("in userinv")
+                    userinv.remove(i[1])
+
+            await self.update_opts(userinv, "add")
+        else:
+            userinv = [i[1] for i in self.items[user.id]]
+            await self.update_opts(userinv, "remove")
+
+    async def update_opts(self, opts: list, method: str):
+        self.options_pg1.clear()
+        self.options_pg2.clear()
+        for index, value in enumerate(opts):
+            print("opts:", index, value)
+            if index > 24:
+                self.options_pg2.append(value)
+            else:
+                self.options_pg1.append(value)
+        print(f"Len: {len(self.options_pg1)}\nValue: {self.options_pg1}")
+        self.clear_items()
+        if self.page1:
+            newsel = ItemsSelect(self.options_pg1, method)
+        else:
+            newsel = ItemsSelect(self.options_pg2, method)
+
+        self.add_item(newsel)
+
+    async def update_embed(self):
+        user1items = self.items[self.user1.id]
+        user2items = self.items[self.user2.id]
+        user1 = ""
+        user2 = ""
+
+        for i in user1items:
+            user1 += f"[{i[0]}] {i[1]}\n"
+
+        for i in user2items:
+            user2 += f"[{i[0]}] {i[1]}\n"
+
+        if user1 == "": user1 = "No items added"
+        if user2 == "": user2 = "No items added"
+
+        self.embed.clear_fields()
+        self.embed.add_field(name=str(self.user1), value=f"```\n{user1}```")
+        if self.performing:
+            self.embed.add_field(name="\u200b", value="```\n     ⇔```")
+        else:
+            self.embed.add_field(name="\u200b", value="```\n⇔```")
+        self.embed.add_field(name=str(self.user2), value=f"```\n{user2}```")
+
+        state = "\\✅ Ready \\✅"
+        if self.user1.id not in self.ready:
+            state = "\\❌ Not Ready \\❌"
+        self.embed.add_field(name=state, value="\u200b")
+        self.embed.add_field(name="\u200b", value="\u200b")
+        state = "\\✅ Ready \\✅"
+        if self.user2.id not in self.ready:
+            state = "\\❌ Not Ready \\❌"
+        self.embed.add_field(name=state, value="\u200b")
+
+    async def update_msg(self):
+        await self.msg.edit(embed=self.embed)
+
+
+class ItemsSelect(discord.ui.Select):
+    def __init__(self, options: list, method: str):
+        final = []
+
+        self.method = method
+        options = list(set(options))
+        print("Sel:", options)
+        for k, v in bot.items.items():
+            for i, j in v.items():
+                for item in j:
+                    for opt in options:
+                        if opt == item["name"]:
+                            final.append(discord.SelectOption(label=item["name"], emoji=item["emoji"]))
+                            options.remove(opt)
+        if len(final) < 5: maxval = len(final)
+        else: maxval = 5
+        super().__init__(placeholder=f'Click here to {method}...', min_values=1, max_values=maxval,
+                         options=final, row=4)
+
+    async def callback(self, interaction: discord.Interaction):
+        assert self.view is not None
+        view: TradeAdd = self.view
+
+        if self.method == "add":
+            olditems = view.items[interaction.user.id]
+            if len(olditems) == 5:
+                return await interaction.response.edit_message(
+                    content=f"{economyerror} You can't add more than 5 items",
+                    view=None)
+            myitems = [("a", x) for x in self.values]
+            olditems.extend(myitems)
+            olditems = olditems[:5]
+            view.items[interaction.user.id] = olditems
+            await interaction.response.edit_message(content="Added!", view=None)
+        else:
+            olditems = view.items[interaction.user.id]
+            if len(olditems) == 0:
+                return await interaction.response.edit_message(
+                    content=f"{economyerror} You can't remove items anymore",
+                    view=None)
+            for i in olditems:
+                if i[1] in self.values:
+                    view.items[interaction.user.id].remove(i)
+            await interaction.response.edit_message(content="Removed!", view=None)
+        await view.update_embed()
+        await view.update_msg()
 
 bot.connected_ = False
 @bot.event

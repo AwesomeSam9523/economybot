@@ -1083,6 +1083,10 @@
       "duration": 5,
       "users": []
     },
+    "trade": {
+      "duration": 2,
+      "users": []
+    },
     "items": {
       "duration": 5,
       "users": []
