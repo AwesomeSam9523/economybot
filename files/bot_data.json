@@ -65,7 +65,7 @@
       "Oh No! Not enough money? Go beg from our mum haha",
       "Imagine not having enough money but still trying lmfao",
       "Ew you poor, go and do something worthwhile!",
-      "Bro, atleast check with your wallet before buying",
+      "Bro, atleast check with your wallet before bothering me",
       "Why you bother me when you don't have enough coins?"
     ],
     "negative": [
@@ -468,15 +468,6 @@
         "percent": 13
       },
       {
-        "icon": "common_chest.png",
-        "name": "Common Chest",
-        "desc": "70% Common, 25% Rare, 5% Leg.",
-        "price": "1,000",
-        "special": false,
-        "disc": "520",
-        "percent": 48
-      },
-      {
         "icon": "silver_lock.png",
         "name": "Silver Lock",
         "desc": "Increases rob protection by 25%",
@@ -499,9 +490,18 @@
         "name": "Legendary Chest",
         "desc": "30% Common, 50% Rare, 20% Leg.",
         "price": "10,000",
-        "special": true,
+        "special": false,
         "disc": "8,000",
         "percent": 20
+      },
+      {
+        "icon": "common_chest.png",
+        "name": "Common Chest",
+        "desc": "70% Common, 25% Rare, 5% Leg.",
+        "price": "1,000",
+        "special": true,
+        "disc": "790",
+        "percent": 21
       }
     ],
     "category": {
@@ -517,7 +517,7 @@
         "Gold Lock"
       ]
     },
-    "updated": 1630503989.4712055
+    "updated": 1630651038.5240045
   },
   "items": {
     "common": {
@@ -1084,6 +1084,10 @@
       "users": []
     },
     "trade": {
+      "duration": 2,
+      "users": []
+    },
+    "hangman": {
       "duration": 2,
       "users": []
     },

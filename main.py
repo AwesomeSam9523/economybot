@@ -1,7 +1,7 @@
 import time
 t1 = time.time()
 import datetime, csv, threading, functools, asyncio, discord, operator, math
-import json, random, os, traceback, difflib, discord_files
+import json, random, os, traceback, difflib, discord_files, requests
 from discord.ext import commands, tasks
 from discord.ext.commands import *
 from prettytable import PrettyTable
@@ -209,7 +209,7 @@ def is_staff(ctx):
     return ctx.author.id in staff
 
 def cache_allitems():
-    #return
+    return
     t = time.time()
     bot.allitems = {}
     for i in bot.items.keys():
@@ -3453,6 +3453,12 @@ class Games(discord.ui.View):
                                    f' Tic-Tac-Toe. Click "Accept" to proceed!', view=confirming)
         confirming.confirm_p = confirm_p
 
+    @discord.ui.button(label="Hangman", emoji="🪢", style=discord.ButtonStyle.blurple)
+    async def hang(self, button, interaction: discord.Interaction):
+        ctx = self.ctx
+        await interaction.response.defer()
+        await hangman(ctx)
+
     async def on_timeout(self):
         for i in self.children:
             i.disabled = True
@@ -4272,6 +4278,92 @@ class PreviousPage(discord.ui.Button):
         view.page1 = True
         await view.new_opts(interaction.user, "add")
         await interaction.response.edit_message(view=view)
+
+@bot.command()
+async def hangman(ctx):
+    bet = 100
+    if bet > bot.accounts[str(ctx.author.id)]["wallet"]:
+        return await ctx.send(f"{ctx.author.mention} You don't have 100 coins in your wallet. {random.choice(bot.phrases['less_bal'])}")
+    bot.accounts[str(ctx.author.id)]["wallet"] -= 100
+    def get_word():
+        return json.loads(requests.get("https://random-word-api.herokuapp.com/word?number=1").text)[0]
+
+    while True:
+        word = get_word()
+        if 6 < len(word) < 10: break
+
+    uncovered_word = list(len(word) * '_')
+    wrong = 0
+    reveal_rand = random.randint(0, len(word))
+    for i in range(0, len(word)):
+        if word[reveal_rand] == word[i]:
+            uncovered_word[i] = word[reveal_rand]
+
+    images = {0:'https://media.discordapp.net/attachments/837564505952747520/883242727117058068/unknown.png',
+              1:'https://media.discordapp.net/attachments/837564505952747520/883242763137732668/unknown.png',
+              2:'https://media.discordapp.net/attachments/837564505952747520/883242804158021642/unknown.png',
+              3:'https://media.discordapp.net/attachments/837564505952747520/883242848781221888/unknown.png',
+              4:'https://media.discordapp.net/attachments/837564505952747520/883242883820433408/unknown.png',
+              5:'https://media.discordapp.net/attachments/837564505952747520/883242924689739816/unknown.png',
+              6:'https://media.discordapp.net/attachments/837564505952747520/883242982592102450/unknown.png'}
+
+    embed = discord.Embed(title="H A N G M A N",
+                          description="Enter your guesses, and if the letter is in the word, the bot updates the embed.\n"
+                                      "For each wrong guess, the man is closer to getting hanged to death!\n\n"
+                                      "Start below (you better protect the poor soul):\n"
+                                      f"**`{' '.join(uncovered_word)}`**\n\n"
+                                      f"Chances Left: `6`",
+                          color=embedcolor)
+    embed.set_thumbnail(url=images[wrong])
+    msg = await ctx.send(embed=embed)
+
+    while True:
+        def check(msg):
+            return msg.author == ctx.author and msg.channel == ctx.channel
+
+        try:
+            msgc = await bot.wait_for("message", timeout=60, check=check)
+            msgc = msgc.content.lower()
+
+            if len(msgc) != 1:
+                await ctx.reply("Please enter a letter only!")
+                continue
+
+            if msgc not in [x for x in word]:
+                await ctx.reply("Wrong!", delete_after=3)
+                wrong += 1
+                if wrong == 6:
+                    break
+            else:
+                await ctx.reply("Correct!", delete_after=3)
+                for i in range(0, len(word)):
+                    if msgc == word[i]:
+                        uncovered_word[i] = msgc
+                if "".join(uncovered_word) == word:
+                    break
+            embed = discord.Embed(title="H A N G M A N",
+                                  description="Enter your guesses, and if the letter is in the word, the bot updates the embed.\n"
+                                              "For each wrong guess, the man is closer to getting hanged to death!\n\n"
+                                              "Start below (you better protect the poor soul):\n"
+                                              f"**`{' '.join(uncovered_word)}`**\n\n"
+                                              f"Chances Left: `{6-wrong}`",
+                                  color=embedcolor)
+            embed.set_thumbnail(url=images[wrong])
+            await ctx.send(embed=embed)
+        except:
+            break
+    if wrong == 6:
+        embed = discord.Embed(title="H A N G M A N",
+                              description=f"Ah you lost! The correct word was: `{word}`",
+                              color=error_embed)
+        embed.set_thumbnail(url=images[wrong])
+    else:
+        embed = discord.Embed(title="H A N G M A N",
+                              description=f"Yay you win! Nice guessing the word `{word}` :D",
+                              color=success_embed)
+        embed.set_thumbnail(url=images[wrong])
+        bot.accounts[str(ctx.author.id)]["wallet"] += 200
+    await ctx.send(embed=embed)
 
 bot.connected_ = False
 @bot.event
