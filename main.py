@@ -1,7 +1,7 @@
 import time
 t1 = time.time()
 import datetime, csv, threading, functools, asyncio, discord, operator, math
-import json, random, os, traceback, difflib, discord_files, requests
+import json, random, os, traceback, difflib, discord_files, requests, aiohttp
 from discord.ext import commands, tasks
 from discord.ext.commands import *
 from prettytable import PrettyTable
@@ -4284,17 +4284,15 @@ async def hangman(ctx):
     bet = 100
     if bet > bot.accounts[str(ctx.author.id)]["wallet"]:
         return await ctx.send(f"{ctx.author.mention} You don't have 100 coins in your wallet. {random.choice(bot.phrases['less_bal'])}")
+    load = await ctx.send(f"{economysuccess} Finding a word...")
     bot.accounts[str(ctx.author.id)]["wallet"] -= 100
-    def get_word():
-        return json.loads(requests.get("https://random-word-api.herokuapp.com/word?number=1").text)[0]
-
-    while True:
-        word = get_word()
-        if 6 < len(word) < 10: break
+    session = aiohttp.ClientSession()
+    uri = ""
+    word = session.put()
 
     uncovered_word = list(len(word) * '_')
     wrong = 0
-    reveal_rand = random.randint(0, len(word))
+    reveal_rand = random.randint(0, len(word)-1)
     for i in range(0, len(word)):
         if word[reveal_rand] == word[i]:
             uncovered_word[i] = word[reveal_rand]
@@ -4315,27 +4313,28 @@ async def hangman(ctx):
                                       f"Chances Left: `6`",
                           color=embedcolor)
     embed.set_thumbnail(url=images[wrong])
-    msg = await ctx.send(embed=embed)
-
+    msg = await ctx.author.send(embed=embed)
+    await load.delete()
+    await ctx.reply("In ya DMs!")
     while True:
         def check(msg):
-            return msg.author == ctx.author and msg.channel == ctx.channel
+            return msg.author == ctx.author and msg.guild == None
 
         try:
-            msgc = await bot.wait_for("message", timeout=60, check=check)
-            msgc = msgc.content.lower()
+            msg = await bot.wait_for("message", timeout=60, check=check)
+            msgc = msg.content.lower()
 
             if len(msgc) != 1:
-                await ctx.reply("Please enter a letter only!")
+                await msg.reply("Please enter a letter only!")
                 continue
 
             if msgc not in [x for x in word]:
-                await ctx.reply("Wrong!", delete_after=3)
+                await msg.reply("Wrong!", delete_after=3)
                 wrong += 1
                 if wrong == 6:
                     break
             else:
-                await ctx.reply("Correct!", delete_after=3)
+                await msg.reply("Correct!", delete_after=3)
                 for i in range(0, len(word)):
                     if msgc == word[i]:
                         uncovered_word[i] = msgc
@@ -4349,9 +4348,9 @@ async def hangman(ctx):
                                               f"Chances Left: `{6-wrong}`",
                                   color=embedcolor)
             embed.set_thumbnail(url=images[wrong])
-            await ctx.send(embed=embed)
+            await ctx.author.send(embed=embed)
         except:
-            break
+            return
     if wrong == 6:
         embed = discord.Embed(title="H A N G M A N",
                               description=f"Ah you lost! The correct word was: `{word}`",
@@ -4363,7 +4362,7 @@ async def hangman(ctx):
                               color=success_embed)
         embed.set_thumbnail(url=images[wrong])
         bot.accounts[str(ctx.author.id)]["wallet"] += 200
-    await ctx.send(embed=embed)
+    await ctx.author.send(embed=embed)
 
 bot.connected_ = False
 @bot.event
