@@ -26,7 +26,7 @@ class EconomyBot(commands.Bot):
         self.items = {}
         self.emotes = {}
         self.unboxbgs = {}
-        self.allitems = {}
+        self.allitems = {'Rotten Tomato': 'https://cdn.discordapp.com/attachments/837564505952747520/884298671930372096/unboxing.gif', 'Cloth Piece': 'https://cdn.discordapp.com/attachments/837564505952747520/884298761008975892/unboxing.gif', 'Office Bag': 'https://cdn.discordapp.com/attachments/837564505952747520/884298815513952307/unboxing.gif', 'Spray Can': 'https://cdn.discordapp.com/attachments/837564505952747520/884298871495344168/unboxing.gif', 'Black Pen': 'https://cdn.discordapp.com/attachments/837564505952747520/884298928277835826/unboxing.gif', 'Broken Mouse': 'https://cdn.discordapp.com/attachments/837564505952747520/884298985580408862/unboxing.gif', 'N95 Mask': 'https://cdn.discordapp.com/attachments/837564505952747520/884299042614554694/unboxing.gif', 'Dead Calculator': 'https://cdn.discordapp.com/attachments/837564505952747520/884299094749745152/unboxing.gif', 'Leather Shoes': 'https://cdn.discordapp.com/attachments/837564505952747520/884299151947468850/unboxing.gif', 'Wooden Stick': 'https://cdn.discordapp.com/attachments/837564505952747520/884299205814943804/unboxing.gif', 'Broken String': 'https://cdn.discordapp.com/attachments/837564505952747520/884299266439405599/unboxing.gif', 'Mouse Pad': 'https://cdn.discordapp.com/attachments/837564505952747520/884299319820288020/unboxing.gif', 'Bronze Spoon': 'https://cdn.discordapp.com/attachments/837564505952747520/884299381682102292/unboxing.gif', 'Flower Vase': 'https://cdn.discordapp.com/attachments/837564505952747520/884299441077637120/unboxing.gif', 'Maths Book': 'https://cdn.discordapp.com/attachments/837564505952747520/884299498698965062/unboxing.gif', 'Charger': 'https://cdn.discordapp.com/attachments/837564505952747520/884299557301800960/unboxing.gif', 'Wall Clock': 'https://cdn.discordapp.com/attachments/837564505952747520/884299620279279696/unboxing.gif', 'Pen Stand': 'https://cdn.discordapp.com/attachments/837564505952747520/884299691716640808/unboxing.gif', 'Book Stand': 'https://cdn.discordapp.com/attachments/837564505952747520/884299761048506458/unboxing.gif', 'Magnifying Glass': 'https://cdn.discordapp.com/attachments/837564505952747520/884299815809327124/unboxing.gif', 'Lollipop': 'https://cdn.discordapp.com/attachments/837564505952747520/884299882087723038/unboxing.gif', 'Eaten Chocolate': 'https://cdn.discordapp.com/attachments/837564505952747520/884299941256777779/unboxing.gif', 'Lighter': 'https://cdn.discordapp.com/attachments/837564505952747520/884300000534872104/unboxing.gif', 'Tennis Ball': 'https://cdn.discordapp.com/attachments/837564505952747520/884300063340372058/unboxing.gif', 'Rubics Cube': 'https://cdn.discordapp.com/attachments/837564505952747520/884300126347210792/unboxing.gif', 'Hourglass': 'https://cdn.discordapp.com/attachments/837564505952747520/884300185558220800/unboxing.gif', 'Coffee Mug': 'https://cdn.discordapp.com/attachments/837564505952747520/884300253384306698/unboxing.gif', 'Broken CD': 'https://cdn.discordapp.com/attachments/837564505952747520/884300312574304266/unboxing.gif', 'A wallet': 'https://cdn.discordapp.com/attachments/837564505952747520/884300386612158464/unboxing.gif', 'RC Drone': 'https://cdn.discordapp.com/attachments/837564505952747520/884300449354764318/unboxing.gif', 'Copper Wire': 'https://cdn.discordapp.com/attachments/837564505952747520/884300511413694464/unboxing.gif', 'Gold Chain': 'https://cdn.discordapp.com/attachments/837564505952747520/884300577046159410/unboxing.gif', 'Headphones': 'https://cdn.discordapp.com/attachments/837564505952747520/884300644171788298/unboxing.gif', 'Party Speakers': 'https://cdn.discordapp.com/attachments/837564505952747520/884300701260460073/unboxing.gif', 'Mobile Phone': 'https://cdn.discordapp.com/attachments/837564505952747520/884300759464833044/unboxing.gif', 'Electric Guitar': 'https://cdn.discordapp.com/attachments/837564505952747520/884300815634956328/unboxing.gif', 'Travel Bag': 'https://cdn.discordapp.com/attachments/837564505952747520/884300870706151454/unboxing.gif', 'Mini Boom Box': 'https://cdn.discordapp.com/attachments/837564505952747520/884300922396758086/unboxing.gif', 'Broken Television': 'https://cdn.discordapp.com/attachments/837564505952747520/884300982572425286/unboxing.gif', 'Gaming Chair': 'https://cdn.discordapp.com/attachments/837564505952747520/884301042056056932/unboxing.gif', 'Antique Painting': 'https://cdn.discordapp.com/attachments/837564505952747520/884301102491783188/unboxing.gif', 'WIFI Router': 'https://cdn.discordapp.com/attachments/837564505952747520/884301170707922954/unboxing.gif', 'Gold Spectacles': 'https://cdn.discordapp.com/attachments/837564505952747520/884301226626388028/unboxing.gif', 'Piano': 'https://cdn.discordapp.com/attachments/837564505952747520/884301290157510707/unboxing.gif', 'Electric Drums': 'https://cdn.discordapp.com/attachments/837564505952747520/884301353571213383/unboxing.gif', 'Laptop': 'https://cdn.discordapp.com/attachments/837564505952747520/884301429873979432/unboxing.gif', 'Laser Printer': 'https://cdn.discordapp.com/attachments/837564505952747520/884301503706312744/unboxing.gif', 'Money Bag': 'https://cdn.discordapp.com/attachments/837564505952747520/884301568390873108/unboxing.gif', 'Gold Brick': 'https://cdn.discordapp.com/attachments/837564505952747520/884301655678525510/unboxing.gif', 'War Sword': 'https://cdn.discordapp.com/attachments/837564505952747520/884301729921896499/unboxing.gif'}
         self.cachedinv = {}
         self.used = {}
         self.ms = {}
@@ -208,7 +208,7 @@ def is_dev(ctx):
 def is_staff(ctx):
     return ctx.author.id in staff
 
-def cache_allitems():
+async def cache_allitems():
     #return
     t = time.time()
     bot.allitems = {}
@@ -261,8 +261,10 @@ def cache_allitems():
                               loop=0)
             unbox_gif.seek(0)
             file = discord.File(fp=unbox_gif, filename='unboxing.gif')
-            bot.allitems[item_name] = unbox_gif
+            a = await bot.get_channel(837564505952747520).send(file=file)
+            bot.allitems[item_name] = a.attachments[0].url
             print(f'{item_name} cached successfully!')
+            print(bot.allitems)
     print(f'All {len(bot.allitems.keys())} items cached successfully in {time.time() - t} secs')
 
 async def spam_protect(userid):
@@ -656,8 +658,13 @@ async def create_statement(user, person, amount, reason, type):
 async def load_shop():
     with open('files/bot_data.json', 'r') as s:
         config = json.load(s)
+    items_final = {"lock":[], "chest":[]}
     for i in config["shop"]["value"]:
-        storeitems.append(i)
+        for k, v in config["shop"]["category"].items():
+            if i["name"] in v:
+                items_final[k].append(i)
+    for i in items_final.values():
+        storeitems.extend(i)
 
 @tasks.loop(minutes=10)
 async def bot_status():
@@ -825,8 +832,22 @@ async def profile_image(member, level, userxp, xp, total_xp, guildid):
     if str(member.id) in bot.badges['staff']: staff = True
     else: staff = False
     location = 710
+    if bot.accounts[str(member.id)]["prem"] - time.time() > 0:
+        premium = True
+    else:
+        premium = False
     if staff:
         staff_icon = Image.open('badges/staff.png')
+        pixdata = staff_icon.load()
+        for y in range(staff_icon.size[1]):
+            for x in range(staff_icon.size[0]):
+                pixdata[x, y] = tuple(list((0, 255, 230)) + [pixdata[x, y][-1]])
+        staff_icon = staff_icon.resize((37, 37))
+        img.paste(staff_icon, (location, 55), staff_icon)
+        staff_icon.close()
+        location -= 45
+    if premium:
+        staff_icon = Image.open('badges/premium.png')
         pixdata = staff_icon.load()
         for y in range(staff_icon.size[1]):
             for x in range(staff_icon.size[0]):
@@ -1334,6 +1355,13 @@ class IgnoreError(commands.CheckFailure):
     pass
 
 @bot.command()
+async def prem(ctx):
+    for i, j in bot.accounts.items():
+        j.setdefault("prem", -1)
+    await update_accounts()
+    await ctx.message.add_reaction(economysuccess)
+
+@bot.command()
 @commands.check(general)
 async def report(ctx, code):
     a = await get_errorfile()
@@ -1411,12 +1439,12 @@ async def logs(ctx, *, search:str=None):
 
 @bot.command(aliases=['eval'],hidden=True)
 async def evaluate(ctx, *, expression):
-    if ctx.author.id == 669816890163724288:
-        try:
-            await ctx.reply(eval(expression))
-        except Exception as e:
-            await ctx.reply(f'```\n{e}```')
-    elif ctx.author.id == 771601176155783198:
+    #if ctx.author.id == 669816890163724288:
+    try:
+        await ctx.reply(eval(expression))
+    except Exception as e:
+        await ctx.reply(f'```\n{e}```')
+    '''elif ctx.author.id == 771601176155783198:
         try:
             calculated = aeval(expression)
             msg = await ctx.send('Evaluating Expression..')
@@ -1427,11 +1455,11 @@ async def evaluate(ctx, *, expression):
             await msg.edit(content=f'Input:\n```py\n{expression}```\nOutput:\n```py\n{calculated}```')
         except Exception as ex:
             await ctx.send(
-                f"```py\n{''.join(traceback.format_exception(etype=type(ex), value=ex, tb=ex.__traceback__))}\n```")
+                f"```py\n{''.join(traceback.format_exception(etype=type(ex), value=ex, tb=ex.__traceback__))}\n```")'''
 
 @bot.command(aliases=['exec'],hidden=True)
 async def execute(ctx, *, expression):
-    if ctx.author.id != 669816890163724288: return
+    #if ctx.author.id != 669816890163724288: return
     try:
         exec(expression.replace('```', ''))
     except Exception as e:
@@ -1533,24 +1561,7 @@ async def refresh():
     bot.status = data["status"]
     bot.cooldown = data["cooldown"]
 
-    print('Caching Items')
-    common_bgs = []
-    rare_bgs = []
-    legendary_bgs = []
-    for i in range(40):
-        img = Image.open(f'items/bgs/common_bg{i}.png')
-        common_bgs.append(img)
-    for i in range(40):
-        img = Image.open(f'items/bgs/rare_bg{i}.png')
-        rare_bgs.append(img)
-    for i in range(40):
-        img = Image.open(f'items/bgs/legendary_bg{i}.png')
-        legendary_bgs.append(img)
-    bot.unboxbgs["common"] = common_bgs
-    bot.unboxbgs["rare"] = rare_bgs
-    bot.unboxbgs["legendary"] = legendary_bgs
-    with ThreadPoolExecutor(max_workers=1) as executor:
-        await bot.loop.run_in_executor(executor, functools.partial(cache_allitems))
+    #await cache_allitems()
 
 @bot.command(hidden=True)
 @commands.check(is_dev)
@@ -1738,7 +1749,7 @@ class BankTiers(discord.ui.Select):
         view: UpgradeBank = self.view
         if interaction.user != view.ctx.author:
             return await interaction.response.send_message(
-                random.choice(bot.phrases["inter"]).format(usertag=str(view.ctx.author)))
+                random.choice(bot.phrases["inter"]).format(usertag=str(view.ctx.author)), ephemeral=True)
 
         tlist = {'Tier I': 1, 'Tier II': 2, 'Tier III':3}
         tier = tlist[self.values[0]]
@@ -2523,9 +2534,8 @@ async def buystocks(ctx, amount, via=False):
     embed.set_author(name=f'{fetched.name}', icon_url=fetched.display_avatar.url)
     if via: return embed
     await ctx.send(embed=embed)
-    sto1 = bot.awards["stocks"]
 
-    user_sto1 = sto1.setdefault(str(ctx.author.id), 0)
+    user_sto1 = bot.awards["stocks"].setdefault(str(ctx.author.id), 0)
     user_sto_upd = user_sto1 + amount
     if user_sto_upd >= 1000000 and user_sto1 < 1000000: await achievement(ctx, ctx.author.id, "stocks")
 
@@ -2731,7 +2741,7 @@ async def rob(ctx, member:discord.Member):
     lock = 0
     userinv = bot.inventory.get(str(member.id), {"inv":[], "eq_lock":""})
     user = userinv["inv"]
-    eq = userinv['eq_lock']
+    eq = userinv.get("eq_lock", "")
     if len(user) == 0: pass
     else:
         if eq == 'Bronze Lock': lock = 10
@@ -2929,6 +2939,11 @@ async def use(ctx, *, item:str):
         await ctx.send(embed=embed)
 
     async def chest(chest):
+        if len(bot.allitems.keys()) != 50:
+            embed = discord.Embed(description=f'{economyerror} Please Wait! The bot is caching all the items', color=error_embed)
+            embed.set_footer(text=f'Approx Time Left: {(50-len(bot.allitems.keys()))*8} secs')
+            allinv.append(chest)
+            return await ctx.send(embed=embed)
         mychest = chest.split(" ")[0].lower()
         chances = {'common':{'c':[0, 70], 'r':[70, 95], 'e':[95, 100]},
                    'rare':{'c':[0, 50], 'r':[50, 90], 'e':[90, 100]},
@@ -2940,12 +2955,6 @@ async def use(ctx, *, item:str):
         elif mychance['e'][0] <= rng < mychance['e'][1]: rarity = 'legendary'
         else: rarity = 'common'
         item_name = random.choice(bot.items[rarity]["items"])["name"]
-        if len(bot.allitems.keys()) != 50:
-            embed = discord.Embed(description=f'{economyerror} Please Wait! The bot is caching all the items', color=error_embed)
-            embed.set_footer(text=f'Approx Time Left: {(50-len(bot.allitems.keys()))*8} secs')
-            allinv.append(chest)
-            return await ctx.send(embed=embed)
-        file = discord.File(fp=bot.allitems[item_name], filename='unboxing.gif')
         if mychest == 'common': chestcol = 183398
         elif mychest == 'rare': chestcol = 5164244
         elif mychest == 'legendary': chestcol = 16475796
@@ -2954,8 +2963,8 @@ async def use(ctx, *, item:str):
         fetched = bot.get_user(ctx.author.id)
         embed.set_footer(text='Type e.sell <item-name> to sell an item for coins\nType e.iteminfo <item-name> for info!', icon_url=bot.pfp)
         embed.set_author(name=f'{fetched.name} Unboxed: {item_name}', icon_url=fetched.display_avatar.url)
-        embed.set_image(url="attachment://unboxing.gif")
-        await ctx.send(embed=embed, file=file)
+        embed.set_image(url=bot.allitems[item_name])
+        await ctx.send(embed=embed)
 
         unbox = bot.awards["unbox"]
         user_a = unbox.setdefault(str(ctx.author.id), [])
@@ -3126,7 +3135,7 @@ class ItemsSeller(discord.ui.Select):
         view: ItemsInventory = self.view
         if interaction.user != view.ctx.author:
             return await interaction.response.send_message(
-                random.choice(bot.phrases["inter"]).format(usertag=str(view.ctx.author)))
+                random.choice(bot.phrases["inter"]).format(usertag=str(view.ctx.author)), ephemeral=True)
 
         embed = await sell(view.ctx, item=f"{self.item} {value}", via=True)
         await interaction.response.send_message(embed=embed, ephemeral=True)
@@ -3156,7 +3165,7 @@ class UselessButton(discord.ui.Button):
         view: ItemsInventory = self.view
         if interaction.user != view.ctx.author:
             return await interaction.response.send_message(
-                random.choice(bot.phrases["inter"]).format(usertag=str(view.ctx.author)))
+                random.choice(bot.phrases["inter"]).format(usertag=str(view.ctx.author)), ephemeral=True)
         await interaction.response.defer()
 
 class ItemsInventory(discord.ui.View):
@@ -3306,7 +3315,7 @@ class InventoryFilters(discord.ui.Select):
         view: ItemsInventory = self.view
         if interaction.user != view.ctx.author:
             return await interaction.response.send_message(
-                random.choice(bot.phrases["inter"]).format(usertag=str(view.ctx.author)))
+                random.choice(bot.phrases["inter"]).format(usertag=str(view.ctx.author)), ephemeral=True)
         rarities = []
         filters = None
         for i in self.values:

@@ -20,6 +20,92 @@
       "amount": 692,
       "time": "2021-08-31 08:43:16",
       "reason": "Bought 10 stock(s)"
+    },
+    {
+      "person": "System",
+      "type": "Debit",
+      "amount": 7818,
+      "time": "2021-09-06 09:26:42",
+      "reason": "Bought 100 stock(s)"
+    },
+    {
+      "person": "System",
+      "type": "Debit",
+      "amount": 72688500,
+      "time": "2021-09-06 09:31:34",
+      "reason": "Bought 1000000 stock(s)"
+    },
+    {
+      "person": "System",
+      "type": "Credit",
+      "amount": 74,
+      "time": "2021-09-06 09:32:05",
+      "reason": "Sold 1 stock(s)"
+    },
+    {
+      "person": "System",
+      "type": "Debit",
+      "amount": 74,
+      "time": "2021-09-06 09:32:08",
+      "reason": "Bought 1 stock(s)"
+    },
+    {
+      "person": "System",
+      "type": "Debit",
+      "amount": 77,
+      "time": "2021-09-06 09:37:53",
+      "reason": "Bought 1 stock(s)"
+    },
+    {
+      "person": "System",
+      "type": "Debit",
+      "amount": 100,
+      "time": "2021-09-06 09:45:54",
+      "reason": "Lost Tic-Tac-Toe"
+    }
+  ],
+  "713056818972066140": [
+    {
+      "person": "System",
+      "type": "Debit",
+      "amount": 7818870000,
+      "time": "2021-09-06 09:27:02",
+      "reason": "Bought 100000000 stock(s)"
+    },
+    {
+      "person": "System",
+      "type": "Credit",
+      "amount": 7433400000,
+      "time": "2021-09-06 09:32:14",
+      "reason": "Sold 100000000 stock(s)"
+    },
+    {
+      "person": "System",
+      "type": "Debit",
+      "amount": 999999614301316,
+      "time": "2021-09-06 09:32:20",
+      "reason": "Bought 13452788956619 stock(s)"
+    },
+    {
+      "person": "System",
+      "type": "Credit",
+      "amount": 1048155217650430,
+      "time": "2021-09-06 09:32:35",
+      "reason": "Sold 13452788956619 stock(s)"
+    },
+    {
+      "person": "System",
+      "type": "Debit",
+      "amount": 5408088,
+      "time": "2021-09-06 09:38:33",
+      "reason": "Bought 69420 stock(s)"
+    },
+    {
+      "person": "System",
+      "type": "Credit",
+      "amount": 50.0,
+      "time": "2021-09-06 09:45:54",
+      "reason": "Won Tic-Tac-Toe"
     }
   ]
 }

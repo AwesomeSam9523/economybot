@@ -453,7 +453,7 @@
         "icon": "rare_chest.png",
         "name": "Rare Chest",
         "desc": "50% Common, 40% Rare, 10% Leg.",
-        "price": "3,500",
+        "price": "5,000",
         "special": false,
         "disc": "2,905",
         "percent": 17
@@ -489,7 +489,7 @@
         "icon": "common_chest.png",
         "name": "Common Chest",
         "desc": "70% Common, 25% Rare, 5% Leg.",
-        "price": "1,000",
+        "price": "2,500",
         "special": false,
         "disc": "790",
         "percent": 21
@@ -1031,7 +1031,7 @@
   "status": [
     {
       "type": "p",
-      "status": "with {users} users"
+      "status": "with {users} peeps"
     },
     {
       "type": "w",
