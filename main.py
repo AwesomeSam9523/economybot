@@ -54,7 +54,7 @@ class EconomyBot(commands.Bot):
 bot = EconomyBot()
 uploader = discord_files.ConcurrentUploader(bot)
 bot.launch_time = datetime.datetime.utcnow()
-bot.dev = 1
+bot.dev = 0
 bot.remove_command('help')
 bot.loop.set_debug(True)
 bot.loop.slow_callback_duration = 0.3
@@ -583,7 +583,11 @@ async def check_storetime():
 
 async def open_account(userid):
     if bot.accounts.get(str(userid)) is None:
-        bot.accounts[str(userid)] = {'bank_type':1, 'wallet':0, 'bank':1000, 'joined':datetime.date.today().strftime('%d-%m-%Y')}
+        bot.accounts[str(userid)] = {'bank_type':1,
+                                     'wallet':0,
+                                     'bank':1000,
+                                     'joined':datetime.date.today().strftime('%d-%m-%Y'),
+                                     'prem':-1}
         await update_accounts()
 
 async def open_estates(userid):
@@ -1244,7 +1248,7 @@ async def on_message(message):
         return
     if message.content.lower() == 'e.' or all(msg in message.content.lower() for msg in ["<@!832083717417074689>", "help"]):
         await message.reply('Do you need my help?\nGet started using `e.help`')
-    await open_account(message.author.id)
+    if message.content.lower().startswith("e."): await open_account(message.author.id)
     await bot.process_commands(message)
 
 @bot.check
@@ -1580,7 +1584,6 @@ async def balance(ctx, member:discord.Member = None):
         userid = ctx.author.id
     else:
         userid = member.id
-    await open_account(userid)
     person = bot.accounts.get(str(userid))
     bank_type = person['bank_type']
     wallet = person['wallet']
@@ -1665,7 +1668,6 @@ async def bank(ctx, member:discord.Member = None):
         userid = ctx.author.id
     else:
         userid = member.id
-    await open_account(userid)
     await avg_update()
 
     person = bot.accounts.get(f'{userid}')
@@ -1845,8 +1847,6 @@ async def daily(ctx):
 @bot.command()
 @commands.check(general)
 async def give(ctx, member:discord.Member, amount:int):
-    await open_account(member.id)
-    await open_account(ctx.author.id)
     author = bot.accounts.get(f'{ctx.author.id}')
     person = bot.accounts.get(f'{member.id}')
 
@@ -2234,8 +2234,6 @@ class Alerts(discord.ui.View):
 @bot.command()
 @commands.check(general)
 async def transfer(ctx, togive:discord.Member = None, amount = None, *, reason = None):
-    await open_account(togive.id)
-    await open_account(ctx.author.id)
     if togive is None or amount is None:
         return await ctx.send(f'{ctx.author.mention} The format for the command is: `e.transfer @user <amount> [reason]`')
     current = bot.accounts[f'{ctx.author.id}']
@@ -2726,8 +2724,6 @@ async def reset_chl(ctx):
 @bot.command()
 @commands.check(general)
 async def rob(ctx, member:discord.Member):
-    await open_account(member.id)
-    await open_account(ctx.author.id)
     if member == bot.user:
         pass
     success = random.randint(0, 100)
