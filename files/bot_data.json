@@ -502,6 +502,15 @@
         "special": true,
         "disc": "1,450",
         "percent": 42
+      },
+      {
+        "icon": "premium.png",
+        "name": "Premium",
+        "desc": "Use e.premium for features",
+        "price": "90,000",
+        "special": false,
+        "disc": "1,450",
+        "percent": 42
       }
     ],
     "category": {
@@ -515,6 +524,9 @@
         "Bronze Lock",
         "Silver Lock",
         "Gold Lock"
+      ],
+      "other": [
+        "Premium"
       ]
     },
     "updated": 1630850227.7733016

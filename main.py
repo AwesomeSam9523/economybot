@@ -658,7 +658,7 @@ async def create_statement(user, person, amount, reason, type):
 async def load_shop():
     with open('files/bot_data.json', 'r') as s:
         config = json.load(s)
-    items_final = {"lock":[], "chest":[]}
+    items_final = {"lock":[], "chest":[], "boost":[], "other":[]}
     for i in config["shop"]["value"]:
         for k, v in config["shop"]["category"].items():
             if i["name"] in v:
@@ -847,14 +847,10 @@ async def profile_image(member, level, userxp, xp, total_xp, guildid):
         staff_icon.close()
         location -= 45
     if premium:
-        staff_icon = Image.open('badges/premium.png')
-        pixdata = staff_icon.load()
-        for y in range(staff_icon.size[1]):
-            for x in range(staff_icon.size[0]):
-                pixdata[x, y] = tuple(list((0, 255, 230)) + [pixdata[x, y][-1]])
-        staff_icon = staff_icon.resize((37, 37))
-        img.paste(staff_icon, (location, 55), staff_icon)
-        staff_icon.close()
+        prem_icon = Image.open('badges/premium.png')
+        prem_icon = prem_icon.resize((37, 37))
+        img.paste(prem_icon, (location, 55), prem_icon)
+        prem_icon.close()
         location -= 45
     server_r, global_r = await xp_ranks(member.id, guildid)
     if global_r > 1000:
@@ -1355,11 +1351,22 @@ class IgnoreError(commands.CheckFailure):
     pass
 
 @bot.command()
-async def prem(ctx):
-    for i, j in bot.accounts.items():
-        j.setdefault("prem", -1)
-    await update_accounts()
-    await ctx.message.add_reaction(economysuccess)
+@commands.check(general)
+async def premium(ctx):
+    embed = discord.Embed(title="<:Premium:884331929808281603:> Premium",
+                          description="Get premium and enjoy extra perks!")
+    if bot.accounts[str(ctx.author.id)]["prem"] - time.time() > 0:
+        premium = True
+    else:
+        premium = False
+    embed.add_field(name="Status", value=premium)
+    arrow = "<a:Arrow:884334470830903307:>"
+    perks = f"""{arrow} Customize your background in `e.pf`!
+{arrow} 1.5x multiplier in daily coins!
+{arrow} Ability to add 10 items in trades instead of 5!
+{arrow} 
+"""
+
 
 @bot.command()
 @commands.check(general)
@@ -2605,7 +2612,7 @@ async def help(ctx, specify=None):
     embed = discord.Embed(color=embedcolor,
                           description=f'[Support Server]({support_server}) | [Invite Url]({invite_url})\nTo get help on a command, use `e.help <command name>`')
     embed.set_author(name='Help', icon_url=bot.pfp)
-    embed.set_footer(text='Bot developed by: AwesomeSam#7985 and BlackThunder#4007')
+    embed.set_footer(text='Bot developed by: AwesomeSam#7985')
     if specify is None:
         for j in bot.help_json:
             mylist = []
