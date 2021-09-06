@@ -1,7 +1,7 @@
 import time
 t1 = time.time()
 import datetime, csv, threading, functools, asyncio, discord, operator, math
-import json, random, os, traceback, difflib, discord_files, requests, aiohttp
+import json, random, os, traceback, difflib, discord_files, aiohttp
 from discord.ext import commands, tasks
 from discord.ext.commands import *
 from prettytable import PrettyTable
@@ -209,7 +209,7 @@ def is_staff(ctx):
     return ctx.author.id in staff
 
 def cache_allitems():
-    return
+    #return
     t = time.time()
     bot.allitems = {}
     for i in bot.items.keys():
@@ -461,7 +461,7 @@ async def update_stocks():
 
     config = await get_stockconfigs()
     line = config.setdefault("line", 1)
-    name = config.setdefault("name", random.choice(stock_names))
+    name = config.setdefault("name", random.choice(stock_names)+ "Ltd.")
     if line == bot.total_lines:
         os.rename(f'stocks/{stock}', f'stocks/{str(stock).replace("_today", "_done")}')
         config['line'] = line + 1
@@ -2662,8 +2662,11 @@ async def help(ctx, specify=None):
 
 @bot.command(aliases=['add_chl'])
 @commands.check(general)
-@commands.has_permissions(manage_channels=True)
 async def set_chl(ctx, channel:discord.TextChannel):
+    if ctx.message.author.guild_permissions.manage_channels or ctx.author.id in devs:
+        pass
+    else:
+        return
     server = bot.admin.get(str(ctx.guild.id), [])
     if channel.id in server:
         embed = discord.Embed(description=f'{economyerror} {channel.mention} is already in list of registered channels!', color=error_embed)
@@ -2678,8 +2681,11 @@ async def set_chl(ctx, channel:discord.TextChannel):
 
 @bot.command(aliases=['rem_chl', 'remove_chl', 'delete_chl'])
 @commands.check(general)
-@commands.has_permissions(manage_channels=True)
 async def del_chl(ctx, channel:discord.TextChannel):
+    if ctx.message.author.guild_permissions.manage_channels or ctx.author.id in devs:
+        pass
+    else:
+        return
     server = bot.admin.get(str(ctx.guild.id), [])
     if channel.id not in server:
         embed = discord.Embed(description=f'{economyerror} {channel.mention} not in list of registered channels!', color=error_embed)
@@ -2692,8 +2698,11 @@ async def del_chl(ctx, channel:discord.TextChannel):
 
 @bot.command(aliases=['show_chl'])
 @commands.check(general)
-@commands.has_permissions(manage_channels=True)
 async def list_chl(ctx):
+    if ctx.message.author.guild_permissions.manage_channels or ctx.author.id in devs:
+        pass
+    else:
+        return
     server = bot.admin.get(str(ctx.guild.id), [])
     if len(server) == 0: channels = ['> No channels set']
     else: channels = [f'> <#{x}>' for x in server]
@@ -2703,8 +2712,11 @@ async def list_chl(ctx):
 
 @bot.command()
 @commands.check(general)
-@commands.has_permissions(manage_channels=True)
 async def reset_chl(ctx):
+    if ctx.message.author.guild_permissions.manage_channels or ctx.author.id in devs:
+        pass
+    else:
+        return
     bot.admin[str(ctx.guild.id)] = []
     embed = discord.Embed(title=f'{economysuccess} Done', description='Cleared Successfully!', color=embedcolor)
     await close_admin()
@@ -4280,30 +4292,43 @@ class PreviousPage(discord.ui.Button):
         await interaction.response.edit_message(view=view)
 
 @bot.command()
-async def hangman(ctx):
-    bet = 100
+async def hangman(ctx, bet: int=100):
+    if bet == 0:
+        embed = discord.Embed(description=f"{economyerror} {random.choice(bot.phrases['zero'])}", color=error_embed)
+        return await ctx.send(embed=embed)
+    if bet < 0:
+        embed = discord.Embed(description=f"{economyerror} {random.choice(bot.phrases['negative'])}", color=error_embed)
+        return await ctx.send(embed=embed)
     if bet > bot.accounts[str(ctx.author.id)]["wallet"]:
-        return await ctx.send(f"{ctx.author.mention} You don't have 100 coins in your wallet. {random.choice(bot.phrases['less_bal'])}")
+        return await ctx.send(
+            f"{ctx.author.mention} You don't have 100 coins in your wallet. {random.choice(bot.phrases['less_bal'])}")
     load = await ctx.send(f"{economysuccess} Finding a word...")
     bot.accounts[str(ctx.author.id)]["wallet"] -= 100
-    session = aiohttp.ClientSession()
-    uri = ""
-    word = session.put()
+
+    async def get_word():
+        async with aiohttp.ClientSession() as session:
+            async with session.get("https://random-word-api.herokuapp.com/word?number=1") as r:
+                return await r.json()
+
+    while True:
+        word = await get_word()
+        word = word[0]
+        if 6 < len(word) < 10: break
 
     uncovered_word = list(len(word) * '_')
     wrong = 0
-    reveal_rand = random.randint(0, len(word)-1)
+    reveal_rand = random.randint(0, len(word))
     for i in range(0, len(word)):
         if word[reveal_rand] == word[i]:
             uncovered_word[i] = word[reveal_rand]
 
-    images = {0:'https://media.discordapp.net/attachments/837564505952747520/883242727117058068/unknown.png',
-              1:'https://media.discordapp.net/attachments/837564505952747520/883242763137732668/unknown.png',
-              2:'https://media.discordapp.net/attachments/837564505952747520/883242804158021642/unknown.png',
-              3:'https://media.discordapp.net/attachments/837564505952747520/883242848781221888/unknown.png',
-              4:'https://media.discordapp.net/attachments/837564505952747520/883242883820433408/unknown.png',
-              5:'https://media.discordapp.net/attachments/837564505952747520/883242924689739816/unknown.png',
-              6:'https://media.discordapp.net/attachments/837564505952747520/883242982592102450/unknown.png'}
+    images = {0: 'https://media.discordapp.net/attachments/837564505952747520/883242727117058068/unknown.png',
+              1: 'https://media.discordapp.net/attachments/837564505952747520/883242763137732668/unknown.png',
+              2: 'https://media.discordapp.net/attachments/837564505952747520/883242804158021642/unknown.png',
+              3: 'https://media.discordapp.net/attachments/837564505952747520/883242848781221888/unknown.png',
+              4: 'https://media.discordapp.net/attachments/837564505952747520/883242883820433408/unknown.png',
+              5: 'https://media.discordapp.net/attachments/837564505952747520/883242924689739816/unknown.png',
+              6: 'https://media.discordapp.net/attachments/837564505952747520/883242982592102450/unknown.png'}
 
     embed = discord.Embed(title="H A N G M A N",
                           description="Enter your guesses, and if the letter is in the word, the bot updates the embed.\n"
@@ -4345,7 +4370,7 @@ async def hangman(ctx):
                                               "For each wrong guess, the man is closer to getting hanged to death!\n\n"
                                               "Start below (you better protect the poor soul):\n"
                                               f"**`{' '.join(uncovered_word)}`**\n\n"
-                                              f"Chances Left: `{6-wrong}`",
+                                              f"Chances Left: `{6 - wrong}`",
                                   color=embedcolor)
             embed.set_thumbnail(url=images[wrong])
             await ctx.author.send(embed=embed)

@@ -477,15 +477,6 @@
         "percent": 22
       },
       {
-        "icon": "bronze_lock.png",
-        "name": "Bronze Lock",
-        "desc": "Increases rob protection by 10%",
-        "price": "2,500",
-        "special": false,
-        "disc": "1,925",
-        "percent": 23
-      },
-      {
         "icon": "legendary_chest.png",
         "name": "Legendary Chest",
         "desc": "30% Common, 50% Rare, 20% Leg.",
@@ -499,9 +490,18 @@
         "name": "Common Chest",
         "desc": "70% Common, 25% Rare, 5% Leg.",
         "price": "1,000",
-        "special": true,
+        "special": false,
         "disc": "790",
         "percent": 21
+      },
+      {
+        "icon": "bronze_lock.png",
+        "name": "Bronze Lock",
+        "desc": "Increases rob protection by 10%",
+        "price": "2,500",
+        "special": true,
+        "disc": "1,450",
+        "percent": 42
       }
     ],
     "category": {
@@ -517,7 +517,7 @@
         "Gold Lock"
       ]
     },
-    "updated": 1630651038.5240045
+    "updated": 1630850227.7733016
   },
   "items": {
     "common": {
