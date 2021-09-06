@@ -4303,7 +4303,7 @@ async def hangman(ctx, bet: int=100):
         return await ctx.send(
             f"{ctx.author.mention} You don't have 100 coins in your wallet. {random.choice(bot.phrases['less_bal'])}")
     load = await ctx.send(f"{economysuccess} Finding a word...")
-    bot.accounts[str(ctx.author.id)]["wallet"] -= 100
+    bot.accounts[str(ctx.author.id)]["wallet"] -= bet
 
     async def get_word():
         async with aiohttp.ClientSession() as session:
@@ -4386,7 +4386,7 @@ async def hangman(ctx, bet: int=100):
                               description=f"Yay you win! Nice guessing the word `{word}` :D",
                               color=success_embed)
         embed.set_thumbnail(url=images[wrong])
-        bot.accounts[str(ctx.author.id)]["wallet"] += 200
+        bot.accounts[str(ctx.author.id)]["wallet"] += bet*2
     await ctx.author.send(embed=embed)
 
 bot.connected_ = False
