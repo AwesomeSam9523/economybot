@@ -450,24 +450,6 @@
   "shop": {
     "value": [
       {
-        "icon": "rare_chest.png",
-        "name": "Rare Chest",
-        "desc": "50% Common, 40% Rare, 10% Leg.",
-        "price": "5,000",
-        "special": false,
-        "disc": "2,905",
-        "percent": 17
-      },
-      {
-        "icon": "gold_lock.png",
-        "name": "Gold Lock",
-        "desc": "Increases rob protection by 40%",
-        "price": "15,000",
-        "special": false,
-        "disc": "13,050",
-        "percent": 13
-      },
-      {
         "icon": "silver_lock.png",
         "name": "Silver Lock",
         "desc": "Increases rob protection by 25%",
@@ -475,6 +457,24 @@
         "special": false,
         "disc": "4,680",
         "percent": 22
+      },
+      {
+        "icon": "bronze_lock.png",
+        "name": "Bronze Lock",
+        "desc": "Increases rob protection by 10%",
+        "price": "2,500",
+        "special": false,
+        "disc": "1,450",
+        "percent": 42
+      },
+      {
+        "icon": "rare_chest.png",
+        "name": "Rare Chest",
+        "desc": "50% Common, 40% Rare, 10% Leg.",
+        "price": "5,000",
+        "special": false,
+        "disc": "2,905",
+        "percent": 17
       },
       {
         "icon": "legendary_chest.png",
@@ -495,15 +495,6 @@
         "percent": 21
       },
       {
-        "icon": "bronze_lock.png",
-        "name": "Bronze Lock",
-        "desc": "Increases rob protection by 10%",
-        "price": "2,500",
-        "special": true,
-        "disc": "1,450",
-        "percent": 42
-      },
-      {
         "icon": "premium.png",
         "name": "Premium",
         "desc": "Use e.premium for features",
@@ -511,6 +502,15 @@
         "special": false,
         "disc": "1,450",
         "percent": 42
+      },
+      {
+        "icon": "gold_lock.png",
+        "name": "Gold Lock",
+        "desc": "Increases rob protection by 40%",
+        "price": "15,000",
+        "special": true,
+        "disc": "11,700",
+        "percent": 22
       }
     ],
     "category": {
@@ -529,7 +529,7 @@
         "Premium"
       ]
     },
-    "updated": 1630850227.7733016
+    "updated": 1630988425.413739
   },
   "items": {
     "common": {

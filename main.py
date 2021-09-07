@@ -1,12 +1,12 @@
 import time
 t1 = time.time()
 import datetime, csv, threading, functools, asyncio, discord, operator, math
-import json, random, os, traceback, difflib, discord_files, aiohttp
+import json, random, os, traceback, difflib, discord_files, aiohttp, copy
 from discord.ext import commands, tasks
 from discord.ext.commands import *
 from prettytable import PrettyTable
 import matplotlib.pyplot as plt
-from PIL import Image, ImageDraw, ImageFont, ImageEnhance, ImageFilter
+from PIL import Image, ImageDraw, ImageFont, ImageEnhance, ImageFilter, ImageSequence, ImageColor
 from io import BytesIO
 from concurrent.futures import ThreadPoolExecutor
 from asteval import Interpreter
@@ -16,6 +16,7 @@ tnew = time.time()
 
 class EconomyBot(commands.Bot):
     def __init__(self):
+        self.unsaved = {}
         self.help_json = {}
         self.phrases = {}
         self.current_stock = []
@@ -48,6 +49,7 @@ class EconomyBot(commands.Bot):
         with open("files/badges.json", "r") as f: self.badges = json.load(f)
         with open("files/inventory.json", "r") as f: self.inventory = json.load(f)
         with open("files/awards.json", "r") as f: self.awards = json.load(f)
+        with open("files/bgdata.json", "r") as f: self.bgdata = json.load(f)
 
         super().__init__(command_prefix=bot.when_mentioned_or("e.", "E."), intents=discord.Intents.all(), case_insensitive=True)
 
@@ -64,6 +66,7 @@ devs = [669816890163724288, 771601176155783198]
 staff = [669816890163724288, 771601176155783198, 619377929951903754, 713056818972066140, 517402093066256404, 459350068877852683]
 disregarded = []
 embedcolor = 3407822
+loading = "<a:EconomyLoading:884701041097060382>"
 
 support_server = 'https://discord.gg/aMqWWTunrJ'
 invite_url = 'https://discord.com/api/oauth2/authorize?client_id=832083717417074689&permissions=392256&scope=bot'
@@ -382,6 +385,10 @@ async def update_avg():
     with open('files/average.json', 'w') as avgbal:
         avgbal.write(json.dumps(bot.avg, indent=2))
 
+async def savebgdata():
+    with open('files/bgdata.json', 'w') as avgbal:
+        avgbal.write(json.dumps(bot.bgdata, indent=2))
+
 async def update_est():
     with open('files/estates.json', 'w') as f:
         f.write(json.dumps(bot.estates, indent=2))
@@ -463,7 +470,7 @@ async def update_stocks():
 
     config = await get_stockconfigs()
     line = config.setdefault("line", 1)
-    name = config.setdefault("name", random.choice(stock_names)+ "Ltd.")
+    name = config.setdefault("name", random.choice(stock_names)+ " Ltd.")
     if line == bot.total_lines:
         os.rename(f'stocks/{stock}', f'stocks/{str(stock).replace("_today", "_done")}')
         config['line'] = line + 1
@@ -742,7 +749,7 @@ async def calculate_networth(userid):
         "Gold Lock": 15000
     }
     for i in invlist:
-        networth += chestnetworths[i]
+        networth += chestnetworths.get(i, 0)
 
     for i, rar in bot.items.items():
         for j in rar["items"]:
@@ -799,164 +806,6 @@ async def perform_stuff(data):
 
 async def get_avatar(user):
     return Image.open(BytesIO(await user.display_avatar.read())).resize((140, 140))
-
-async def profile_image(member, level, userxp, xp, total_xp, guildid):
-    font = ImageFont.truetype("badges/font2.ttf", 19)
-    font_rank = ImageFont.truetype("badges/font2.ttf", 24)
-    fontm = ImageFont.truetype("badges/font2.ttf", 13)
-    fonts = ImageFont.truetype("badges/font2.ttf", 10)
-    gadugi = ImageFont.truetype("badges/gadugi.ttf", 16)
-    gadugi_b = ImageFont.truetype("badges/oswald.ttf", 26)
-
-    img = Image.open("badges/levelbg.png")
-    member_colour = (255, 42, 84)
-    avatar = await get_avatar(member)
-    ava_mask = Image.open("badges/AVAmask.png").convert('L')
-    ava_mask2 = Image.open("badges/AVAmas2k.png").convert('L')
-    img.paste(Image.new("RGBA", (148, 148), member_colour), (11, 11), ava_mask2)
-    img.paste(avatar, (15, 15), ava_mask)
-    member_status = member.status
-    status = Image.open(f'badges/{member_status}.png')
-    img.paste(status.resize((30, 30)), (124, 113), status.resize((30, 30)))
-
-    xpbar = Image.open("./badges/xpbar.png")
-    xpbar = xpbar.resize((579, 27))
-    pixdata = xpbar.load()
-    for y in range(xpbar.size[1]):
-        for x in range(xpbar.size[0]):
-            pixdata[x, y] = tuple(list(member_colour) + [pixdata[x, y][-1]])
-
-    xpbar = xpbar.crop((0, 0, xpbar.width * (int(xp) / int(total_xp)), xpbar.height))
-    img.paste(xpbar, (180, 105), xpbar)
-
-    if str(member.id) in bot.badges['staff']: staff = True
-    else: staff = False
-    location = 710
-    if bot.accounts[str(member.id)]["prem"] - time.time() > 0:
-        premium = True
-    else:
-        premium = False
-    if staff:
-        staff_icon = Image.open('badges/staff.png')
-        pixdata = staff_icon.load()
-        for y in range(staff_icon.size[1]):
-            for x in range(staff_icon.size[0]):
-                pixdata[x, y] = tuple(list((0, 255, 230)) + [pixdata[x, y][-1]])
-        staff_icon = staff_icon.resize((37, 37))
-        img.paste(staff_icon, (location, 55), staff_icon)
-        staff_icon.close()
-        location -= 45
-    if premium:
-        prem_icon = Image.open('badges/premium.png')
-        prem_icon = prem_icon.resize((37, 37))
-        img.paste(prem_icon, (location, 55), prem_icon)
-        prem_icon.close()
-        location -= 45
-    server_r, global_r = await xp_ranks(member.id, guildid)
-    if global_r > 1000:
-        global_r = 'Unknown'
-    else:
-        global_r = f'#{global_r}'
-    draw = ImageDraw.Draw(img)
-    newimg = Image.new('RGBA', img.size, (0,0,0,0))
-    newdraw = ImageDraw.Draw(newimg)
-
-    userinv = bot.inventory.get(str(member.id), [])
-    if len(userinv) != 0:
-        eq_lock = userinv.get('eq_lock')
-        eq_boost = userinv.get('eq_boost')
-        paste_loc = 332
-        if eq_lock is None and eq_boost is None:
-            newdraw.text((335, 145), 'None', font=ImageFont.truetype("badges/font2.ttf", 15), fill=(0,0,0))
-    else:
-        newdraw.text((335, 145), 'None', font=ImageFont.truetype("badges/font2.ttf", 15), fill=(0,0,0))
-    networth = await calculate_networth(member.id)
-    newdraw.text((180, 34), f'{member.name}#{member.discriminator}', font=font, fill='#000000')
-    newdraw.text((180, 70), f"Level {level} | XP: {userxp}", font=fontm, fill='#000000')
-    newdraw.text((120, 210), f'Server Rank', font=font, fill='#000000')
-    newdraw.text((530, 210), f'Global Rank', font=font, fill='#000000')
-    newdraw.text((120, 250), f'#{server_r}', font=font_rank, fill='#000000')
-    newdraw.text((530, 250), f'{global_r}', font=font_rank, fill='#000000')
-    newdraw.text((50, 355), f"Net Worth:  {await commait(networth)} coins", font=gadugi_b, fill='#000000')
-    newdraw.text((50, 395), f"Join Date: {bot.accounts[str(member.id)]['joined']}", font=gadugi_b, fill='#000000')
-
-    awards = {"estates": 'badges/awards/estates_{colortype}.png',
-              "games":'badges/awards/games_{colortype}.png',
-              "stocks":'badges/awards/stocks_{colortype}.png',
-              "unbox":'badges/awards/unbox_{colortype}.png',
-              "global":'badges/awards/global_{colortype}.png'}
-    awardsdesc = {"estates":"Estates level 30",
-                  "games":"Win 1000 games",
-                  "stocks":"Buy 1 mil stocks",
-                  "unbox":"Unbox every item",
-                  "global":"           ???"}
-
-    x2_loc = 50
-    for i in awards.keys():
-        newdraw.text((x2_loc, 585), awardsdesc[i], font=gadugi, fill=(0,0,0))
-        x2_loc += 148
-
-    newimg = newimg.filter(ImageFilter.GaussianBlur(radius=2))
-    newimg = newimg.filter(ImageFilter.GaussianBlur(radius=4))
-    img.paste(newimg, (0, 0), newimg)
-
-    draw.text((180, 34), f'{member.name}#{member.discriminator}', (255, 255, 255), font=font)
-    draw.text((180, 70), f"Level {level} | XP: {userxp}", font=fontm)
-    draw.text((120, 210), f'Server Rank', font=font)
-    draw.text((530, 210), f'Global Rank', font=font)
-    draw.text((120, 250), f'#{server_r}', (255, 243, 0), font=font_rank)
-    draw.text((530, 250), f'{global_r}', (255, 243, 0), font=font_rank)
-    draw.text((50, 355), f"Net Worth:  {await commait(networth)} coins", font=gadugi_b)
-    draw.text((50, 395), f"Join Date: {bot.accounts[str(member.id)]['joined']}", font=gadugi_b)
-
-    twidth, theight = draw.textsize(f"{await commait(xp)}/{await commait(total_xp)}", fonts)
-    draw.text((468 - (twidth / 2), 121 - (theight / 2)), f"{await commait(xp)}/{await commait(total_xp)}", (255, 255, 255), font=fonts, stroke_width=1, stroke_fill=(0, 0, 0))
-
-    achi = bot.awards.get("achievements", {})
-    user_a = achi.get(str(member.id), [])
-    x_loc = 70
-    x2_loc = 50
-    for i in awards.keys():
-        if i in user_a: colortype = "color"
-        else: colortype = "bw"
-        award = Image.open(awards[i].format(colortype=colortype)).resize((80, 80))
-        img.paste(award, (x_loc, 500), award.convert("RGBA"))
-        award.close()
-        draw.text((x2_loc, 585), awardsdesc[i], font=gadugi, fill=(255, 255, 255))
-        x_loc += 148
-        x2_loc += 148
-
-    if len(userinv) != 0:
-        eq_lock = userinv.get('eq_lock')
-        eq_boost = userinv.get('eq_boost')
-        paste_loc = 332
-        if eq_lock is not None:
-            for i in storeitems:
-                if eq_lock == i["name"]:
-                    lock = Image.open(f'store/{i["icon"]}').resize((27, 27))
-                    img.paste(lock, (paste_loc, 142), lock.convert('RGBA'))
-                    lock.close()
-        if eq_boost is not None:
-            for i in storeitems:
-                if eq_lock == i["name"]:
-                    lock = Image.open(i["icon"]).resize((30, 30))
-                    img.paste(lock, (paste_loc, 140), lock.convert('RGBA'))
-                    lock.close()
-        if eq_lock is None and eq_boost is None:
-            draw.text((335, 145), 'None', font=ImageFont.truetype("badges/font2.ttf", 15))
-    else:
-        draw.text((335, 145), 'None', font=ImageFont.truetype("badges/font2.ttf", 15))
-    enhancer = ImageEnhance.Sharpness(img)
-    img = enhancer.enhance(2)
-    image_bytes = BytesIO()
-    img.save(image_bytes, 'PNG')
-    img.close()
-    ava_mask.close()
-    ava_mask2.close()
-    status.close()
-    xpbar.close()
-    image_bytes.seek(0)
-    return image_bytes
 
 async def xp_ranks(member, guild):
     userid = str(member)
@@ -1176,10 +1025,14 @@ async def general(ctx):
         toreturn= False
     elif state == 'return':
         toreturn= False
-    cmd = bot.cooldown[ctx.command.name]
+    cmd = bot.cooldown.get(ctx.command.name)
+    if cmd is None:
+        return True
     ifuser = [i for i in cmd["users"] if i[0] == ctx.author.id]
     if len(ifuser) != 0:
-        left = cmd["duration"] - (time.time() - ifuser[0][1])
+        lapse = 0
+        if is_premium(ctx.author.id): lapse = 0.6
+        left = cmd["duration"]*lapse - (time.time() - ifuser[0][1])
         if left > 0:
             final = datetime.datetime.strptime(str(datetime.timedelta(seconds=left)), '%H:%M:%S.%f')
             colon_format = str(final).split(" ")[1].split(':')
@@ -1270,10 +1123,13 @@ async def on_message(message):
 
 @bot.check
 async def is_dm(ctx):
+    if bot.accounts.get(str(ctx.author.id), {'prem':-1})["prem"] - time.time() > 0:
+        return True
     return ctx.guild != None
 
 @bot.check
 async def if_allowed(ctx):
+    if ctx.guild is None: return True
     return await check_channel(ctx.channel.id, ctx.guild.id)
 
 #@bot.event
@@ -1336,7 +1192,132 @@ async def on_command_error(ctx, error):
 
 @bot.event
 async def on_raw_reaction_add(payload):
-    if payload.channel_id != 844184710678577193: return
+    if payload.user_id == 832083717417074689: return
+    #if payload.channel_id != 844184710678577193: return
+    if payload.channel_id == 814460868753489921:
+
+        print(bot.bgdata["pending"])
+        print(bot.bgdata)
+        bgchannel = bot.get_channel(814460868753489921)
+        bglogs = bot.get_channel(756471541281325146)
+        if str(payload.message_id) not in bot.bgdata["pending"].keys():
+            return
+        data = bot.bgdata["pending"][str(payload.message_id)]["data"]
+        print("data", data)
+        editor = bot.bgdata["pending"][str(payload.message_id)]["editor"]
+        confmsg = await bot.get_channel(814460868753489921).fetch_message(payload.message_id)
+        bot.bgdata["pending"].pop(str(payload.message_id))
+        if str(payload.emoji) == economysuccess:
+            for k, v in data.items():
+                bot.bgdata[k] = v
+                if v["file"] != "":
+                    imgtype = v['file'].lower()[-3:]
+                    async with aiohttp.ClientSession() as session:
+                        async with session.get(v["file"]) as r:
+                            with open(f"bgs/{k.upper()}.{imgtype}", 'wb') as f:
+                                f.write(await r.read())
+
+                embed = discord.Embed(title=f"{economysuccess} Saved", color=success_embed)
+                await confmsg.edit(embed=embed)
+                await bot.get_user(int(editor)).send(f"{economysuccess} Your background for `{k}` has been approved!")
+                embed = discord.Embed(description=f"`{k}` Accepted by {bot.get_user(payload.user_id).mention}", color=success_embed)
+                await bglogs.send(embed=embed)
+                await asyncio.sleep(5)
+                await confmsg.delete()
+        elif str(payload.emoji) == economyerror:
+            for k, v in data.items():
+                embed = discord.Embed(description=f"Choose reason(s) for decline:\n"
+                                                  f"\n"
+                                                  f"1\N{variation selector-16}\N{combining enclosing keycap} - Background Image\n"
+                                                  f"2\N{variation selector-16}\N{combining enclosing keycap} - XP bar color\n"
+                                                  f"3\N{variation selector-16}\N{combining enclosing keycap} - Custom message to editor\n\n"
+                                                  f"*You can select multiple options also*\n"
+                                                  f"Removing a reaction will unselect that reason\n\n"
+                                                  f"Click the ☑️ after selecting your reasons",
+                                      color=embedcolor)
+                await confmsg.remove_reaction(economysuccess, bot.user)
+                await confmsg.remove_reaction(economyerror, bot.user)
+                await confmsg.edit(embed=embed)
+                reas_dict = {
+                    "1\N{variation selector-16}\N{combining enclosing keycap}": "> Background Image",
+                    "2\N{variation selector-16}\N{combining enclosing keycap}": "> XP bar color",
+                }
+
+                for k2, v2 in reas_dict.items():
+                    await confmsg.add_reaction(k2)
+                economysuccess2 = "✅"
+                await confmsg.add_reaction("3\N{variation selector-16}\N{combining enclosing keycap}")
+                await confmsg.add_reaction(economysuccess2)
+                reasons = []
+                extras = []
+                note = ""
+                while True:
+                    def check(reac, user):
+                        return user.id == payload.user_id
+
+                    def mcheck(msg):
+                        return msg.author.id == payload.user_id
+
+                    done, pending = await asyncio.wait([
+                        bot.wait_for('reaction_remove', check=check),
+                        bot.wait_for('reaction_add', check=check)
+                    ], return_when=asyncio.FIRST_COMPLETED)
+                    stuff = done.pop().result()
+                    userstuff = stuff[1]
+                    stuff = stuff[0]
+                    for future in pending:
+                        future.cancel()
+                    emoji = str(stuff.emoji)
+
+                    if emoji == economysuccess2:
+                        if userstuff == bot.user: continue
+                        if len(reasons) == 0:
+                            a = await bgchannel.send("Please select atleast 1 reason!")
+                            extras.append(a)
+                            await confmsg.remove_reaction(economysuccess2, userstuff)
+                            continue
+                        else: break
+                    if emoji == "3\N{variation selector-16}\N{combining enclosing keycap}":
+                        a = await bgchannel.send("Type the note:\n"
+                                             "*`None` to remove it*")
+                        extras.append(a)
+                        try:
+                            msgc = await bot.wait_for("message", check=mcheck, timeout=180)
+                            extras.append(msgc)
+                            note = msgc.content
+                            if note.lower() == "none": note = ""
+                            await msgc.add_reaction("🆗")
+                        except: pass
+                        continue
+                    if stuff.count > 1:
+                        a = reas_dict.get(emoji)
+                        if a is None: continue
+                        reasons.append(a)
+                    else:
+                        a = reas_dict.get(emoji)
+                        if a is None: continue
+                        reasons.remove(a)
+                reasons = [x for x in reasons if x != ""]
+                final_reasons = "\n".join(reasons)
+                if len(note) != 0:
+                    final_reasons += f"\nCustom Message: {note}"
+                embed = discord.Embed(description=f"{economysuccess} Declined due to following reasons:-\n"
+                                                  f"{final_reasons}", color=error_embed)
+                await confmsg.edit(embed=embed)
+                await bot.get_user(int(editor)).send(f"{economyerror} Your background for `{k}` has been declined. "
+                                                     f"Please consider changing the following:\n"
+                                                     f"{final_reasons}")
+                for i in extras:
+                    try: await i.delete()
+                    except: pass
+                embed = discord.Embed(
+                    description=f"`{k}` Declined by {bot.get_user(payload.user_id).mention} for:\n"
+                                f"{final_reasons}",
+                    color=error_embed)
+                await bglogs.send(embed=embed)
+                await asyncio.sleep(5)
+                await confmsg.delete()
+        await savebgdata()
     if payload.user_id not in devs: return
     a = await get_errorfile()
     if str(payload.emoji) == economysuccess:
@@ -1353,20 +1334,382 @@ class IgnoreError(commands.CheckFailure):
 @bot.command()
 @commands.check(general)
 async def premium(ctx):
-    embed = discord.Embed(title="<:Premium:884331929808281603:> Premium",
-                          description="Get premium and enjoy extra perks!")
-    if bot.accounts[str(ctx.author.id)]["prem"] - time.time() > 0:
+    embed = discord.Embed(title="<:Premium:884331929808281603> Premium",
+                          description="Get premium and enjoy extra perks! A premium subscription lasts for 30 days, and"
+                                      " can be renewed. By buying the premium, you agree to out T&C (`e.tc`).\n\n"
+                                      "**To buy premium, use `e.buy premium`**",
+                          color=embedcolor)
+    premtime = int(bot.accounts[str(ctx.author.id)]["prem"] - time.time())
+    if premtime > 0:
+        premtime = int(bot.accounts[str(ctx.author.id)]["prem"])
+        embed.add_field(name="Status", value=f"Expiring on: <t:{premtime}:F>\n(<t:{premtime}:R>)")
+    else:
+        embed.add_field(name="Status", value=f"Not purchased")
+
+    arrow = "<a:Arrow:884334470830903307>"
+    perks = f"""{arrow} Customize your profile` using `e.configure`!
+{arrow} 1.5x multiplier in daily coins!
+{arrow} 1.25x revenue from estates!
+{arrow} Reduced cooldown on commands!
+{arrow} Special "Premium" golden badge on profile!
+{arrow} Access to special channel #premium-chat!
+{arrow} Insider news and leaks!
+{arrow} Use commands in DMs!
+"""
+    embed.add_field(name="Perks:", value=perks, inline=False)
+    embed.set_image(url="https://media.discordapp.net/attachments/854273608263925770/884653291944968272/ezgif.com-gif-maker_31.gif")
+    await ctx.send(embed=embed)
+
+async def sendnew_pbg(ctx, datafile):
+    curset = f"1. Background- image.png\n" \
+             f"2. XP Bar Color- {datafile['mc']}"
+    embed = discord.Embed(title="⚙️ Profile Background",
+                          description="Current Settings:\n" \
+                                      f"```less\n{curset}```\n"
+                                      "__Choose the below options to modify the background:__\n",
+                          color=embedcolor)
+    if datafile["file"] == "": ext = "png"
+    else: ext =datafile['file'].lower()[-3:]
+    fileurl = await profile_bg(ctx.author.id, datafile)
+    embed.set_image(url=fileurl)
+    embed.set_footer(text="Type 'save' to save background\nType 'cancel' to cancel all changes")
+    view = BgEditor(ctx.author)
+    a = await ctx.send(embed=embed, view=view)
+    view.msg = a
+    return a, view
+
+
+class BgEditor(discord.ui.View):
+    def __init__(self, user: discord.User):
+        super().__init__(timeout=120)
+        self.userid = str(user.id)
+        self.add_item(Dropdown())
+        self.msg = None
+        self.user = user
+
+    @discord.ui.button(style=discord.ButtonStyle.green, label="Save")
+    async def save(self, button: discord.ui.Button, interaction: discord.Interaction):
+        if interaction.user != self.user:
+            await interaction.response.send_message("You cannot control other's background!", ephemeral=True)
+            return
+
+        self.clear_items()
+        await interaction.response.edit_message(embed=discord.Embed(
+            description=f"{economysuccess} Your background has been redirected to staff for approval. "
+                        f"You will receive a notification when its approved. "
+                        f"You are suggested to keep your dms on if not already", color=embedcolor), view=self)
+        await send_approval(interaction.user, bot.unsaved[self.userid], self.userid)
+
+    @discord.ui.button(style=discord.ButtonStyle.red, label="Cancel")
+    async def cancel(self, button: discord.ui.Button, interaction: discord.Interaction):
+        if interaction.user != self.user:
+            await interaction.response.send_message("You cannot control other's background!", ephemeral=True)
+            return
+        self.clear_items()
+        await interaction.response.edit_message(view=self)
+
+
+class Dropdown(discord.ui.Select):
+    def __init__(self):
+        options = [
+            discord.SelectOption(label='Background Image', description='Edit the backround image', emoji='🏝️'),
+            discord.SelectOption(label='XP Bar Color', description='Color of the XP Bar', emoji='🌈')
+        ]
+
+        super().__init__(placeholder='Select field to modify...', min_values=1, max_values=1, options=options)
+
+    async def callback(self, interaction: discord.Interaction):
+        assert self.view is not None
+        view: BgEditor = self.view
+        if interaction.user != view.user:
+            await interaction.response.send_message("You cannot control other's background!", ephemeral=True)
+            return
+
+        def check(msg):
+            return msg.author == interaction.user and msg.channel == interaction.channel
+
+        datafile = bot.unsaved[view.userid]
+        value = self.values[0]
+        ctx = interaction.channel
+
+        async def modify1(self):
+            try:
+                embed = discord.Embed(description="Upload the `PNG/GIF` file from your PC to set as background.\n"
+                                                  "**Dont send a link to the image! Upload the file**",
+                                      color=embedcolor)
+                embed.set_footer(text="Recommended Size: 800x632")
+                await interaction.response.send_message(embed=embed, ephemeral=True)
+
+                msg = await bot.wait_for("message", check=check, timeout=180)
+                await msg.add_reaction(loading)
+                try:
+                    image = msg.attachments[0].url
+                    if image[-3:].lower() not in ["png", "gif"]:
+                        await ctx.send(f"{interaction.user.mention} The image should be `.PNG/.GIF` file only!")
+                        return
+
+                    async with aiohttp.ClientSession(auto_decompress=False) as session:
+                        async with session.get(image) as r:
+                            if r.status == 200:
+                                with open(f"bgs/{interaction.user.id}.{image[-3:].lower()}", 'wb') as f:
+                                    f.write(await r.read())
+                                filesize = os.stat(f"bgs/{interaction.user.id}.{image[-3:].lower()}").st_size
+                                if filesize >= 6291456:
+                                    raise discord.HTTPException
+                                bgfile = await bot.get_channel(837564505952747520).send(
+                                    file=discord.File(f"bgs/{interaction.user.id}.{image[-3:].lower()}",
+                                                      filename=f"{interaction.user.id}.{image[-3:].lower()}"))
+                                bot.unsaved[view.userid]["file"] = bgfile.attachments[0].url
+                        await update_bg(view.msg, datafile, view.userid)
+                except IndexError:
+                    await ctx.send(
+                        "Bot didnt detect any attachments. Make sure you upload the image from your device!")
+                except discord.HTTPException:
+                    embed = discord.Embed(description=f"{economyerror} Image size too big. The maximum is 6 mbs.\n"
+                                                      f"Note that the size increases as bot pastes the stats over it.",
+                                          color=error_embed)
+                    await ctx.send(embed=embed)
+                except Exception as e:
+                    etype = type(e)
+                    trace = e.__traceback__
+                    lines = traceback.format_exception(etype, e, trace)
+                    traceback_text = ''.join(lines)
+                    print(traceback_text)
+                    await bot.get_channel(869597680333099018).send(f"```py\n{traceback_text[:1950]}```")
+                    await ctx.send("Unknown error occured. The error is automatically reported to the developers.\n"
+                                   "Sorry for any inconvenience")
+                finally:
+                    await msg.delete()
+
+            except asyncio.TimeoutError:
+                pass
+
+        async def modifycolor(self):
+            try:
+                embed = discord.Embed(description="Enter the `R, G, B` code or `#Hex` value of the color.\n"
+                                                  "Trouble choosing? [Click Here](https://htmlcolorcodes.com/)\n",
+                                      color=embedcolor)
+                await interaction.response.send_message(embed=embed, ephemeral=True)
+                try:
+                    msg = await bot.wait_for("message", check=check, timeout=180)
+                    if msg.content[0] == "#":
+                        h = msg.content.lower()
+                        r, g, b = ImageColor.getcolor(h, "RGB")
+                    else:
+                        r, g, b = msg.content.replace(" ", "").split(",")
+                    r = int(r)
+                    g = int(g)
+                    b = int(b)
+                    if (r > 255 or r < 0) or (g > 255 or g < 0) or (b > 255 or b < 0): raise ValueError
+
+                    types = {1: "hd", 2: "st", 3: "us", 4: "bt", 5: "xp"}
+                    bot.unsaved[view.userid]["mc"] = [r, g, b]
+                    await update_bg(view.msg, datafile, view.userid)
+                except:
+                    await ctx.send("Incorrect `R, G, B` / `#Hex` code. Please retry")
+            except asyncio.TimeoutError:
+                pass
+
+        if value == "Background Image":
+            await modify1(self)
+        elif value == "XP Bar Color":
+            await modifycolor(self)
+
+async def update_bg(msg, datafile, userid):
+    curset = f"1. Background- image.png\n" \
+             f"2. XP Bar Color- {datafile['mc']}"
+    embed = discord.Embed(title="⚙️ Profile Background",
+                          description="Current Settings:\n" \
+                                      f"```less\n{curset}```\n"
+                                      "__Choose the below options to modify the background:__\n",
+                          color=embedcolor)
+    if datafile["file"] == "":
+        ext = "png"
+    else:
+        ext = datafile['file'].lower()[-3:]
+    fileurl = await profile_bg(userid, datafile)
+    embed.set_image(url=fileurl)
+    embed.set_footer(text="Type 'save' to save background\nType 'cancel' to cancel all changes")
+    await msg.edit(embed=embed)
+
+async def send_approval(user, datafile, userid):
+    embed = discord.Embed(description=f"`{datafile}`",
+                          color=embedcolor)
+    if datafile["file"] == "": ext = "png"
+    else: ext =datafile['file'].lower()[-3:]
+    fileurl = await profile_bg(userid, datafile)
+    embed.set_image(url=fileurl)
+    embed.add_field(name="Bg Name", value=f"`{userid}`")
+    embed.add_field(name="Editor", value=f"{user}\n{user.id}")
+    a = await bot.get_channel(814460868753489921).send(embed=embed)
+    bot.bgdata.setdefault("pending", {})
+    bot.bgdata["pending"][str(a.id)] = {"data":{userid: datafile}, "editor":user.id}
+    await savebgdata()
+    await a.add_reaction(economysuccess)
+    await a.add_reaction(economyerror)
+
+async def profile_bg(userid, bgdata:dict, image_change=False):
+    bgdata = bgdata
+            
+    lev = 15
+    max_xp = 2000
+    newxp = 1200
+
+    font = ImageFont.truetype("badges/font2.ttf", 19)
+    font_rank = ImageFont.truetype("badges/font2.ttf", 24)
+    fontm = ImageFont.truetype("badges/font2.ttf", 13)
+    fonts = ImageFont.truetype("badges/font2.ttf", 10)
+    gadugi = ImageFont.truetype("badges/gadugi.ttf", 16)
+    gadugi_b = ImageFont.truetype("badges/oswald.ttf", 26)
+
+    if bgdata["file"] == "":
+        imgtype = "png"
+        bgimg = Image.open("bgs/default.png")
+    else:
+        imgtype = bgdata['file'].lower()[-3:]
+        if not os.path.exists(f"bgs/{userid}.{imgtype}"):
+            async with aiohttp.ClientSession() as session:
+                async with session.get(bgdata["file"]) as r:
+                    with open(f"bgs/{userid}.{imgtype}", 'wb') as f:
+                        f.write(await r.read())
+        bgimg = Image.open(f"bgs/{userid}.{imgtype}")
+    if imgtype == "png":
+        bgimg = bgimg.convert("RGBA").resize((800, 632))
+    img = Image.open("bgs/stats.PNG").convert("RGBA")
+    member_colour = tuple(bgdata["mc"])
+    avatar = await get_avatar(bot.user)
+    ava_mask = Image.open("badges/AVAmask.png").convert('L')
+    ava_mask2 = Image.open("badges/AVAmas2k.png").convert('L')
+    img.paste(Image.new("RGBA", (148, 148), member_colour), (11, 11), ava_mask2)
+    img.paste(avatar, (15, 15), ava_mask)
+    member_status = "idle"
+    status = Image.open(f'badges/{member_status}.png')
+    img.paste(status.resize((30, 30)), (124, 113), status.resize((30, 30)))
+
+    xpbar = Image.open("./badges/xpbar.png")
+    xpbar = xpbar.resize((579, 27))
+    pixdata = xpbar.load()
+    for y in range(xpbar.size[1]):
+        for x in range(xpbar.size[0]):
+            pixdata[x, y] = tuple(list(member_colour) + [pixdata[x, y][-1]])
+
+    xpbar = xpbar.crop((0, 0, xpbar.width * (int(newxp) / int(max_xp)), xpbar.height))
+    img.paste(xpbar, (180, 105), xpbar)
+
+    location = 710
+    if bot.accounts.get(str(userid), {'prem': -1})["prem"] - time.time() > 0:
         premium = True
     else:
         premium = False
-    embed.add_field(name="Status", value=premium)
-    arrow = "<a:Arrow:884334470830903307:>"
-    perks = f"""{arrow} Customize your background in `e.pf`!
-{arrow} 1.5x multiplier in daily coins!
-{arrow} Ability to add 10 items in trades instead of 5!
-{arrow} 
-"""
 
+    if premium:
+        prem_icon = Image.open('badges/premium.png')
+        prem_icon = prem_icon.resize((37, 37))
+        img.paste(prem_icon, (location, 55), prem_icon)
+        prem_icon.close()
+        location -= 45
+
+    draw = ImageDraw.Draw(img)
+    newimg = Image.new('RGBA', img.size, (0, 0, 0, 0))
+    newdraw = ImageDraw.Draw(newimg)
+
+    userinv = bot.inventory.get(str(userid), [])
+    if len(userinv) != 0:
+        eq_lock = userinv.get('eq_lock')
+        eq_boost = userinv.get('eq_boost')
+        paste_loc = 332
+        if eq_lock is None and eq_boost is None:
+            newdraw.text((335, 145), 'None', font=ImageFont.truetype("badges/font2.ttf", 15), fill=(0, 0, 0))
+    else:
+        newdraw.text((335, 145), 'None', font=ImageFont.truetype("badges/font2.ttf", 15), fill=(0, 0, 0))
+    networth = await calculate_networth(userid)
+    newdraw.text((180, 34), f'GameBot Economy#3789', font=font, fill='#000000')
+    newdraw.text((180, 70), f"Level {lev} | XP: {newxp}", font=fontm, fill='#000000')
+    newdraw.text((120, 210), f'Server Rank', font=font, fill='#000000')
+    newdraw.text((530, 210), f'Global Rank', font=font, fill='#000000')
+    newdraw.text((120, 250), f'#1', font=font_rank, fill='#000000')
+    newdraw.text((530, 250), f'#1', font=font_rank, fill='#000000')
+    newdraw.text((50, 355), f"Net Worth: -", font=gadugi_b, fill='#000000')
+    newdraw.text((50, 395), f"Join Date: -", font=gadugi_b,
+                 fill='#000000')
+
+    awards = {"estates": 'badges/awards/estates_{colortype}.png',
+              "games": 'badges/awards/games_{colortype}.png',
+              "stocks": 'badges/awards/stocks_{colortype}.png',
+              "unbox": 'badges/awards/unbox_{colortype}.png',
+              "global": 'badges/awards/global_{colortype}.png'}
+    awardsdesc = {"estates": "Estates level 30",
+                  "games": "Win 1000 games",
+                  "stocks": "Buy 1 mil stocks",
+                  "unbox": "Unbox every item",
+                  "global": "           ???"}
+
+    x2_loc = 50
+    for i in awards.keys():
+        newdraw.text((x2_loc, 585), awardsdesc[i], font=gadugi, fill=(0, 0, 0))
+        x2_loc += 148
+
+    newimg = newimg.filter(ImageFilter.GaussianBlur(radius=2))
+    newimg = newimg.filter(ImageFilter.GaussianBlur(radius=4))
+    frm = []
+    if imgtype == "png":
+        bgimage = Image.alpha_composite(img, newimg)
+    else:
+        for fr in ImageSequence.Iterator(img):
+            fr = fr.convert("RGBA")
+            fr = fr.resize((800, 632))
+            frm.append(Image.alpha_composite(fr, newimg))
+
+    draw.text((180, 34), f'GameBot Economy#3789', (255, 255, 255), font=font)
+    draw.text((180, 70), f"Level {lev} | XP: {newxp}", font=fontm)
+    draw.text((120, 210), f'Server Rank', font=font)
+    draw.text((530, 210), f'Global Rank', font=font)
+    draw.text((120, 250), f'#1', (255, 243, 0), font=font_rank)
+    draw.text((530, 250), f'#1', (255, 243, 0), font=font_rank)
+    draw.text((50, 355), f"Net Worth: -", font=gadugi_b)
+    draw.text((50, 395), f"Join Date: -", font=gadugi_b)
+
+    twidth, theight = draw.textsize(f"{await commait(newxp)}/{await commait(max_xp)}", fonts)
+    draw.text((468 - (twidth / 2), 121 - (theight / 2)), f"{await commait(newxp)}/{await commait(max_xp)}",
+              (255, 255, 255), font=fonts, stroke_width=1, stroke_fill=(0, 0, 0))
+
+    draw.text((335, 145), 'None', font=ImageFont.truetype("badges/font2.ttf", 15))
+
+    image_bytes = BytesIO()
+    if imgtype == "png":
+        bgimg = Image.alpha_composite(bgimg, img)
+        enhancer = ImageEnhance.Sharpness(bgimg)
+        bgimg = enhancer.enhance(2)
+        bgimg.save(image_bytes, 'PNG')
+        image_bytes.seek(0)
+    else:
+        final = []
+        for i in frm:
+            final.append(Image.alpha_composite(bgimg, i))
+        final[0].save(image_bytes,
+                      format='GIF',
+                      save_all=True,
+                      append_images=final[1:],
+                      loop=0)
+        image_bytes.seek(0)
+    bgfile = await bot.get_channel(837564505952747520).send(
+        file=discord.File(image_bytes, filename=f"profile.{imgtype}"))
+
+    return bgfile.attachments[0].url
+
+@bot.command(aliases=["conf", "con"])
+@commands.check(general)
+async def configure(ctx):
+    if not is_premium(ctx.author.id):
+        embed = discord.Embed(title=f"{economyerror} No Access",
+                              description="Only the users with Premium Subscription have access to this command!",
+                              color=error_embed)
+        embed.set_footer(text="e.premium for more details")
+        return await ctx.send(embed=embed)
+
+    bot.unsaved[str(ctx.author.id)] = copy.copy(bot.bgdata.get(str(ctx.author.id), {"file":"", 'mc':[255, 42, 84]}))
+    msg, view = await sendnew_pbg(ctx, bot.unsaved[str(ctx.author.id)])
+    view.msg = msg
 
 @bot.command()
 @commands.check(general)
@@ -1826,6 +2169,11 @@ class UpgradeBank(discord.ui.View):
             child.disabled = True
         await self.msg.edit(view=self)
 
+def is_premium(userid):
+    if bot.accounts.get(str(userid), {'prem':-1})['prem'] - time.time() > 0:
+        return True
+    return False
+
 @bot.command()
 @commands.check(general)
 async def daily(ctx):
@@ -1846,10 +2194,9 @@ async def daily(ctx):
     avgbal = avg_p['avg']
     bank_d = data_p['bank']
     multiplier = (bank_details[btype]["rate"])/100
-
-    newbal = bank_d + int(avgbal * multiplier)
-    data_p['bank'] = newbal
-    bot.accounts[f'{ctx.author.id}'] = data_p
+    prem = 1
+    if is_premium(ctx.author.id): prem = 1.5
+    bot.accounts[f'{ctx.author.id}']['bank'] = bank_d + int(avgbal * multiplier * prem)
     avg_p['claimed'] = 1
     avg_p['sum'] = int(avgbal)
     avg_p['i'] = 1
@@ -2109,7 +2456,9 @@ async def revenue(ctx, via=False):
         fine = -5000
     else:
         fine = 0
-    totalpay = int(fixed_rev+low_rev+fine)
+    prem = 1
+    if is_premium(ctx.author.id): prem=1.25
+    totalpay = int(fixed_rev+low_rev+fine)*prem
 
     x = PrettyTable()
     x.field_names = ["    Name", "       ", "      ", "Amount  "]
@@ -2306,7 +2655,7 @@ async def transfer(ctx, togive:discord.Member = None, amount = None, *, reason =
 
     await ctx.send(embed=embed)
 
-@bot.command(aliases=['transactions'])
+@bot.command(aliases=['transactions', 'statements', 'trans'])
 @commands.check(general)
 async def statement(ctx, *args):
     if '-u' not in args:
@@ -2370,7 +2719,7 @@ async def statement(ctx, *args):
 async def profile(ctx, member:discord.Member = None):
     if member is None:
         member = ctx.author
-
+    bgdata = bot.bgdata.get(str(member.id), {'mc':[255, 42, 84], 'file':''})
     xp = bot.xp.setdefault(f'{member.id}', 0)
     lev, newxp = await calculate_level(xp)
 
@@ -2379,8 +2728,198 @@ async def profile(ctx, member:discord.Member = None):
         if lev == value:
             max_xp = key
             break
-    bytes = await profile_image(member, lev, xp, newxp, max_xp, ctx.guild.id)
-    await uploader.upload_file(ctx.channel, bytes, filename="level.png")
+
+    font = ImageFont.truetype("badges/font2.ttf", 19)
+    font_rank = ImageFont.truetype("badges/font2.ttf", 24)
+    fontm = ImageFont.truetype("badges/font2.ttf", 13)
+    fonts = ImageFont.truetype("badges/font2.ttf", 10)
+    gadugi = ImageFont.truetype("badges/gadugi.ttf", 16)
+    gadugi_b = ImageFont.truetype("badges/oswald.ttf", 26)
+
+    if bgdata["file"] == "":
+        imgtype = "png"
+        bgimg = Image.open("bgs/default.png")
+    else:
+        imgtype = bgdata['file'].lower()[-3:]
+        if not os.path.exists(f"bgs/{member.id}.{imgtype}"):
+            async with aiohttp.ClientSession() as session:
+                async with session.get(bgdata["file"]) as r:
+                    with open(f"bgs/{member.id}.{imgtype}", 'wb') as f:
+                        f.write(await r.read())
+        bgimg = Image.open(f"bgs/{member.id}.{imgtype}")
+    if imgtype == "png":
+        bgimg = bgimg.convert("RGBA").resize((800, 632))
+    img = Image.open("bgs/stats.PNG").convert("RGBA")
+    member_colour = tuple(bgdata["mc"])
+    avatar = await get_avatar(member)
+    ava_mask = Image.open("badges/AVAmask.png").convert('L')
+    ava_mask2 = Image.open("badges/AVAmas2k.png").convert('L')
+    img.paste(Image.new("RGBA", (148, 148), member_colour), (11, 11), ava_mask2)
+    img.paste(avatar, (15, 15), ava_mask)
+    member_status = member.status
+    status = Image.open(f'badges/{member_status}.png')
+    img.paste(status.resize((30, 30)), (124, 113), status.resize((30, 30)))
+
+    xpbar = Image.open("./badges/xpbar.png")
+    xpbar = xpbar.resize((579, 27))
+    pixdata = xpbar.load()
+    for y in range(xpbar.size[1]):
+        for x in range(xpbar.size[0]):
+            pixdata[x, y] = tuple(list(member_colour) + [pixdata[x, y][-1]])
+
+    xpbar = xpbar.crop((0, 0, xpbar.width * (int(newxp) / int(max_xp)), xpbar.height))
+    img.paste(xpbar, (180, 105), xpbar)
+
+    if str(member.id) in bot.badges['staff']:
+        staff = True
+    else:
+        staff = False
+    location = 710
+    if bot.accounts.get(str(member.id), {'prem': -1})["prem"] - time.time() > 0:
+        premium = True
+    else:
+        premium = False
+    if staff:
+        staff_icon = Image.open('badges/staff.png')
+        pixdata = staff_icon.load()
+        for y in range(staff_icon.size[1]):
+            for x in range(staff_icon.size[0]):
+                pixdata[x, y] = tuple(list((0, 255, 230)) + [pixdata[x, y][-1]])
+        staff_icon = staff_icon.resize((37, 37))
+        img.paste(staff_icon, (location, 55), staff_icon)
+        staff_icon.close()
+        location -= 45
+    if premium:
+        prem_icon = Image.open('badges/premium.png')
+        prem_icon = prem_icon.resize((37, 37))
+        img.paste(prem_icon, (location, 55), prem_icon)
+        prem_icon.close()
+        location -= 45
+    server_r, global_r = await xp_ranks(member.id, ctx.guild.id)
+    if global_r > 1000:
+        global_r = 'Unknown'
+    else:
+        global_r = f'#{global_r}'
+    draw = ImageDraw.Draw(img)
+    newimg = Image.new('RGBA', img.size, (0, 0, 0, 0))
+    newdraw = ImageDraw.Draw(newimg)
+
+    userinv = bot.inventory.get(str(member.id), [])
+    if len(userinv) != 0:
+        eq_lock = userinv.get('eq_lock')
+        eq_boost = userinv.get('eq_boost')
+        paste_loc = 332
+        if eq_lock is None and eq_boost is None:
+            newdraw.text((335, 145), 'None', font=ImageFont.truetype("badges/font2.ttf", 15), fill=(0, 0, 0))
+    else:
+        newdraw.text((335, 145), 'None', font=ImageFont.truetype("badges/font2.ttf", 15), fill=(0, 0, 0))
+    networth = await calculate_networth(member.id)
+    newdraw.text((180, 34), f'{member.name}#{member.discriminator}', font=font, fill='#000000')
+    newdraw.text((180, 70), f"Level {lev} | XP: {newxp}", font=fontm, fill='#000000')
+    newdraw.text((120, 210), f'Server Rank', font=font, fill='#000000')
+    newdraw.text((530, 210), f'Global Rank', font=font, fill='#000000')
+    newdraw.text((120, 250), f'#{server_r}', font=font_rank, fill='#000000')
+    newdraw.text((530, 250), f'{global_r}', font=font_rank, fill='#000000')
+    newdraw.text((50, 355), f"Net Worth:  {await commait(networth)} coins", font=gadugi_b, fill='#000000')
+    newdraw.text((50, 395), f"Join Date: {bot.accounts.get(str(member.id), {'joined': '-'})['joined']}", font=gadugi_b,
+                 fill='#000000')
+
+    awards = {"estates": 'badges/awards/estates_{colortype}.png',
+              "games": 'badges/awards/games_{colortype}.png',
+              "stocks": 'badges/awards/stocks_{colortype}.png',
+              "unbox": 'badges/awards/unbox_{colortype}.png',
+              "global": 'badges/awards/global_{colortype}.png'}
+    awardsdesc = {"estates": "Estates level 30",
+                  "games": "Win 1000 games",
+                  "stocks": "Buy 1 mil stocks",
+                  "unbox": "Unbox every item",
+                  "global": "           ???"}
+
+    x2_loc = 50
+    for i in awards.keys():
+        newdraw.text((x2_loc, 585), awardsdesc[i], font=gadugi, fill=(0, 0, 0))
+        x2_loc += 148
+
+    newimg = newimg.filter(ImageFilter.GaussianBlur(radius=2))
+    newimg = newimg.filter(ImageFilter.GaussianBlur(radius=4))
+    frm = []
+    if imgtype == "png":
+        bgimage = Image.alpha_composite(img, newimg)
+    else:
+        for fr in ImageSequence.Iterator(img):
+            fr = fr.convert("RGBA")
+            fr = fr.resize((800, 632))
+            frm.append(Image.alpha_composite(fr, newimg))
+
+    draw.text((180, 34), f'{member.name}#{member.discriminator}', (255, 255, 255), font=font)
+    draw.text((180, 70), f"Level {lev} | XP: {newxp}", font=fontm)
+    draw.text((120, 210), f'Server Rank', font=font)
+    draw.text((530, 210), f'Global Rank', font=font)
+    draw.text((120, 250), f'#{server_r}', (255, 243, 0), font=font_rank)
+    draw.text((530, 250), f'{global_r}', (255, 243, 0), font=font_rank)
+    draw.text((50, 355), f"Net Worth:  {await commait(networth)} coins", font=gadugi_b)
+    draw.text((50, 395), f"Join Date: {bot.accounts.get(str(member.id), {'joined': '-'})['joined']}", font=gadugi_b)
+
+    twidth, theight = draw.textsize(f"{await commait(newxp)}/{await commait(max_xp)}", fonts)
+    draw.text((468 - (twidth / 2), 121 - (theight / 2)), f"{await commait(newxp)}/{await commait(max_xp)}",
+              (255, 255, 255), font=fonts, stroke_width=1, stroke_fill=(0, 0, 0))
+
+    achi = bot.awards.get("achievements", {})
+    user_a = achi.get(str(member.id), [])
+    x_loc = 70
+    x2_loc = 50
+    for i in awards.keys():
+        if i in user_a:
+            colortype = "color"
+        else:
+            colortype = "bw"
+        award = Image.open(awards[i].format(colortype=colortype)).resize((80, 80))
+        img.paste(award, (x_loc, 500), award.convert("RGBA"))
+        award.close()
+        draw.text((x2_loc, 585), awardsdesc[i], font=gadugi, fill=(255, 255, 255))
+        x_loc += 148
+        x2_loc += 148
+
+    if len(userinv) != 0:
+        eq_lock = userinv.get('eq_lock')
+        eq_boost = userinv.get('eq_boost')
+        paste_loc = 332
+        if eq_lock is not None:
+            for i in storeitems:
+                if eq_lock == i["name"]:
+                    lock = Image.open(f'store/{i["icon"]}').resize((27, 27))
+                    img.paste(lock, (paste_loc, 142), lock.convert('RGBA'))
+                    lock.close()
+        if eq_boost is not None:
+            for i in storeitems:
+                if eq_lock == i["name"]:
+                    lock = Image.open(i["icon"]).resize((30, 30))
+                    img.paste(lock, (paste_loc, 140), lock.convert('RGBA'))
+                    lock.close()
+        if eq_lock is None and eq_boost is None:
+            draw.text((335, 145), 'None', font=ImageFont.truetype("badges/font2.ttf", 15))
+    else:
+        draw.text((335, 145), 'None', font=ImageFont.truetype("badges/font2.ttf", 15))
+
+    image_bytes = BytesIO()
+    if imgtype == "png":
+        bgimg = Image.alpha_composite(bgimg, img)
+        enhancer = ImageEnhance.Sharpness(bgimg)
+        bgimg = enhancer.enhance(2)
+        bgimg.save(image_bytes, 'PNG')
+        image_bytes.seek(0)
+    else:
+        final = []
+        for i in frm:
+            final.append(Image.alpha_composite(bgimg, i))
+        final[0].save(image_bytes,
+                      format='GIF',
+                      save_all=True,
+                      append_images=final[1:],
+                      loop=0)
+        image_bytes.seek(0)
+
+    await ctx.send(file=discord.File(image_bytes, filename="profile.png"))
 
 @bot.command()
 @commands.check(general)
@@ -2885,11 +3424,29 @@ async def buy(ctx, *, item):
     user = bot.accounts[str(ctx.author.id)]
     wallet = user["wallet"]
     qty = int(qty)
+    buying_prem = False
+    if store_item["name"] == "Premium":
+        buying_prem = True
+
+    if user["prem"] - time.time() > 0 and buying_prem:
+        return await ctx.reply("You already have a premium subscription running!")
+
+    if buying_prem and qty > 1:
+        return await ctx.reply("You cannot buy more than 1 premium subscription")
     price = int(price.replace(',', ''))
     if price*qty > wallet:
         embed = discord.Embed(title=f'{economyerror} Insufficient Funds',
                               description=f'{random.choice(bot.phrases["less_bal"])}',
                               color=error_embed)
+        return await ctx.send(embed=embed)
+    if buying_prem:
+        user["wallet"] = wallet - (price * qty)
+        user["prem"] = int(time.time() + 30*86400)
+        bot.accounts[str(ctx.author.id)] = user
+        embed = discord.Embed(
+            description=f'{economysuccess} Done! `{store_item["name"]} Subscription` purchased successfully!',
+            color=success_embed)
+        await update_accounts()
         return await ctx.send(embed=embed)
     member_inv = bot.inventory.get(str(ctx.author.id), {"inv":[]})
     memberinv = member_inv["inv"]
