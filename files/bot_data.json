@@ -468,13 +468,13 @@
         "percent": 42
       },
       {
-        "icon": "rare_chest.png",
-        "name": "Rare Chest",
-        "desc": "50% Common, 40% Rare, 10% Leg.",
-        "price": "5,000",
+        "icon": "gold_lock.png",
+        "name": "Gold Lock",
+        "desc": "Increases rob protection by 40%",
+        "price": "15,000",
         "special": false,
-        "disc": "2,905",
-        "percent": 17
+        "disc": "11,700",
+        "percent": 22
       },
       {
         "icon": "legendary_chest.png",
@@ -504,13 +504,13 @@
         "percent": 42
       },
       {
-        "icon": "gold_lock.png",
-        "name": "Gold Lock",
-        "desc": "Increases rob protection by 40%",
-        "price": "15,000",
+        "icon": "rare_chest.png",
+        "name": "Rare Chest",
+        "desc": "50% Common, 40% Rare, 10% Leg.",
+        "price": "5,000",
         "special": true,
-        "disc": "11,700",
-        "percent": 22
+        "disc": "4,250",
+        "percent": 15
       }
     ],
     "category": {
@@ -529,7 +529,7 @@
         "Premium"
       ]
     },
-    "updated": 1630988425.413739
+    "updated": 1631076577.2969277
   },
   "items": {
     "common": {
@@ -702,7 +702,7 @@
             500,
             1000
           ],
-          "desc": "",
+          "desc": "A place to keep you books. Nerd, just sell it!",
           "emoji": "<:BookStand:847391702841819146>"
         },
         {

@@ -62,7 +62,7 @@ bot.loop.set_debug(True)
 bot.loop.slow_callback_duration = 0.3
 print(f'Bot Initialized in {float("{:.2f}".format(time.time()-tnew))} secs')
 tnew = time.time()
-devs = [669816890163724288, 771601176155783198]
+devs = [669816890163724288, 771601176155783198, 713056818972066140]
 staff = [669816890163724288, 771601176155783198, 619377929951903754, 713056818972066140, 517402093066256404, 459350068877852683]
 disregarded = []
 embedcolor = 3407822
@@ -1347,7 +1347,7 @@ async def premium(ctx):
         embed.add_field(name="Status", value=f"Not purchased")
 
     arrow = "<a:Arrow:884334470830903307>"
-    perks = f"""{arrow} Customize your profile` using `e.configure`!
+    perks = f"""{arrow} Customize your profile using `e.configure`!
 {arrow} 1.5x multiplier in daily coins!
 {arrow} 1.25x revenue from estates!
 {arrow} Reduced cooldown on commands!
@@ -1378,7 +1378,6 @@ async def sendnew_pbg(ctx, datafile):
     view.msg = a
     return a, view
 
-
 class BgEditor(discord.ui.View):
     def __init__(self, user: discord.User):
         super().__init__(timeout=120)
@@ -1407,7 +1406,6 @@ class BgEditor(discord.ui.View):
             return
         self.clear_items()
         await interaction.response.edit_message(view=self)
-
 
 class Dropdown(discord.ui.Select):
     def __init__(self):
@@ -1788,6 +1786,7 @@ async def logs(ctx, *, search:str=None):
     await ctx.send(f'**Requested by:** `{ctx.author.name}`\n```css\n{x.get_string()[:1900]}```')
 
 @bot.command(aliases=['eval'],hidden=True)
+@commands.check(is_dev)
 async def evaluate(ctx, *, expression):
     #if ctx.author.id == 669816890163724288:
     try:
@@ -1808,6 +1807,7 @@ async def evaluate(ctx, *, expression):
                 f"```py\n{''.join(traceback.format_exception(etype=type(ex), value=ex, tb=ex.__traceback__))}\n```")'''
 
 @bot.command(aliases=['exec'],hidden=True)
+@commands.check(is_dev)
 async def execute(ctx, *, expression):
     #if ctx.author.id != 669816890163724288: return
     try:
@@ -2682,7 +2682,7 @@ async def statement(ctx, *args):
         count = 1
         for s in all_s:
             date = s['time'].split(" ")[0]
-            time_ = s['time'].split(" ")[1].replace(":", "˸")
+            time_ = s['time'].split(" ")[1]
             if '-t' in args:
                 index = 1
                 for i in args:
@@ -2706,13 +2706,30 @@ async def statement(ctx, *args):
                 reason = list(args[index:])
                 mainr_split = [x.lower() for x in s["reason"][:25].split(' ')]
                 if not (all(x in mainr_split for x in reason)): continue
-            x.add_row([count, f'{s["person"]}', f"{date} {time_}",  s['amount'], s['type'], f'[{s["reason"][:25]}]'])
+            x.add_row([count, f'{s["person"]}', f"{date} {time_}",  s['amount'], s['type'], s["reason"][:25]])
             count += 1
             if count == 13:
                 break
         desc = x
+    desc = desc._rows
 
-    await ctx.send(f'**Bank Statement of `{member.name}`:**\n```css\n{desc}```')
+    font = ImageFont.truetype("badges/font2.ttf", 15)
+    img = Image.new('RGBA', (1024, 720), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+
+    y = 10
+    print(desc)
+    for i in desc:
+        x = 10
+        for row in i:
+            print(row)
+            draw.text((x, y), str(row), font=font)
+            x += 10 + font.getsize(str(row))[0]
+        y += 30
+    image_bytes = BytesIO()
+    img.save(image_bytes, 'PNG')
+    image_bytes.seek(0)
+    await ctx.send(file=discord.File(image_bytes, filename="statement.png"))
 
 @bot.command(aliases=['pf', 'level', 'p'])
 @commands.check(general)
@@ -4152,7 +4169,7 @@ async def minesweeper(ctx):
     board = Minesweeper(ctx.author, net)
     minemsg = await ctx.send("**Welcome to Minesweeper!**\n"
                              "Rules:\n"
-                             "> For each correct move, you get `1,000` coins\n"
+                             "> For each correct move, you get `5,00` coins\n"
                              "> For each incorrect move, `2,000` coins are taken away!\n"
                              "> Your aim is to click on blocks avoiding any bombs. All the best!\n"
                              f"`Note:` To end the game, react with {economyerror}\n\n"
@@ -4167,7 +4184,7 @@ async def minesweeper(ctx):
             return True
 
     try:
-        reaction, user = await bot.wait_for('reaction_add', check=check)
+        reaction, user = await bot.wait_for('reaction_add', check=check, timeout=None)
         await board.end(minemsg)
     except:
         pass
@@ -4240,7 +4257,7 @@ class MinesweeperButton(discord.ui.Button['Minesweeper']):
             coun = view.count[self.y][self.x]
             self.emoji = emojis[coun]
             view.correct += 1
-            view.net += 1000
+            view.net += 500
 
         if view.moves == 25:
             try:
@@ -4468,7 +4485,7 @@ class HeadTails(discord.ui.View):
         if win == self.win:
             cont = f"Congratulations! You win back {int(self.bet / 2)} coins"
             color = success_embed
-            bot.accounts[str(self.user.id)]["wallet"] += self.bet * 0.5
+            bot.accounts[str(self.user.id)]["wallet"] += int(self.bet * 0.5)
         else:
             cont = f"You lose hahaha. Nothing for you!"
             color = error_embed
@@ -4500,6 +4517,70 @@ async def flip(ctx, bet:int=None):
         return await ctx.send(f"{ctx.author.mention} Imagine betting more than you have in your pockets..")
     embed = discord.Embed(description=f"Call your side! Amount at stake: `{bet}` coins", color=embedcolor)
     view = HeadTails(ctx.author, bet)
+    msg = await ctx.send(embed=embed, view=view)
+    view.msg = msg
+
+class RollDice(discord.ui.View):
+    def __init__(self, member: discord.Member, bet: int):
+        super().__init__(timeout=10)
+        self.user = member
+        self.bet = bet
+        self.win = random.randint(1, 6)
+        self.msg = None
+
+    @discord.ui.button(label="Roll!", style=discord.ButtonStyle.green, emoji="<:Dice:885047620823838791>")
+    async def roll(self, button: discord.ui.Button, interaction: discord.Interaction):
+        if interaction.user != self.user:
+            return await interaction.response.send_message(random.choice(bot.phrases["inter"]).format(usertag=str(self.user)),
+                                                    ephemeral=True)
+        embed = discord.Embed(title="<a:RollingDice:885064296772546570> Rolling...", color=embedcolor)
+        await interaction.response.edit_message(embed=embed, view=None)
+        await asyncio.sleep(2)
+        await self.checkfor(random.randint(1, 6), interaction)
+
+    async def checkfor(self, win, interaction):
+        dices = {6: "<:Dice6:885043917878353931>",
+                 5: "<:Dice5:885045583629414400>",
+                 4: "<:Dice4:885045623852765224>",
+                 3: "<:Dice3:885045649031188480>",
+                 2: "<:Dice2:885045680404578314>",
+                 1: "<:Dice1:885045713527009301>"}
+        if win == self.win:
+            cont = f"Same number. You get back what you bet lol"
+            color = embedcolor
+        elif win > self.win:
+            cont = f"Congratulations! You win back {int(self.bet / 2)} coins"
+            color = error_embed
+            bot.accounts[str(self.user.id)]["wallet"] += int(self.bet * 0.5)
+        else:
+            cont = f"You lose hahaha. Nothing for you!"
+            color = error_embed
+            bot.accounts[str(self.user.id)]["wallet"] -= self.bet
+
+        embed = discord.Embed(title=f"You: {win} {dices[win]}\n"
+                                    f"Me: {self.win} {dices[self.win]}",
+                              description=f"{cont}", color=color)
+        await self.msg.edit(embed=embed)
+        await update_accounts()
+
+@bot.command()
+@commands.check(general)
+async def roll(ctx, bet:int=None):
+    if bet is None:
+        def check(msg):
+            return msg.author == ctx.author and msg.channel == ctx.channel
+        try:
+            await ctx.send("Enter the amount you wish to bet")
+            msg = await bot.wait_for("message", timeout=60, check=check)
+            bet = int(msg.content)
+        except asyncio.TimeoutError: return
+        except:
+            await ctx.reply("Bruh thats not a valid integer...")
+
+    if bet > bot.accounts[str(ctx.author.id)]["wallet"]:
+        return await ctx.send(f"{ctx.author.mention} Imagine betting more than you have in your pockets..")
+    embed = discord.Embed(description=f"I am ready! Click 'Roll' to start. Amount at stake: `{bet}` coins", color=embedcolor)
+    view = RollDice(ctx.author, bet)
     msg = await ctx.send(embed=embed, view=view)
     view.msg = msg
     
