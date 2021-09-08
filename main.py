@@ -2708,25 +2708,58 @@ async def statement(ctx, *args):
                 if not (all(x in mainr_split for x in reason)): continue
             x.add_row([count, f'{s["person"]}', f"{date} {time_}",  s['amount'], s['type'], s["reason"][:25]])
             count += 1
-            if count == 13:
+            if count == 11:
                 break
         desc = x
     desc = desc._rows
 
-    font = ImageFont.truetype("badges/font2.ttf", 15)
-    img = Image.new('RGBA', (1024, 720), (0, 0, 0, 0))
-    draw = ImageDraw.Draw(img)
+    font = ImageFont.truetype("badges/font2.ttf", 16)
+    img = Image.open("store/statements.png")
+    newimg = Image.new("RGBA", img.size)
+    newdraw = ImageDraw.Draw(newimg)
+    locs = {0: 85,
+            1: 230,
+            2: 475,
+            3: 700,
+            4: 865,
+            5: 1085}
 
-    y = 10
-    print(desc)
-    for i in desc:
-        x = 10
-        for row in i:
-            print(row)
-            draw.text((x, y), str(row), font=font)
-            x += 10 + font.getsize(str(row))[0]
-        y += 30
+    y = 135
+    for c, i in enumerate(desc):
+        fill = (0, 0, 0)
+
+        for index, row in enumerate(i):
+            if index == 3:
+                val = await commait(row)
+            else:
+                val = str(row)
+            x = locs[index] - int(font.getsize(val)[0] / 2)
+            newdraw.text((x, y), val, font=font, fill=fill)
+        y += 48
+
+    newimg = newimg.filter(ImageFilter.GaussianBlur(radius=2))
+    newimg = newimg.filter(ImageFilter.GaussianBlur(radius=4))
+    img = Image.alpha_composite(img, newimg)
+
+    draw = ImageDraw.Draw(img)
+    y = 135
+    for c, i in enumerate(desc):
+        if c % 2 == 0:
+            fill = (89, 255, 173)
+        else:
+            fill = (255, 172, 89)
+
+        for index, row in enumerate(i):
+            if index == 3:
+                val = await commait(row)
+            else:
+                val = str(row)
+            x = locs[index] - int(font.getsize(val)[0]/2)
+            draw.text((x, y), val, font=font, fill=fill)
+        y += 48
     image_bytes = BytesIO()
+    enhancer = ImageEnhance.Sharpness(img)
+    img = enhancer.enhance(2)
     img.save(image_bytes, 'PNG')
     image_bytes.seek(0)
     await ctx.send(file=discord.File(image_bytes, filename="statement.png"))
