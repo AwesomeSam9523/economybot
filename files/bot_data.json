@@ -112,341 +112,6 @@
       "Ok ok, I know its interesting but ||THIS IS NOT FOR YOU!!||"
     ]
   },
-  "help": {
-    "Fun": {
-      "category": "Fun",
-      "e.profile": {
-        "aliases": [
-          "pf",
-          "level"
-        ],
-        "usage": "e.profile [user]",
-        "desc": "Shows you level, perks and other stats",
-        "cooldown": 5
-      },
-      "e.rob": {
-        "aliases": [
-          "None"
-        ],
-        "usage": "e.rob <user>",
-        "desc": "Rob your friend's wallet! Need minimum 100 coins to start",
-        "cooldown": 60
-      },
-      "e.find": {
-        "aliases": [
-          "None"
-        ],
-        "usage": "e.find",
-        "desc": "Find coins or lose them!",
-        "cooldown": 30
-      },
-      "e.games": {
-        "usage": "e.games (Interactive Setup)",
-        "aliases": [
-          "None"
-        ],
-        "desc": "Play retro games like tic-tac-toe and minesweeper in a new way, with buttons!",
-        "cooldown": 5
-      },
-      "e.minesweeper": {
-        "usage": "e.minesweeper",
-        "aliases": [
-          "mine",
-          "ms"
-        ],
-        "desc": "Play minesweeper and earn loads of coins",
-        "cooldown": 120
-      },
-      "e.tictactoe": {
-        "usage": "e.tictactoe <user> <bet-amount>",
-        "aliases": [
-          "ttt"
-        ],
-        "desc": "Challenge your friend for a game of tic-tac-toe and win 1.5x money back!",
-        "cooldown": 60
-      }
-    },
-    "Market": {
-      "category": "Market",
-      "e.shop": {
-        "aliases": [
-          "store"
-        ],
-        "usage": "e.shop [page]",
-        "desc": "See items in shop, get to know about daily offers etc.",
-        "cooldown": 10
-      },
-      "e.buy": {
-        "aliases": [
-          "purchase"
-        ],
-        "usage": "e.buy <item name> [quantity]",
-        "desc": "Buy an item from shop",
-        "cooldown": 5
-      },
-      "e.use": {
-        "usage": "e.use <item name>",
-        "aliases": [
-          "None"
-        ],
-        "desc": "Use an item.\nLocks: Equip/Unequip\nChest: Unbox for items\nBoosts: Activate/Deactivate",
-        "cooldown": 5
-      },
-      "e.sell": {
-        "usage": "e.sell <item name>",
-        "aliases": [
-          "None"
-        ],
-        "desc": "Sell an item for coins",
-        "cooldown": 2
-      },
-      "e.iteminfo": {
-        "usage": "e.iteminfo <item name>",
-        "aliases": [
-          "item"
-        ],
-        "desc": "Shows the info like rarity, name, estimated sell value etc. about the item",
-        "cooldown": 2
-      },
-      "e.items": {
-        "usage": "e.items [rarity] [page]",
-        "aliases": [
-          "itemsinv",
-          "iteminv"
-        ],
-        "desc": "View the inventory for all your owned items\nRarity can be either `common`, `rare` or `legendary`",
-        "cooldown": 5
-      },
-      "e.inventory": {
-        "aliases": [
-          "inv"
-        ],
-        "usage": "e.inventory [user]",
-        "desc": "View your inventory",
-        "cooldown": 5
-      }
-    },
-    "Bank": {
-      "category": "Bank",
-      "e.balance": {
-        "aliases": [
-          "bal"
-        ],
-        "usage": "e.balance [user]",
-        "desc": "View you balance: Bank, Wallet and Stocks",
-        "cooldown": 2
-      },
-      "e.mybank": {
-        "aliases": [
-          "None"
-        ],
-        "usage": "e.mybank",
-        "desc": "View interest rate, average balance, bank tier etc.",
-        "cooldown": 5
-      },
-      "e.bank": {
-        "usage": "e.bank [tier]",
-        "aliases": [
-          "None"
-        ],
-        "desc": "View all the bank tiers and upgrade your bank for more interest and loan",
-        "cooldown": 5
-      },
-      "e.statement": {
-        "aliases": [
-          "transactions"
-        ],
-        "usage": "e.statement [-a <amount>] [-t <c | d>] [-r <reason>]",
-        "desc": "View your bank statement and filter records based on Type, Amount and/or Reason",
-        "cooldown": 5
-      },
-      "e.deposit": {
-        "aliases": [
-          "dep"
-        ],
-        "usage": "e.deposit <amount>",
-        "desc": "Deposit coins to bank",
-        "cooldown": 2
-      },
-      "e.withdraw": {
-        "aliases": [
-          "with"
-        ],
-        "usage": "e.withdraw <amount>",
-        "desc": "Withdraw coins from bank",
-        "cooldown": 2
-      }
-    },
-    "Casino": {
-      "category": "Casino",
-      "e.flip": {
-        "usage": "e.flip <amount>",
-        "desc": "Flip a coin and get 50% more if you win. Well if you lose, you get nothing kek",
-        "aliases": [
-          "None"
-        ],
-        "cooldown": 30
-      }
-    },
-    "Estates": {
-      "category": "Estates",
-      "e.estates": {
-        "aliases": [
-          "None"
-        ],
-        "usage": "e.estates",
-        "desc": "Estates are a way to earn some coins for free. You have being provided with a hotel which will earn you revenue.\nDont forget, money never comes entirely for free, so you have to maintain your hotel too.",
-        "cooldown": 5
-      },
-      "e.revenue": {
-        "aliases": [
-          "None"
-        ],
-        "usage": "e.revenue",
-        "desc": "Use this command to earn revenue. The revenue will be added in your bank",
-        "cooldown": 10
-      },
-      "e.maintain": {
-        "aliases": [
-          "None"
-        ],
-        "usage": "e.maintain",
-        "desc": "Use this to maintain your hotel to look shining new! Not maintaining for a long time will lead to lesser revenue.",
-        "cooldown": 5
-      },
-      "e.upgrade": {
-        "aliases": [
-          "None"
-        ],
-        "usage": "e.upgrade",
-        "desc": "Upgrading your hotel will lead to more revenue and less maintenance relatively. It also increases your net-worth",
-        "cooldown": 5
-      }
-    },
-    "Stocks": {
-      "category": "Stocks",
-      "e.stocks": {
-        "aliases": [
-          "None"
-        ],
-        "usage": "e.stocks",
-        "desc": "Invest in stock market which refreshes every 20-30 secs. New stock starts every day. Probably the best and fastest way to earn money?",
-        "cooldown": 5
-      },
-      "e.buystocks": {
-        "aliases": [
-          "None"
-        ],
-        "usage": "e.buystocks <quantity>",
-        "desc": "Buy stocks on current price",
-        "cooldown": 3
-      },
-      "e.sellstocks": {
-        "aliases": [
-          "None"
-        ],
-        "usage": "e.sellstocks <quantity>",
-        "desc": "Sell stocks on current price",
-        "cooldown": 3
-      }
-    },
-    "Admin": {
-      "category": "Admin",
-      "e.set_chl": {
-        "aliases": [
-          "add_chl"
-        ],
-        "usage": "e.set_chl <#channel>",
-        "desc": "Allows the bot to respond in that channel",
-        "cooldown": 2
-      },
-      "e.del_chl": {
-        "aliases": [
-          "delete_chl",
-          "rem_chl",
-          "remove_chl"
-        ],
-        "usage": "e.del_chl <#channel>",
-        "desc": "Disallows the bot to respond in that channel",
-        "cooldown": 2
-      },
-      "e.list_chl": {
-        "aliases": [
-          "show_chl"
-        ],
-        "usage": "e.list_chl",
-        "desc": "Lists all the channels where the bot is allowed to respond",
-        "cooldown": 2
-      },
-      "e.reset_chl": {
-        "aliases": [
-          "None"
-        ],
-        "usage": "e.reset_chl",
-        "desc": "Clears all the configuration and makes the bot to respond again in **all** the channels",
-        "cooldown": 2
-      }
-    },
-    "Misc": {
-      "category": "Misc",
-      "e.give": {
-        "aliases": [
-          "None"
-        ],
-        "usage": "e.give <user> <amount>",
-        "desc": "Send coins to a person from your wallet",
-        "cooldown": 10
-      },
-      "e.transfer": {
-        "aliases": [
-          "None"
-        ],
-        "usage": "e.transfer <user> <amount> [Reason]",
-        "desc": "Transfer coins from your bank to others' bank. It costs interest if bank isn't same.\nThis action is recorded in bank statements",
-        "cooldown": 30
-      },
-      "e.alerts": {
-        "aliases": [
-          "None"
-        ],
-        "usage": "e.alerts <on | off>",
-        "desc": "Receive DMs from bot upon stock ending, pending maintenance etc.",
-        "cooldown": 2
-      },
-      "e.daily": {
-        "aliases": [
-          "None"
-        ],
-        "usage": "e.daily",
-        "desc": "Gives you your daily interest. It is the product of interest rate and average bank balance",
-        "cooldown": 2
-      },
-      "e.report": {
-        "aliases": [
-          "None"
-        ],
-        "usage": "e.report <error-code>",
-        "desc": "Report an error to developers",
-        "cooldown": 30
-      },
-      "e.uptime": {
-        "usage": "e.uptime",
-        "aliases": [
-          "None"
-        ],
-        "desc": "View when was bot last restarted",
-        "cooldown": 0
-      },
-      "e.ping": {
-        "usage": "e.ping",
-        "aliases": [
-          "None"
-        ],
-        "desc": "View the bot's ping. Lesser ping = Better performance",
-        "cooldown": 2
-      }
-    }
-  },
   "shop": {
     "value": [
       {
@@ -457,15 +122,6 @@
         "special": false,
         "disc": "4,680",
         "percent": 22
-      },
-      {
-        "icon": "bronze_lock.png",
-        "name": "Bronze Lock",
-        "desc": "Increases rob protection by 10%",
-        "price": "2,500",
-        "special": false,
-        "disc": "1,450",
-        "percent": 42
       },
       {
         "icon": "gold_lock.png",
@@ -495,6 +151,15 @@
         "percent": 21
       },
       {
+        "icon": "rare_chest.png",
+        "name": "Rare Chest",
+        "desc": "50% Common, 40% Rare, 10% Leg.",
+        "price": "5,000",
+        "special": false,
+        "disc": "4,250",
+        "percent": 15
+      },
+      {
         "icon": "premium.png",
         "name": "Premium",
         "desc": "Use e.premium for features",
@@ -504,13 +169,13 @@
         "percent": 42
       },
       {
-        "icon": "rare_chest.png",
-        "name": "Rare Chest",
-        "desc": "50% Common, 40% Rare, 10% Leg.",
-        "price": "5,000",
+        "icon": "bronze_lock.png",
+        "name": "Bronze Lock",
+        "desc": "Increases rob protection by 10%",
+        "price": "2,500",
         "special": true,
-        "disc": "4,250",
-        "percent": 15
+        "disc": "1,475",
+        "percent": 41
       }
     ],
     "category": {
@@ -529,7 +194,7 @@
         "Premium"
       ]
     },
-    "updated": 1631076577.2969277
+    "updated": 1631183300.954936
   },
   "items": {
     "common": {

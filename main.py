@@ -17,7 +17,6 @@ tnew = time.time()
 class EconomyBot(commands.Bot):
     def __init__(self):
         self.unsaved = {}
-        self.help_json = {}
         self.phrases = {}
         self.current_stock = []
         self.total_lines = 0
@@ -414,6 +413,7 @@ async def update_xp():
         w.write(json.dumps(bot.xp, indent=2))
 
 def update_sorted_inv(userid):
+    userid = str(userid)
     userinv = bot.inventory.get(userid)
     if userinv is None:
         bot.cachedinv[userid] = ()
@@ -1084,7 +1084,8 @@ async def achievement(ctx, userid, field):
     types = {
         "estates":"Estates Level 30",
         "games":"Win 1000 games",
-        "stocks":"Buy 1 million stocks"
+        "stocks":"Buy 1 million stocks",
+        "unbox":"Unbox all items"
     }
     achi = bot.awards["achievements"]
     userid = str(userid)
@@ -1331,9 +1332,12 @@ async def on_raw_reaction_add(payload):
 class IgnoreError(commands.CheckFailure):
     pass
 
-@bot.command()
+@bot.command(usage="", brief="Fun")
 @commands.check(general)
 async def premium(ctx):
+    """
+    Check out all the features we offer to our premium users!
+    """
     embed = discord.Embed(title="<:Premium:884331929808281603> Premium",
                           description="Get premium and enjoy extra perks! A premium subscription lasts for 30 days, and"
                                       " can be renewed. By buying the premium, you agree to out T&C (`e.tc`).\n\n"
@@ -1695,9 +1699,12 @@ async def profile_bg(userid, bgdata:dict, image_change=False):
 
     return bgfile.attachments[0].url
 
-@bot.command(aliases=["conf", "con"])
+@bot.command(aliases=["conf", "con"], usage="", brief="Fun")
 @commands.check(general)
 async def configure(ctx):
+    """
+    Configure your background and the XP bar color and make your rank card stand different!
+    """
     if not is_premium(ctx.author.id):
         embed = discord.Embed(title=f"{economyerror} No Access",
                               description="Only the users with Premium Subscription have access to this command!",
@@ -1709,9 +1716,12 @@ async def configure(ctx):
     msg, view = await sendnew_pbg(ctx, bot.unsaved[str(ctx.author.id)])
     view.msg = msg
 
-@bot.command()
+@bot.command(usage="<error-code>", brief="Misc")
 @commands.check(general)
 async def report(ctx, code):
+    """
+    Report a bug to the developers and get 1,000 coins if it was never seen before!
+    """
     a = await get_errorfile()
     if code not in a:
         return await ctx.reply('Invalid Code or Error may be already fixed!')
@@ -1787,6 +1797,7 @@ async def logs(ctx, *, search:str=None):
 
 @bot.command(aliases=['eval'],hidden=True)
 @commands.check(is_dev)
+#@commands.is_owner()
 async def evaluate(ctx, *, expression):
     #if ctx.author.id == 669816890163724288:
     try:
@@ -1808,6 +1819,7 @@ async def evaluate(ctx, *, expression):
 
 @bot.command(aliases=['exec'],hidden=True)
 @commands.check(is_dev)
+#@commands.is_owner()
 async def execute(ctx, *, expression):
     #if ctx.author.id != 669816890163724288: return
     try:
@@ -1892,9 +1904,12 @@ async def stockinfo(ctx):
 
     await ctx.send(embed=embed)
 
-@bot.command()
+@bot.command(usage="", brief="Misc")
 @commands.check(general)
 async def uptime(ctx):
+    """
+    Shows the time since the bot was last restarted
+    """
     delta_uptime = datetime.datetime.utcnow() - bot.launch_time
     hours, remainder = divmod(int(delta_uptime.total_seconds()), 3600)
     minutes, seconds = divmod(remainder, 60)
@@ -1905,7 +1920,6 @@ async def refresh():
     with open('files/bot_data.json', 'r') as c:
         data = json.load(c)
     bot.phrases = data["phrases"]
-    bot.help_json = data["help"]
     bot.shopc = data["shop"]["category"]
     bot.items = data["items"]
     bot.status = data["status"]
@@ -1938,9 +1952,12 @@ async def resetdb(ctx):
         f.write("{}")
     await ctx.message.add_reaction(economysuccess)
 
-@bot.command(aliases=['bal'])
+@bot.command(aliases=['bal'], usage="[user]", brief="Bank")
 @commands.check(general)
 async def balance(ctx, member:discord.Member = None):
+    """
+    Shows the coins in wallet, bank and stocks owned by the user
+    """
     if member is None:
         userid = ctx.author.id
     else:
@@ -1961,9 +1978,12 @@ async def balance(ctx, member:discord.Member = None):
 
     await ctx.send(embed=embed)
 
-@bot.command(aliases=['dep'])
+@bot.command(aliases=['dep'], usage="<coins>", brief="Bank")
 @commands.check(general)
 async def deposit(ctx, amount:str):
+    """
+    Move coins from your wallet to your bank
+    """
     person = bot.accounts.get(f'{ctx.author.id}')
     wallet = person['wallet']
     bank = person['bank']
@@ -1990,9 +2010,12 @@ async def deposit(ctx, amount:str):
     await update_accounts()
     await ctx.send(f'{ctx.author.mention} Successfully deposited `{await commait(amount)}` coins.')
 
-@bot.command(aliases=['with'])
+@bot.command(aliases=['with'], usage="<coins>", brief="Bank")
 @commands.check(general)
 async def withdraw(ctx, amount: str = None):
+    """
+    Move coins from your bank to wallet
+    """
     if amount is None:
         await ctx.reply('`e.with <amount>`, idiot.')
     person = bot.accounts.get(f'{ctx.author.id}')
@@ -2022,9 +2045,13 @@ async def withdraw(ctx, amount: str = None):
     await update_accounts()
     await ctx.send(f'{ctx.author.mention} Successfully withdrew `{await commait(amount)}` coins.')
 
-@bot.command()
+@bot.command(usage="[user]", brief="Bank")
 @commands.check(general)
 async def bank(ctx, member:discord.Member = None):
+    """
+    Check the tier, name, interest rate and average balance in your bank.
+    You can also change your tier if you have enough coins!
+    """
     if member is None:
         userid = ctx.author.id
     else:
@@ -2174,9 +2201,12 @@ def is_premium(userid):
         return True
     return False
 
-@bot.command()
+@bot.command(usage="", brief="Fun")
 @commands.check(general)
 async def daily(ctx):
+    """
+    Claim your daily coins!
+    """
     await avg_update()
 
     avg_p = bot.avg.get(f'{ctx.author.id}')
@@ -2209,9 +2239,13 @@ async def daily(ctx):
     embed = discord.Embed(title=f'{economysuccess} Claimed Successfully!', description=f'Daily interest payout of `{await commait(int(avgbal * multiplier))}` coins credited successfully!', color=success_embed)
     await ctx.send(embed=embed)
 
-@bot.command()
+@bot.command(usage="<user> <coins>", brief="Bank")
 @commands.check(general)
 async def give(ctx, member:discord.Member, amount:int):
+    """
+    Give coins to a user!
+    **Note:** You can just give 5,000 coins at once. Use `e.transfer` for increased limit!
+    """
     author = bot.accounts.get(f'{ctx.author.id}')
     person = bot.accounts.get(f'{member.id}')
 
@@ -2256,9 +2290,12 @@ async def give(ctx, member:discord.Member, amount:int):
 
     await ctx.send(embed=embed)
 
-@bot.command(aliases=['property'])
+@bot.command(aliases=['property'], usage="[user]", brief="Estates")
 @commands.check(general)
 async def estates(ctx, member:discord.Member=None):
+    """
+    View the level, revenue and maintainence cost for the respective property! You can also upgrade it using this command
+    """
     if member is None:
         userid = ctx.author.id
     else:
@@ -2426,9 +2463,12 @@ async def disregard(ctx, member:discord.Member):
     else: disregarded.append(member.id)
     await ctx.message.add_reaction(economysuccess)
 
-@bot.command()
+@bot.command(usage="", brief="Estates")
 @commands.check(general)
 async def revenue(ctx, via=False):
+    """
+    Claim the revenue for the estates you own!
+    """
     userid = ctx.author.id
     await open_estates(userid)
     await est_update()
@@ -2492,9 +2532,12 @@ async def revenue(ctx, via=False):
     if via: return embed
     await ctx.send(embed=embed)
 
-@bot.command()
+@bot.command(usage="", brief="Estates")
 @commands.check(general)
 async def maintain(ctx, via=False):
+    """
+    Pay the maintainence cost and make your hotel look shining new!
+    """
     userid = ctx.author.id
     await open_estates(userid)
     userid = str(ctx.author.id)
@@ -2551,9 +2594,12 @@ async def maintain(ctx, via=False):
     if via: return embed
     await ctx.send(embed=embed)
 
-@bot.command()
+@bot.command(usage="", brief="Misc")
 @commands.check(general)
 async def alerts(ctx):
+    """
+    Turn alerts on/off
+    """
     embed = discord.Embed(title='Alerts System',
                           description='Get Alerts on pending loans, hotel maintainance, robberies etc straight to your DMs',
                           color=embedcolor)
@@ -2598,11 +2644,12 @@ class Alerts(discord.ui.View):
         await interaction.response.send_message(embed=embed, ephemeral=True)
         await alerts_state(ctx.author.id, 'off')
 
-@bot.command()
+@bot.command(usage="<user> <amount> [reason]", brief="Bank")
 @commands.check(general)
-async def transfer(ctx, togive:discord.Member = None, amount = None, *, reason = None):
-    if togive is None or amount is None:
-        return await ctx.send(f'{ctx.author.mention} The format for the command is: `e.transfer @user <amount> [reason]`')
+async def transfer(ctx, togive:discord.Member, amount, *, reason = None):
+    """
+    Send the money bank to bank and records an official statement for the same. All the statements can be viewed using `e.statements`
+    """
     current = bot.accounts[f'{ctx.author.id}']
     person = bot.accounts[f'{togive.id}']
 
@@ -2655,9 +2702,13 @@ async def transfer(ctx, togive:discord.Member = None, amount = None, *, reason =
 
     await ctx.send(embed=embed)
 
-@bot.command(aliases=['transactions', 'statements', 'trans'])
+@bot.command(aliases=['transactions', 'statements', 'trans'], usage="", brief="Bank")
 @commands.check(general)
 async def statement(ctx, *args):
+    """
+    View all the statements of your bank i.e. Credits and Debits till now.
+    Use can also use filters to sort them
+    """
     if '-u' not in args:
         member = ctx.author
     else:
@@ -2764,9 +2815,13 @@ async def statement(ctx, *args):
     image_bytes.seek(0)
     await ctx.send(file=discord.File(image_bytes, filename="statement.png"))
 
-@bot.command(aliases=['pf', 'level', 'p'])
+@bot.command(aliases=['pf', 'level', 'p', 'rank'], usage="[user]", brief="Fun")
 @commands.check(general)
 async def profile(ctx, member:discord.Member = None):
+    """
+    Check your rank card which includes global rank, server rank, net worth, achievements and lot more!
+    You can configure it using `e.configure` if you are a premium user
+    """
     if member is None:
         member = ctx.author
     bgdata = bot.bgdata.get(str(member.id), {'mc':[255, 42, 84], 'file':''})
@@ -2971,9 +3026,12 @@ async def profile(ctx, member:discord.Member = None):
 
     await ctx.send(file=discord.File(image_bytes, filename="profile.png"))
 
-@bot.command()
+@bot.command(usage="", brief="Stocks")
 @commands.check(general)
 async def stocks(ctx):
+    """
+    Check the stock for the day, buy/sell them or check the current value of your holdings!
+    """
     columns = ['Name', 'Highest   ', 'Lowest', 'Current', 'Volume']
     details = list(bot.current_stock)
     mydata = await perform_stuff(details)
@@ -3077,9 +3135,12 @@ class StocksBuySell(discord.ui.View):
             child.disabled = True
         await self.msg.edit(view=self)
 
-@bot.command()
+@bot.command(usage="<amount>", brief="Stocks")
 @commands.check(general)
 async def buystocks(ctx, amount, via=False):
+    """
+    Buy stocks at current price (can be viewed using `e.stocks)`
+    """
     userid = str(ctx.author.id)
     dperson = bot.accounts[userid]
     sperson = bot.stocks.setdefault(userid, 0)
@@ -3142,9 +3203,12 @@ async def buystocks(ctx, amount, via=False):
     bot.awards["stocks"] = sto
     await update_awards()
 
-@bot.command()
+@bot.command(usage="", brief="Stocks")
 @commands.check(general)
 async def sellstocks(ctx, amount, via=False):
+    """
+    Sell stocks at current price (can be viewed using `e.stocks)`
+    """
     userid = str(ctx.author.id)
     dperson = bot.accounts[userid]
     sperson = bot.stocks.setdefault(userid, 0)
@@ -3189,84 +3253,133 @@ async def sellstocks(ctx, amount, via=False):
     await ctx.send(embed=embed)
 
 class Help(discord.ui.View):
-    def __init__(self):
+    def __init__(self, user: discord.Member):
         super().__init__(timeout=None)
-        btns = [discord.ui.Button(label="Support Server", url=support_server),
-                discord.ui.Button(label="Invite URL", url=invite_url)]
-        for i in btns: self.add_item(i)
+        self.user = user
+        for i, j in enumerate(categories):
+            if i == 4:
+                self.add_item(discord.ui.Button(label="Support Server", url=support_server))
+            self.add_item(CategoryButton(j))
 
-@bot.command()
+        self.add_item(discord.ui.Button(label="Invite URL", url=invite_url))
+
+    async def interaction_check(self, interaction: discord.Interaction):
+        if interaction.user == self.user:
+            return True
+        await interaction.response.send_message("Not for u", ephemeral=True)
+        return False
+
+class CategoryButton(discord.ui.Button):
+    def __init__(self, label: str):
+        super().__init__(label=label, style=discord.ButtonStyle.green)
+
+    async def callback(self, interaction: discord.Interaction):
+        assert self.view is not None
+        view: Help = self.view
+        specify = self.label
+        selected_cat = str(specify).lower()
+        cmds = [x for x in bot.commands if not x.hidden and x.brief.lower() == selected_cat]
+        cmds = "\n".join([f"e.{i}" for i in cmds])
+        embed = discord.Embed(title=selected_cat.capitalize(), color=embedcolor)
+        embed.add_field(name=f"Commands:",
+                        value=f"```less\n{cmds}```\n__Select the command from the dropdown to expand it__",
+                        inline=False)
+        embed.set_footer(text='Bot developed by: AwesomeSam#7985', icon_url=bot.pfp)
+        allcmds = [x.name for x in bot.commands if not x.hidden and x.brief.lower() == specify.lower()]
+        opts = [discord.SelectOption(label=str(x).capitalize()) for x in allcmds]
+        view.clear_items()
+        view.add_item(CommandDropdown(opts))
+        await interaction.response.send_message(embed=embed, ephemeral=True, view=view)
+
+class Help2(discord.ui.View):
+    def __init__(self, user: discord.Member, cmd: str):
+        super().__init__(timeout=None)
+        self.user = user
+        allcmds = [x.name for x in bot.commands if not x.hidden and x.brief.lower() == cmd.lower()]
+        opts = [discord.SelectOption(label=str(x).capitalize()) for x in allcmds]
+        self.add_item(CommandDropdown(opts))
+
+    async def interaction_check(self, interaction: discord.Interaction):
+        if interaction.user == self.user:
+            return True
+        await interaction.response.send_message("Not for u", ephemeral=True)
+        return False
+
+class CommandDropdown(discord.ui.Select):
+    def __init__(self, opts: list):
+        super().__init__(options=opts)
+
+    async def callback(self, interaction: discord.Interaction):
+        cmd = bot.get_command(self.values[0])
+        if cmd.usage == "":
+            usage = f"e.{cmd.name}"
+        else:
+            usage = f"e.{cmd.name} {cmd.usage}"
+        if len(cmd.aliases) == 0:
+            aliases = "None"
+        else:
+            aliases = "\n".join([f"e.{al}" for al in cmd.aliases])
+        cd = bot.cooldown.get(cmd.name, {'duration':0})
+        val = f"{cmd.help}\n\n" \
+              f"**Category:** `{cmd.brief}`\n" \
+              f"**Cooldown:** `{cd['duration']}s`\n" \
+              f"**Usage:** `{usage}`\n" \
+              f"**Aliases:** ```less\n{aliases}```"
+        embed = discord.Embed(title=cmd.name.capitalize(), description=val, color=embedcolor)
+        embed.set_footer(text='Bot developed by: AwesomeSam#7985', icon_url=bot.pfp)
+        await interaction.response.send_message(embed=embed, ephemeral=True)
+
+@bot.command(usage="[command | category]", brief="Misc")
 @commands.check(general)
-async def help(ctx, specify=None):
+async def help(ctx, specify:str=None):
+    """
+    View the help for a category or a command.
+    """
     embed = discord.Embed(color=embedcolor,
-                          description=f'[Support Server]({support_server}) | [Invite Url]({invite_url})\nTo get help on a command, use `e.help <command name>`')
+                          description=f'[Support Server]({support_server}) | [Invite Url]({invite_url})\n\u200b')
     embed.set_author(name='Help', icon_url=bot.pfp)
-    embed.set_footer(text='Bot developed by: AwesomeSam#7985')
+    embed.set_footer(text='Bot developed by: AwesomeSam#7985', icon_url=bot.pfp)
     if specify is None:
-        for j in bot.help_json:
-            mylist = []
-            max_l = 0
-            for i in bot.help_json[j].keys():
-                if i == "category": continue
-                info = bot.help_json[j][i]['usage']
-                cmdl = len(info.split(' ')[0])
-                if cmdl > max_l:
-                    max_l = cmdl
-                mylist.append(info)
-            finallist = []
-            for cmds in mylist:
-                splitted = cmds.split(' ')
-                first = splitted[0]
-                first = first + ' '*(max_l-len(first))
-                splitted.pop(0)
-                splitted.insert(0, first)
-                finallist.append(' '.join(splitted))
-            content = '\n'.join(finallist)
-            embed.add_field(name=f'**● __{j}__**', value=f'```less\n{content}```', inline=False)
-        embed.add_field(name='\u200b', value=f'For more support, visit our Support Server (click button) or use `e.server`\n'
-                                             f'`<>` and `[]` are **not** required while using commands\n\n'
-                                             f'Syntax: `<>` = Required `[]` = Optional')
-        try:
-            await ctx.author.send(embed=embed, view=Help())
-            embed = discord.Embed(title=f'{economysuccess} You received a mail!', color=success_embed)
-            await ctx.reply(embed=embed)
-        except:
-            await ctx.send(embed=embed, view=Help())
-        return
-    x = bot.help_json.values()
-    notfound = True
-    for i in x:
-        for j in i.keys():
-            if j == 'category':
-                continue
-            available = []
-            available.append(j[2:])
-            info = i[j]
+        all_cats = "\n".join([f"● {i}" for i in categories])
+        embed.add_field(name=f"All Categories:", value=f"```\n{all_cats}```\n__Click the category below to get help on it__", inline=False)
+        await ctx.send(embed=embed, view=Help(ctx.author))
 
-            for k in info['aliases']:
-                available.append(k)
-            if specify.lower() in available:
-                alias_list = [f'{q}' for q in info['aliases']]
+    elif specify.lower() in [x.lower() for x in categories]:
 
-                for aliases in alias_list:
-                    if aliases[0:2] != 'e.':
-                        if aliases == 'None': continue
-                        alias_list.remove(aliases)
-                        aliases = 'e.' + aliases
-                        alias_list.insert(0, aliases)
-                embed = discord.Embed(color=embedcolor, title=f'Command: {j[2:]}', description=info['desc']+f'\n\n**Category:** `{i["category"]}`\n**Cooldown:** `{info["cooldown"]}s`\n**Usage:** `{info["usage"]}`')
-                embed.add_field(name='Aliases', value='```less\n'+'\n'.join(alias_list)+'```', inline=False)
-                embed.set_footer(text='Syntax: <> = required, [] = optional')
-                notfound = False
-                await ctx.send(embed=embed)
-                break
-    if notfound:
+        selected_cat = str(specify).lower()
+        cmds = [x for x in bot.commands if not x.hidden and x.brief.lower() == selected_cat]
+        cmds = "\n".join([f"e.{i}" for i in cmds])
+        embed.add_field(name=f"Category: `{selected_cat.capitalize()}`", value=f"```less\n{cmds}```\n__Select the command from the dropdown to expand it__", inline=False)
+        await ctx.send(embed=embed, view=Help2(ctx.author, selected_cat))
+
+    elif specify.lower() in [x.lower() for x in all_commands]:
+        cmd = bot.get_command(specify)
+        if cmd.usage == "":
+            usage = f"e.{cmd.name}"
+        else:
+            usage = f"e.{cmd.name} {cmd.usage}"
+        if len(cmd.aliases) == 0:
+            aliases = "None"
+        else:
+            aliases = "\n".join([f"e.{al}" for al in cmd.aliases])
+        cd = bot.cooldown.get(cmd.name, {'duration': 0})
+        val = f"{cmd.help}\n\n" \
+              f"**Category:** `{cmd.brief}`\n" \
+              f"**Cooldown:** `{cd['duration']}s`\n" \
+              f"**Usage:** `{usage}`\n" \
+              f"**Aliases:** ```less\n{aliases}```"
+        embed.description += f"\n{val}"
+        await ctx.send(embed=embed)
+    else:
         embed = discord.Embed(description=f'{economyerror} No help found or command doesn\'t exist!', color=error_embed)
         await ctx.send(embed=embed)
 
-@bot.command(aliases=['add_chl'])
+@bot.command(aliases=['add_chl'], usage="<#channel>", brief="Admin")
 @commands.check(general)
 async def set_chl(ctx, channel:discord.TextChannel):
+    """
+    Add a chennel to allowed channels where the bot responds to a message
+    """
     if ctx.message.author.guild_permissions.manage_channels or ctx.author.id in devs:
         pass
     else:
@@ -3283,9 +3396,12 @@ async def set_chl(ctx, channel:discord.TextChannel):
     embed = discord.Embed(description=f'{economysuccess} {channel.mention} added to list of registered channels successfully!', color=success_embed)
     await ctx.send(embed=embed)
 
-@bot.command(aliases=['rem_chl', 'remove_chl', 'delete_chl'])
+@bot.command(aliases=['rem_chl', 'remove_chl', 'delete_chl'], usage="<#channel>", brief="Admin")
 @commands.check(general)
 async def del_chl(ctx, channel:discord.TextChannel):
+    """
+    Delete a channel from the list of allowed channels where bot can respond
+    """
     if ctx.message.author.guild_permissions.manage_channels or ctx.author.id in devs:
         pass
     else:
@@ -3300,9 +3416,12 @@ async def del_chl(ctx, channel:discord.TextChannel):
     embed = discord.Embed(description=f'{economysuccess} {channel.mention} removed from list of registered channels successfully!', color=success_embed)
     await ctx.send(embed=embed)
 
-@bot.command(aliases=['show_chl'])
+@bot.command(aliases=['show_chl'], usage="<#channel>", brief="Admin")
 @commands.check(general)
 async def list_chl(ctx):
+    """
+    Show all the channels where the bot will respond to messages
+    """
     if ctx.message.author.guild_permissions.manage_channels or ctx.author.id in devs:
         pass
     else:
@@ -3314,9 +3433,13 @@ async def list_chl(ctx):
     embed.set_footer(text='Add a channel using e.set_chl <name>\nRemove a channel using e.del_chl <name>')
     await ctx.send(embed=embed)
 
-@bot.command()
+@bot.command(usage="<#channel>", brief="Admin")
 @commands.check(general)
 async def reset_chl(ctx):
+    """
+    Reset the channels. Bot can respond to every channel after this.
+    This operation cannot be undone!
+    """
     if ctx.message.author.guild_permissions.manage_channels or ctx.author.id in devs:
         pass
     else:
@@ -3327,9 +3450,12 @@ async def reset_chl(ctx):
     embed.set_footer(text='Add a channel using e.set_chl <name>\nRemove a channel using e.del_chl <name>')
     await ctx.send(embed=embed)
 
-@bot.command()
+@bot.command(usage="<user>", brief="Fun")
 @commands.check(general)
 async def rob(ctx, member:discord.Member):
+    """
+    Rob a user's wallet for some coins!
+    """
     if member == bot.user:
         pass
     success = random.randint(0, 100)
@@ -3398,9 +3524,12 @@ async def rob(ctx, member:discord.Member):
         embed = discord.Embed(title=f'{economyerror} Robbery Failed!', description=desc, color=error_embed)
     await ctx.send(embed=embed)
 
-@bot.command()
+@bot.command(usage="", brief="Fun")
 @commands.check(general)
 async def find(ctx):
+    """
+    Random chance of finding coins at weird places!
+    """
     chance = random.randint(1, 100)
     wallet = bot.accounts[str(ctx.author.id)]['wallet']
     if wallet < 50:
@@ -3418,9 +3547,12 @@ async def find(ctx):
     await update_accounts()
     await ctx.send(embed=embed)
 
-@bot.command(aliases=['store'])
+@bot.command(usage="[page]", brief="Market", aliases=["store"])
 @commands.check(general)
 async def shop(ctx, page:int=1):
+    """
+    Lists all the items you can buy! Check daily discounts and deals, next refresh time and proces of all items.
+    """
     if page <= 0: page = 1
     while True:
         if page*8 > len(storeitems):
@@ -3430,16 +3562,22 @@ async def shop(ctx, page:int=1):
     storeimg = await createstore((page)*8,(page+1)*8)
     await uploader.upload_file(ctx.channel, storeimg, "store.png")
 
-@bot.command(aliases=['inv'])
+@bot.command(aliases=['inv'], usage="[user]", brief="Market")
 @commands.check(general)
 async def inventory(ctx, member:discord.Member = None):
+    """
+    View the inventory of a user to check for items they own
+    """
     if member is None: member = ctx.author
     inv = await inventory_image(member.id)
     await uploader.upload_file(ctx.channel, inv, "inventory.png")
 
-@bot.command(aliases=['purchase'])
+@bot.command(aliases=['purchase'], usage="<item> [quantity]", brief="Market")
 @commands.check(general)
 async def buy(ctx, *, item):
+    """
+    Purchase an item from the shop
+    """
     a = str(item).split(' ')
     qty = 1
     try:
@@ -3514,17 +3652,23 @@ async def buy(ctx, *, item):
     await update_inv()
     await ctx.send(embed=embed)
 
-@bot.command()
+@bot.command(usage="", brief="Misc")
 @commands.check(general)
 async def server(ctx):
+    """
+    Join the bot's support server for any query, bug or suggestion!
+    """
     embed = discord.Embed(description=f'**Discord Support Server:** [Join Here]({support_server})\n'
-                                      f'Server Members: `idk lol`', color=embedcolor)
+                                      f'Server Members: `{bot.get_guild(708067789830750449).member_count}`', color=embedcolor)
     embed.set_author(icon_url=bot.pfp, name=f'{bot.user.name}')
     await ctx.send(embed=embed)
 
-@bot.command()
+@bot.command(usage="", brief="Misc")
 @commands.check(general)
 async def invite(ctx):
+    """
+    Invite the bot to your server!
+    """
     guilds = bot.guilds
     members = 0
     for i in guilds:
@@ -3538,9 +3682,12 @@ async def invite(ctx):
     embed.set_author(icon_url=bot.pfp, name=f'{bot.user.name}')
     await ctx.send(embed=embed)
 
-@bot.command()
+@bot.command(usage="<item>", brief="Market")
 @commands.check(general)
 async def use(ctx, *, item:str):
+    """
+    Use an item. This equips/unequips locks, unboxes chests and use the boosts!
+    """
     async def lock(shopitem):
         eq = userinv.setdefault('eq_lock', '')
         if eq != shopitem:
@@ -3615,16 +3762,22 @@ async def use(ctx, *, item:str):
     bot.inventory[str(ctx.author.id)] = userinv
     await update_inv()
 
-@bot.command()
+@bot.command(usage="", brief="Misc")
 @commands.check(general)
 async def ping(ctx):
+    """
+    Check the bot's ping with discord
+    """
     msg = await ctx.send('Pong!')
     ping = "{:.2f}".format(bot.latency*1000)
     await msg.edit(content=f'Pong! `{ping} ms`')
 
-@bot.command(aliases=["item"], pass_context=True)
+@bot.command(aliases=["item"], pass_context=True, usage="<item-name>", brief="Market")
 @commands.check(general)
 async def iteminfo(ctx, *, name:str, via:bool=False):
+    """
+    Check the item's description, rarity and the value for which it can be sold!
+    """
     found = False
     mychest, item = "", {}
     for k, v in bot.items.items():
@@ -3658,9 +3811,12 @@ async def iteminfo(ctx, *, name:str, via:bool=False):
     else:
         return {"embed":embed}
 
-@bot.command(aliases=['itemsinv'])
+@bot.command(aliases=['itemsinv'], usage="[user]", brief="Market")
 @commands.check(general)
 async def items(ctx, user:discord.User = None):
+    """
+    View all the items a user owns. Filter it according to rarity and/or quantity. Check out the iteminfo and sell directly from here.
+    """
     if user is None: user = ctx.author
 
     user_page_orignal = 1
@@ -3941,9 +4097,12 @@ class InventoryFilters(discord.ui.Select):
 
         await view.filter(interaction, rarities, filters)
 
-@bot.command(pass_context=True)
+@bot.command(pass_context=True, usage="<item> [quantity]", brief="Market")
 @commands.check(general)
 async def sell(ctx, *, item, via=False):
+    """
+    Sell an item for coins!
+    """
     a = str(item).split(' ')
     qty = 1
     try:
@@ -4095,17 +4254,23 @@ class Games(discord.ui.View):
             i.disabled = True
         await self.msg.edit(view=self)
 
-@bot.command()
+@bot.command(usage="", brief="Games")
 @commands.check(general)
 async def games(ctx):
+    """
+    Shows all the available games you can play
+    """
     view = Games(ctx)
     msg = await ctx.send(f"**Welcome to Gamebot Arcade <:gamepad:849117058875916308>**\nChoose your game below:",
                          view=view)
     view.msg = msg
 
-@bot.command(aliases=["ms", "mine"], pass_context=True, invoke_without_command=True)
+@bot.command(aliases=["ms", "mine"], pass_context=True, usage="", brief="Games")
 @commands.check(general)
 async def minesweeper(ctx):
+    """
+    Play minesweeper and earn coins!
+    """
     ifactive = ctx.author.id in bot.activems["users"]
     if ifactive:
         a = await ctx.send(f"You have already started a game earlier, please finish it.\n"
@@ -4472,17 +4637,17 @@ class ConfirmTTT(discord.ui.View):
                        f"Click 'Accept' to start. Waiting on: {' '.join([x.mention for x in bot.waitings[self.user.id]])}"
                 await interaction.response.edit_message(content=cont)
 
-@bot.command(aliases=["ttt"])
+@bot.command(aliases=["ttt"], usage="<user> <bet-amount>", brief="Games")
 @commands.check(general)
 async def tictactoe(ctx, user:discord.Member, bet:int=100):
+    """
+    Play the classic tic-tac-toe against your friend and get coins if you win!
+    """
     if user == ctx.author:
         return await ctx.send("Bruh you cant start a game with yourself")
     if user.bot:
         return await ctx.send("You can't challenge a bot lmao. You'll always lose...")
     bet = int(bet)
-    if bet not in [100, 200, 250, 500, 1000, 2000, 2500, 5000, 10000, 20000]:
-        return await ctx.send(f"The betting amount should be {', '.join(str(x) for x in [100, 200, 250, 500, 1000, 2000, 2500, 5000, 10000])} "
-                              f"or 20000")
     bot.waitings[ctx.author.id] = [ctx.author, user]
 
     cont = f"{ctx.author.mention} vs {user.mention}\n" \
@@ -4533,9 +4698,12 @@ class HeadTails(discord.ui.View):
             i.disabled = True
         await self.msg.edit(view=self)
 
-@bot.command(aliases=["bet"])
+@bot.command(aliases=["bet"], usage="[bet]", brief="Games")
 @commands.check(general)
 async def flip(ctx, bet:int=None):
+    """
+    Flip a coin for 50-50 chances to win and lose! If you win, you get back 1.5x of your bet & if you lose you get back nothing.
+    """
     if bet is None:
         def check(msg):
             return msg.author == ctx.author and msg.channel == ctx.channel
@@ -4583,7 +4751,7 @@ class RollDice(discord.ui.View):
             color = embedcolor
         elif win > self.win:
             cont = f"Congratulations! You win back {int(self.bet / 2)} coins"
-            color = error_embed
+            color = success_embed
             bot.accounts[str(self.user.id)]["wallet"] += int(self.bet * 0.5)
         else:
             cont = f"You lose hahaha. Nothing for you!"
@@ -4596,9 +4764,12 @@ class RollDice(discord.ui.View):
         await self.msg.edit(embed=embed)
         await update_accounts()
 
-@bot.command()
+@bot.command(usage="[bet]", brief="Games")
 @commands.check(general)
 async def roll(ctx, bet:int=None):
+    """
+    Roll a die. If your number is greater than bot's number, you get back 1.5x of your bet.
+    """
     if bet is None:
         def check(msg):
             return msg.author == ctx.author and msg.channel == ctx.channel
@@ -4617,9 +4788,12 @@ async def roll(ctx, bet:int=None):
     msg = await ctx.send(embed=embed, view=view)
     view.msg = msg
     
-@bot.command()
+@bot.command(usage="[user]", brief="Market")
 @commands.check(general)
 async def trade(ctx, user: discord.Member= None):
+    """
+    Start a trade with a user! You can exchange your items and have fun
+    """
     if user is None:
         await ctx.reply("Mention the user you would like to trade with:")
         def check(msg):
@@ -4974,8 +5148,12 @@ class PreviousPage(discord.ui.Button):
         await view.new_opts(interaction.user, "add")
         await interaction.response.edit_message(view=view)
 
-@bot.command()
+@bot.command(usage="[bet]", brief="Games")
+@commands.check(general)
 async def hangman(ctx, bet: int=100):
+    """
+    Play hangman with the bot. You get six lives, and if you guess the correct word get double the coins!
+    """
     if bet == 0:
         embed = discord.Embed(description=f"{economyerror} {random.choice(bot.phrases['zero'])}", color=error_embed)
         return await ctx.send(embed=embed)
@@ -5021,7 +5199,7 @@ async def hangman(ctx, bet: int=100):
                                       f"Chances Left: `6`",
                           color=embedcolor)
     embed.set_thumbnail(url=images[wrong])
-    msg = await ctx.author.send(embed=embed)
+    msg_ = await ctx.author.send(embed=embed)
     await load.delete()
     await ctx.reply("In ya DMs!")
     while True:
@@ -5056,7 +5234,7 @@ async def hangman(ctx, bet: int=100):
                                               f"Chances Left: `{6 - wrong}`",
                                   color=embedcolor)
             embed.set_thumbnail(url=images[wrong])
-            await ctx.author.send(embed=embed)
+            await msg_.edit(embed=embed)
         except:
             return
     if wrong == 6:
@@ -5069,8 +5247,8 @@ async def hangman(ctx, bet: int=100):
                               description=f"Yay you win! Nice guessing the word `{word}` :D",
                               color=success_embed)
         embed.set_thumbnail(url=images[wrong])
-        bot.accounts[str(ctx.author.id)]["wallet"] += bet*2
-    await ctx.author.send(embed=embed)
+        bot.accounts[str(ctx.author.id)]["wallet"] += bet*1.5
+    await msg.edit_(embed=embed)
 
 bot.connected_ = False
 @bot.event
@@ -5081,11 +5259,18 @@ async def on_connect():
         bot.connected_ = True
         await create_stuff()
 
+categories = []
 for i in bot.commands:
     if i.hidden: continue
     for j in i.aliases:
         all_commands.append(j)
     all_commands.append(i.name)
+
+for i in bot.commands:
+    if i.hidden: continue
+    if i.brief in categories: continue
+    categories.append(i.brief)
+categories.sort()
 
 bot.token = "ODMyMDgzNzE3NDE3MDc0Njg5.YHeoWQ._O5uoMS_I7abKdI_YzVb9BuEHzs"
 bot.run(bot.token)

@@ -4,7 +4,8 @@
       "stocks"
     ],
     "713056818972066140": [
-      "stocks"
+      "stocks",
+      "unbox"
     ]
   },
   "games": {
@@ -71,7 +72,16 @@
       "Broken CD",
       "Broken Mouse",
       "A wallet",
-      "Bronze Spoon"
+      "Bronze Spoon",
+      "Coffee Mug",
+      "Laser Printer",
+      "Tennis Ball",
+      "Leather Shoes",
+      "Maths Book",
+      "Black Pen",
+      "Cloth Piece",
+      "N95 Mask",
+      "Book Stand"
     ]
   }
 }
