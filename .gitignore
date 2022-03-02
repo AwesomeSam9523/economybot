@@ -2,3 +2,4 @@
 .idea/
 /emojis/
 __pycache__/
+.env

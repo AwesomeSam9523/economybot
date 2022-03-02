@@ -3,206 +3,23 @@ t1 = time.time()
 import datetime, csv, threading, functools, asyncio, discord, operator, math
 import json, random, os, traceback, difflib, discord_files, aiohttp, copy
 from discord.ext import commands, tasks
-from discord.ext.commands import *
 from prettytable import PrettyTable
 import matplotlib.pyplot as plt
 from PIL import Image, ImageDraw, ImageFont, ImageEnhance, ImageFilter, ImageSequence, ImageColor
 from io import BytesIO
 from concurrent.futures import ThreadPoolExecutor
-from asteval import Interpreter
-aeval = Interpreter()
+from utils import *
 print(f"Imports Complete in {float('{:.2f}'.format(time.time()-t1))} secs")
 tnew = time.time()
-
-class EconomyBot(commands.Bot):
-    def __init__(self):
-        self.unsaved = {}
-        self.phrases = {}
-        self.current_stock = []
-        self.total_lines = 0
-        self.pfp = ''
-        self.raw_status = ''
-        self.shopc = {}
-        self.items = {}
-        self.emotes = {}
-        self.unboxbgs = {}
-        self.allitems = {'Rotten Tomato': 'https://cdn.discordapp.com/attachments/837564505952747520/884298671930372096/unboxing.gif', 'Cloth Piece': 'https://cdn.discordapp.com/attachments/837564505952747520/884298761008975892/unboxing.gif', 'Office Bag': 'https://cdn.discordapp.com/attachments/837564505952747520/884298815513952307/unboxing.gif', 'Spray Can': 'https://cdn.discordapp.com/attachments/837564505952747520/884298871495344168/unboxing.gif', 'Black Pen': 'https://cdn.discordapp.com/attachments/837564505952747520/884298928277835826/unboxing.gif', 'Broken Mouse': 'https://cdn.discordapp.com/attachments/837564505952747520/884298985580408862/unboxing.gif', 'N95 Mask': 'https://cdn.discordapp.com/attachments/837564505952747520/884299042614554694/unboxing.gif', 'Dead Calculator': 'https://cdn.discordapp.com/attachments/837564505952747520/884299094749745152/unboxing.gif', 'Leather Shoes': 'https://cdn.discordapp.com/attachments/837564505952747520/884299151947468850/unboxing.gif', 'Wooden Stick': 'https://cdn.discordapp.com/attachments/837564505952747520/884299205814943804/unboxing.gif', 'Broken String': 'https://cdn.discordapp.com/attachments/837564505952747520/884299266439405599/unboxing.gif', 'Mouse Pad': 'https://cdn.discordapp.com/attachments/837564505952747520/884299319820288020/unboxing.gif', 'Bronze Spoon': 'https://cdn.discordapp.com/attachments/837564505952747520/884299381682102292/unboxing.gif', 'Flower Vase': 'https://cdn.discordapp.com/attachments/837564505952747520/884299441077637120/unboxing.gif', 'Maths Book': 'https://cdn.discordapp.com/attachments/837564505952747520/884299498698965062/unboxing.gif', 'Charger': 'https://cdn.discordapp.com/attachments/837564505952747520/884299557301800960/unboxing.gif', 'Wall Clock': 'https://cdn.discordapp.com/attachments/837564505952747520/884299620279279696/unboxing.gif', 'Pen Stand': 'https://cdn.discordapp.com/attachments/837564505952747520/884299691716640808/unboxing.gif', 'Book Stand': 'https://cdn.discordapp.com/attachments/837564505952747520/884299761048506458/unboxing.gif', 'Magnifying Glass': 'https://cdn.discordapp.com/attachments/837564505952747520/884299815809327124/unboxing.gif', 'Lollipop': 'https://cdn.discordapp.com/attachments/837564505952747520/884299882087723038/unboxing.gif', 'Eaten Chocolate': 'https://cdn.discordapp.com/attachments/837564505952747520/884299941256777779/unboxing.gif', 'Lighter': 'https://cdn.discordapp.com/attachments/837564505952747520/884300000534872104/unboxing.gif', 'Tennis Ball': 'https://cdn.discordapp.com/attachments/837564505952747520/884300063340372058/unboxing.gif', 'Rubics Cube': 'https://cdn.discordapp.com/attachments/837564505952747520/884300126347210792/unboxing.gif', 'Hourglass': 'https://cdn.discordapp.com/attachments/837564505952747520/884300185558220800/unboxing.gif', 'Coffee Mug': 'https://cdn.discordapp.com/attachments/837564505952747520/884300253384306698/unboxing.gif', 'Broken CD': 'https://cdn.discordapp.com/attachments/837564505952747520/884300312574304266/unboxing.gif', 'A wallet': 'https://cdn.discordapp.com/attachments/837564505952747520/884300386612158464/unboxing.gif', 'RC Drone': 'https://cdn.discordapp.com/attachments/837564505952747520/884300449354764318/unboxing.gif', 'Copper Wire': 'https://cdn.discordapp.com/attachments/837564505952747520/884300511413694464/unboxing.gif', 'Gold Chain': 'https://cdn.discordapp.com/attachments/837564505952747520/884300577046159410/unboxing.gif', 'Headphones': 'https://cdn.discordapp.com/attachments/837564505952747520/884300644171788298/unboxing.gif', 'Party Speakers': 'https://cdn.discordapp.com/attachments/837564505952747520/884300701260460073/unboxing.gif', 'Mobile Phone': 'https://cdn.discordapp.com/attachments/837564505952747520/884300759464833044/unboxing.gif', 'Electric Guitar': 'https://cdn.discordapp.com/attachments/837564505952747520/884300815634956328/unboxing.gif', 'Travel Bag': 'https://cdn.discordapp.com/attachments/837564505952747520/884300870706151454/unboxing.gif', 'Mini Boom Box': 'https://cdn.discordapp.com/attachments/837564505952747520/884300922396758086/unboxing.gif', 'Broken Television': 'https://cdn.discordapp.com/attachments/837564505952747520/884300982572425286/unboxing.gif', 'Gaming Chair': 'https://cdn.discordapp.com/attachments/837564505952747520/884301042056056932/unboxing.gif', 'Antique Painting': 'https://cdn.discordapp.com/attachments/837564505952747520/884301102491783188/unboxing.gif', 'WIFI Router': 'https://cdn.discordapp.com/attachments/837564505952747520/884301170707922954/unboxing.gif', 'Gold Spectacles': 'https://cdn.discordapp.com/attachments/837564505952747520/884301226626388028/unboxing.gif', 'Piano': 'https://cdn.discordapp.com/attachments/837564505952747520/884301290157510707/unboxing.gif', 'Electric Drums': 'https://cdn.discordapp.com/attachments/837564505952747520/884301353571213383/unboxing.gif', 'Laptop': 'https://cdn.discordapp.com/attachments/837564505952747520/884301429873979432/unboxing.gif', 'Laser Printer': 'https://cdn.discordapp.com/attachments/837564505952747520/884301503706312744/unboxing.gif', 'Money Bag': 'https://cdn.discordapp.com/attachments/837564505952747520/884301568390873108/unboxing.gif', 'Gold Brick': 'https://cdn.discordapp.com/attachments/837564505952747520/884301655678525510/unboxing.gif', 'War Sword': 'https://cdn.discordapp.com/attachments/837564505952747520/884301729921896499/unboxing.gif'}
-        self.cachedinv = {}
-        self.used = {}
-        self.ms = {}
-        self.activems = {"users": [], "games":[]}
-        self.waitings = {}
-        self.status = []
-        self.globaltrades = []
-        self.random_status = True
-        self.maint = False
-        self.cooldown = {}
-        with open("files/average.json", "r") as f: self.avg = json.load(f)
-        with open("files/admin.json", "r") as f: self.admin = json.load(f)
-        with open("files/estates.json", "r") as f: self.estates = json.load(f)
-        with open("files/alerts.json", "r") as f: self.alertsinfo = json.load(f)
-        with open("files/xp.json", "r") as f: self.xp = json.load(f)
-        with open("files/statements.json", "r") as f: self.statements = json.load(f)
-        with open("files/stocks.json", "r") as f: self.stocks = json.load(f)
-        with open("files/accounts.json", "r") as f: self.accounts = json.load(f)
-        with open("files/badges.json", "r") as f: self.badges = json.load(f)
-        with open("files/inventory.json", "r") as f: self.inventory = json.load(f)
-        with open("files/awards.json", "r") as f: self.awards = json.load(f)
-        with open("files/bgdata.json", "r") as f: self.bgdata = json.load(f)
-
-        super().__init__(command_prefix=bot.when_mentioned_or("e.", "E."), intents=discord.Intents.all(), case_insensitive=True)
 
 bot = EconomyBot()
 uploader = discord_files.ConcurrentUploader(bot)
 bot.launch_time = datetime.datetime.utcnow()
 bot.dev = 0
-bot.remove_command('help')
 bot.loop.set_debug(True)
 bot.loop.slow_callback_duration = 0.3
 print(f'Bot Initialized in {float("{:.2f}".format(time.time()-tnew))} secs')
 tnew = time.time()
-devs = [669816890163724288, 771601176155783198, 713056818972066140]
-staff = [669816890163724288, 771601176155783198, 619377929951903754, 713056818972066140, 517402093066256404, 459350068877852683]
-disregarded = []
-embedcolor = 3407822
-loading = "<a:EconomyLoading:884701041097060382>"
-
-support_server = 'https://discord.gg/aMqWWTunrJ'
-invite_url = 'https://discord.com/api/oauth2/authorize?client_id=832083717417074689&permissions=392256&scope=bot'
-all_commands = []
-bank_details = {
-    1: {"name":'Common Finance Bank Ltd.', "rate":3, "tier":"I"},
-    2: {"name":'National Bank Pvt. Ltd.', "rate":5, "tier":"II"},
-    3: {"name":'International Bank of Finance Ltd.', "rate":7, "tier":"III"}
-}
-getestates_thumb = {
-  "1": "https://cdn.discordapp.com/attachments/837564505952747520/863096662813573160/file.png",
-  "2": "https://cdn.discordapp.com/attachments/837564505952747520/863096678865305620/file.png",
-  "3": "https://cdn.discordapp.com/attachments/837564505952747520/863096689282908201/file.png",
-  "4": "https://cdn.discordapp.com/attachments/837564505952747520/863096698753777715/file.png",
-  "5": "https://cdn.discordapp.com/attachments/837564505952747520/863096712674279464/file.png",
-  "6": "https://cdn.discordapp.com/attachments/837564505952747520/863096721550213120/file.png",
-  "7": "https://cdn.discordapp.com/attachments/837564505952747520/863096735307661328/file.png",
-  "8": "https://cdn.discordapp.com/attachments/837564505952747520/863096749349797939/file.png",
-  "9": "https://cdn.discordapp.com/attachments/837564505952747520/863096755993575424/file.png",
-  "10": "https://cdn.discordapp.com/attachments/837564505952747520/863096769843953694/file.png",
-  "11": "https://cdn.discordapp.com/attachments/837564505952747520/863096776131477514/file.png",
-  "12": "https://cdn.discordapp.com/attachments/837564505952747520/863096790915219456/file.png",
-  "13": "https://cdn.discordapp.com/attachments/837564505952747520/863096799425331200/file.png",
-  "14": "https://cdn.discordapp.com/attachments/837564505952747520/863096816592355328/file.png",
-  "15": "https://cdn.discordapp.com/attachments/837564505952747520/863096830647468082/file.png",
-  "16": "https://cdn.discordapp.com/attachments/837564505952747520/863096839246708786/file.png",
-  "17": "https://cdn.discordapp.com/attachments/837564505952747520/863096852215234640/file.png",
-  "18": "https://cdn.discordapp.com/attachments/837564505952747520/863096868589404170/file.png",
-  "19": "https://cdn.discordapp.com/attachments/837564505952747520/863096879696445470/file.png",
-  "20": "https://cdn.discordapp.com/attachments/837564505952747520/863096898818277436/file.png",
-  "21": "https://cdn.discordapp.com/attachments/837564505952747520/863096905348153374/file.png",
-  "22": "https://cdn.discordapp.com/attachments/837564505952747520/863096918074982460/file.png",
-  "23": "https://cdn.discordapp.com/attachments/837564505952747520/863096933940461588/file.png",
-  "24": "https://cdn.discordapp.com/attachments/837564505952747520/863096949799649280/file.png",
-  "25": "https://cdn.discordapp.com/attachments/837564505952747520/863096964958388245/file.png",
-  "26": "https://cdn.discordapp.com/attachments/837564505952747520/863096978476761128/file.png",
-  "27": "https://cdn.discordapp.com/attachments/837564505952747520/863096996974166037/file.png",
-  "28": "https://cdn.discordapp.com/attachments/837564505952747520/863097011842449458/file.png",
-  "29": "https://cdn.discordapp.com/attachments/837564505952747520/863097028343103508/file.png",
-  "30": "https://cdn.discordapp.com/attachments/837564505952747520/863097044230864896/file.png"
-}
-estates_tasks = {
-    1:'Add a room',
-    2:'Improve Restaurant',
-    3:'Add a room',
-    4:'Build a store',
-    5:'Add more items in store',
-    6:'Add a room',
-    7:'Add a Helper Desk',
-    8:'Improve Helper Desk',
-    9:'Add a Presidential Suite',
-    10:'Upgrade Rooms and Suite',
-    11:'Add Laundary Service',
-    12:'Expand Laundary',
-    13:'Add Elevator',
-    14:'Improve Rooms',
-    15:'Improve Meals Variety and Quality',
-    16:'Expand Kitchen',
-    17:'Add two Master Chef',
-    18:'Build second floor and add Cafè',
-    19:'Build a Gym',
-    20:'Improve Service Speed and Cleanliness',
-    21:'Build a Casino',
-    22:'Build a Swimming Pool',
-    23:'Build a Night Bar',
-    24:'Add Valet Parking',
-    25:'Add a Movie Theatre',
-    26:'Add a Voilenist to entertain Guests',
-    27:'Add a Pianoist to Welcome VIPs',
-    28:'Add a Pet Store',
-    29:'Add Decorations like Paintings and Plants',
-    30:'Maxed Out'
-}
-xp_levels = {
-100:1,
-250:2,
-500:3,
-800:4,
-1200:5,
-1700:6,
-2200:7,
-3000:8,
-3800:9,
-4700:10,
-5800:11,
-8000:12,
-9300:13,
-10500:14,
-12000:15,
-13700:16,
-16300:17,
-18000:18,
-19800:19,
-22000:20,
-24500:21,
-26700:22,
-29000:23,
-31500:24,
-34000:25,
-37200:26,
-40500:27,
-43800:28,
-46800:29,
-50000:30,
-54500:31,
-60000:32,
-66000:33,
-73000:34,
-83000:35,
-95000:36,
-110000:37,
-130000:38,
-165000:39,
-200000:40,
-230000:41,
-270000:42,
-325000:43,
-395000:44,
-470000:45,
-560000:46,
-650000:47,
-740000:48,
-850000:49,
-1000000:50
-}
-items_imgs = {'A wallet': 'https://cdn.discordapp.com/attachments/839080243485736970/881416732621819954/A_wallet.PNG', 'Antique Painting': 'https://cdn.discordapp.com/attachments/839080243485736970/881416745473146920/Antique_Painting.png', 'Black Pen': 'https://cdn.discordapp.com/attachments/839080243485736970/881416749159940096/Black_Pen.png', 'Book Stand': 'https://cdn.discordapp.com/attachments/839080243485736970/881416752653807677/Book_Stand.png', 'Broken CD': 'https://cdn.discordapp.com/attachments/839080243485736970/881416761101156383/Broken_CD.PNG', 'Broken Mouse': 'https://cdn.discordapp.com/attachments/839080243485736970/881416764582408212/Broken_Mouse.PNG', 'Broken String': 'https://cdn.discordapp.com/attachments/839080243485736970/881416769489739796/Broken_String.PNG', 'Broken Television': 'https://cdn.discordapp.com/attachments/839080243485736970/881416771985371146/Broken_Television.png', 'Bronze Spoon': 'https://cdn.discordapp.com/attachments/839080243485736970/881416774883622973/Bronze_Spoon.PNG', 'Charger': 'https://cdn.discordapp.com/attachments/839080243485736970/881416789026811964/Charger.PNG', 'Cloth Piece': 'https://cdn.discordapp.com/attachments/839080243485736970/881416792302555186/Cloth_Piece.PNG', 'Coffee Mug': 'https://cdn.discordapp.com/attachments/839080243485736970/881416796933062727/Coffee_Mug.png','Copper Wire': 'https://cdn.discordapp.com/attachments/839080243485736970/881416805887918130/Copper_Wire.PNG', 'Dead Calculator': 'https://cdn.discordapp.com/attachments/839080243485736970/881416811512487936/Dead_Calculator.PNG', 'Eaten Chocolate': 'https://cdn.discordapp.com/attachments/839080243485736970/881416814901477406/Eaten_Chocolate.PNG', 'Electric Drums': 'https://cdn.discordapp.com/attachments/839080243485736970/881416826326753350/Electric_Drums.png', 'Electric Guitar': 'https://cdn.discordapp.com/attachments/839080243485736970/881416831989088336/Electric_Guitar.PNG', 'Flower Vase': 'https://cdn.discordapp.com/attachments/839080243485736970/881416836938350602/Flower_Vase.PNG', 'Gaming Chair': 'https://cdn.discordapp.com/attachments/839080243485736970/881416841984081950/Gaming_Chair.png', 'Gold Brick': 'https://cdn.discordapp.com/attachments/839080243485736970/881416848481062982/Gold_Brick.png', 'Gold Chain': 'https://cdn.discordapp.com/attachments/839080243485736970/881416854814482472/Gold_Chain.PNG', 'Gold Spectacles': 'https://cdn.discordapp.com/attachments/839080243485736970/881416858589339668/Gold_Spectacles.png', 'Headphones': 'https://cdn.discordapp.com/attachments/839080243485736970/881416862645252117/Headphones.PNG', 'Hourglass': 'https://cdn.discordapp.com/attachments/839080243485736970/881416864968896522/Hourglass.PNG', 'Laptop': 'https://cdn.discordapp.com/attachments/839080243485736970/881416869666512926/Laptop.png', 'Laser Printer': 'https://cdn.discordapp.com/attachments/839080243485736970/881416872342462514/Laser_Printer.png', 'Leather Shoes': 'https://cdn.discordapp.com/attachments/839080243485736970/881416883201536000/Leather_Shoes.PNG', 'Lighter': 'https://cdn.discordapp.com/attachments/839080243485736970/881416891137159258/Lighter.PNG', 'Lollipop': 'https://cdn.discordapp.com/attachments/839080243485736970/881416896375828510/Lollipop.PNG', 'Magnifying Glass': 'https://cdn.discordapp.com/attachments/839080243485736970/881416901983612988/Magnifying_Glass.PNG', 'Maths Book': 'https://cdn.discordapp.com/attachments/839080243485736970/881416909491404820/Maths_Book.PNG', 'Mini Boom Box': 'https://cdn.discordapp.com/attachments/839080243485736970/881416916013551677/Mini_Boom_Box.png', 'Mobile Phone': 'https://cdn.discordapp.com/attachments/839080243485736970/881416920623099924/Mobile_Phone.PNG', 'Money Bag': 'https://cdn.discordapp.com/attachments/839080243485736970/881416925425569792/Money_Bag.PNG', 'Mouse Pad': 'https://cdn.discordapp.com/attachments/839080243485736970/881416932576878602/Mouse_Pad.PNG', 'N95 Mask': 'https://cdn.discordapp.com/attachments/839080243485736970/881416936993460254/N95_Mask.PNG', 'Office Bag': 'https://cdn.discordapp.com/attachments/839080243485736970/881416941741436938/Office_Bag.PNG', 'Party Speakers': 'https://cdn.discordapp.com/attachments/839080243485736970/881416946749431848/Party_Speakers.PNG', 'Pen Stand': 'https://cdn.discordapp.com/attachments/839080243485736970/881416951916802068/Pen_Stand.PNG', 'Piano': 'https://cdn.discordapp.com/attachments/839080243485736970/881416959286181978/Piano.png', 'RC Drone': 'https://cdn.discordapp.com/attachments/839080243485736970/881416970019414056/RC_Drone.PNG', 'Rotten Tomato': 'https://cdn.discordapp.com/attachments/839080243485736970/881416973660082236/Rotten_Tomato.PNG', 'Rubics Cube': 'https://cdn.discordapp.com/attachments/839080243485736970/881416977443323934/Rubics_Cube.PNG', 'Spray Can': 'https://cdn.discordapp.com/attachments/839080243485736970/881416986448523284/Spray_Can.PNG', 'Tennis Ball': 'https://cdn.discordapp.com/attachments/839080243485736970/881416990139490384/Tennis_Ball.png', 'Travel Bag': 'https://cdn.discordapp.com/attachments/839080243485736970/881416993671114752/Travel_Bag.PNG', 'Wall Clock': 'https://cdn.discordapp.com/attachments/839080243485736970/881416997743788032/Wall_Clock.PNG', 'War Sword': 'https://cdn.discordapp.com/attachments/839080243485736970/881417004106539028/War_Sword.png', 'WIFI Router': 'https://cdn.discordapp.com/attachments/839080243485736970/881417011522064405/WIFI_Router.png', 'Wooden Stick': 'https://cdn.discordapp.com/attachments/839080243485736970/881417017154998372/Wooden_Stick.PNG'}
-
-usercmds = {}
-stock_names = ['Ava', 'Neil', 'Ryan', 'Anthony', 'Bernadette', 'Lauren', 'Justin', 'Matt', 'Wanda', 'James', 'Emily', 'Vanessa', 'Carl', 'Fiona', 'Stephanie', 'Pippa', 'Phil', 'Carol', 'Liam', 'Michael', 'Ella', 'Amanda', 'Caroline', 'Nicola', 'Sean', 'Oliver', 'Kylie', 'Rachel', 'Leonard', 'Julian', 'Richard', 'Peter', 'Irene', 'Dominic', 'Connor', 'Dorothy', 'Gavin', 'Isaac', 'Karen', 'Kimberly', 'Abigail', 'Yvonne', 'Steven', 'Felicity', 'Evan', 'Bella', 'Alison', 'Diane', 'Joan', 'Jan', 'Wendy', 'Nathan', 'Molly', 'Charles', 'Victor', 'Sally', 'Rose', 'Robert', 'Claire', 'Theresa', 'Grace', 'Keith', 'Stewart', 'Andrea', 'Alexander', 'Chloe', 'Nicholas', 'Edward', 'Deirdre', 'Anne', 'Joseph', 'Alan', 'Rebecca', 'Jane', 'Natalie', 'Cameron', 'Owen', 'Eric', 'Gabrielle', 'Sonia', 'Tim', 'Sarah', 'Madeleine', 'Megan', 'Lucas', 'Joe', 'Brandon', 'Brian', 'Jennifer', 'Alexandra', 'Adrian', 'John', 'Mary', 'Tracey', 'Jasmine', 'Penelope', 'Hannah', 'Thomas', 'Angela', 'Warren', 'Blake', 'Simon', 'Audrey', 'Frank', 'Samantha', 'Dan', 'Victoria', 'Paul', 'Jacob', 'Heather', 'Una', 'Lily', 'Carolyn', 'Jonathan', 'Ian', 'Piers', 'William', 'Gordon', 'Dylan', 'Olivia', 'Jake', 'Leah', 'Jessica', 'David', 'Katherine', 'Amelia', 'Benjamin', 'Boris', 'Sebastian', 'Lisa', 'Diana', 'Michelle', 'Emma', 'Sam', 'Stephen', 'Faith', 'Kevin', 'Austin', 'Jack', 'Ruth', 'Colin', 'Trevor', 'Joanne', 'Virginia', 'Anna', 'Max', 'Adam', 'Maria', 'Sophie', 'Sue', 'Andrew', 'Harry', 'Amy', 'Christopher', 'Donna', 'Melanie', 'Elizabeth', 'Lillian', 'Julia', 'Christian', 'Luke', 'Zoe', 'Joshua', 'Jason']
-xp_timeout = []
-warn1 = []
-warn2 = []
-storeitems = []
-error_embed = 16290332
-success_embed = 2293571
-economysuccess = '<a:EconomySuccess:843499891522797568>'
-economyerror = '<a:EconomyError:843499981695746098>'
 
 def is_dev(ctx):
     return ctx.author.id in devs
@@ -448,7 +265,7 @@ async def clear_dues():
         user = bot.get_user(i)
         if user is None:
             continue
-        embed = discord.Embed(title='Stock Ended', description=f'The current stock ended and `{await commait(bulk)}` coins have been added to your bank.')
+        embed = discord.Embed(title='Stock Ended', description=f'The current stock ended and `{commait(bulk)}` coins have been added to your bank.')
         embed.timestamp = datetime.datetime.utcnow()
         embed.set_author(name=f'{user.name}', icon_url=user.display_avatar.url)
         embed.set_footer(text='Economy Bot', icon_url=bot.pfp)
@@ -570,7 +387,7 @@ async def shop_update():
     newitem["special"] = True
     disc = int(newitem["price"].replace(",", ""))
     percent = random.randint(10, 50)
-    newitem["disc"] = await commait(int(disc*(100-percent)/100))
+    newitem["disc"] = commait(int(disc*(100-percent)/100))
     newitem["percent"] = percent
     storeitems.append(newitem)
     config['updated'] = ct
@@ -640,7 +457,7 @@ async def alerts_state(userid, state:str):
 
     await update_alerts()
 
-async def commait(val):
+def commait(val):
     return "{:,}".format(val)
 
 async def current_time():
@@ -675,7 +492,7 @@ async def load_shop():
 
 @tasks.loop(minutes=10)
 async def bot_status():
-    current_status = random.choice(bot.status)
+    current_status = random.choice(bot._status)
     while True:
         if current_status["status"] == bot.raw_status: continue
         else: break
@@ -684,7 +501,7 @@ async def bot_status():
     users = len(bot.users)
     s_type = current_status["type"]
     bot.raw_status = current_status["status"]
-    s_status = bot.raw_status.format(users=await commait(users), guilds=await commait(guilds))
+    s_status = bot.raw_status.format(users=commait(users), guilds=commait(guilds))
     if s_type == "p":
         await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.playing, name=s_status))
     elif s_type == "w":
@@ -696,13 +513,14 @@ async def create_stuff():
     tnew = time.time()
     await bot.wait_until_ready()
     print("Ready")
+    return
     mybot = bot.get_user(832083717417074689)
     bot.pfp = mybot.display_avatar.url
     tnew = time.time()
     await load_shop()
     with open('files/bot_data.json', 'r') as c:
         data = json.load(c)
-    bot.status = data["status"]
+    bot._status = data["status"]
     asyncio.create_task(stock_update())
     avg_update.start()
     shop_update.start()
@@ -1120,15 +938,9 @@ async def on_message(message):
     if message.content.lower() == 'e.' or all(msg in message.content.lower() for msg in ["<@!832083717417074689>", "help"]):
         await message.reply('Do you need my help?\nGet started using `e.help`')
     if message.content.lower().startswith("e."): await open_account(message.author.id)
-    await bot.process_commands(message)
 
-@bot.check
-async def is_dm(ctx):
-    if bot.accounts.get(str(ctx.author.id), {'prem':-1})["prem"] - time.time() > 0:
-        return True
-    return ctx.guild != None
 
-@bot.check
+#@bot.check
 async def if_allowed(ctx):
     if ctx.guild is None: return True
     return await check_channel(ctx.channel.id, ctx.guild.id)
@@ -1332,7 +1144,7 @@ async def on_raw_reaction_add(payload):
 class IgnoreError(commands.CheckFailure):
     pass
 
-@bot.command(usage="", brief="Fun")
+#@bot.command(usage="", brief="Fun")
 @commands.check(general)
 async def premium(ctx):
     """
@@ -1671,8 +1483,8 @@ async def profile_bg(userid, bgdata:dict, image_change=False):
     draw.text((50, 355), f"Net Worth: -", font=gadugi_b)
     draw.text((50, 395), f"Join Date: -", font=gadugi_b)
 
-    twidth, theight = draw.textsize(f"{await commait(newxp)}/{await commait(max_xp)}", fonts)
-    draw.text((468 - (twidth / 2), 121 - (theight / 2)), f"{await commait(newxp)}/{await commait(max_xp)}",
+    twidth, theight = draw.textsize(f"{commait(newxp)}/{commait(max_xp)}", fonts)
+    draw.text((468 - (twidth / 2), 121 - (theight / 2)), f"{commait(newxp)}/{commait(max_xp)}",
               (255, 255, 255), font=fonts, stroke_width=1, stroke_fill=(0, 0, 0))
 
     draw.text((335, 145), 'None', font=ImageFont.truetype("badges/font2.ttf", 15))
@@ -1699,7 +1511,7 @@ async def profile_bg(userid, bgdata:dict, image_change=False):
 
     return bgfile.attachments[0].url
 
-@bot.command(aliases=["conf", "con"], usage="", brief="Fun")
+#@bot.command(aliases=["conf", "con"], usage="", brief="Fun")
 @commands.check(general)
 async def configure(ctx):
     """
@@ -1716,7 +1528,7 @@ async def configure(ctx):
     msg, view = await sendnew_pbg(ctx, bot.unsaved[str(ctx.author.id)])
     view.msg = msg
 
-@bot.command(usage="<error-code>", brief="Misc")
+#@bot.command(usage="<error-code>", brief="Misc")
 @commands.check(general)
 async def report(ctx, code):
     """
@@ -1737,7 +1549,7 @@ async def report(ctx, code):
     await e.add_reaction(economysuccess)
     await ctx.message.add_reaction(economysuccess)
 
-@bot.command(hidden=True)
+#@bot.command(hidden=True)
 @commands.check(is_dev)
 async def debug(ctx, code):
     a = await get_errorfile()
@@ -1751,7 +1563,7 @@ async def debug(ctx, code):
                         color=success_embed)
     await ctx.send(embed=embed)
 
-@bot.command(hidden=True)
+#@bot.command(hidden=True)
 @commands.check(is_dev)
 async def dvm(ctx):
     if bot.dev == 1:
@@ -1761,7 +1573,7 @@ async def dvm(ctx):
         await ctx.reply('Changed Dev Mode state to: **`On`**')
         bot.dev = 1
 
-@bot.command(hidden=True)
+#@bot.command(hidden=True)
 @commands.check(is_dev)
 async def maint(ctx):
     if bot.maint:
@@ -1771,7 +1583,7 @@ async def maint(ctx):
         await ctx.reply(f"Maintainence mode state: **On**")
         bot.maint = True
 
-@bot.command(hidden=True)
+#@bot.command(hidden=True)
 @commands.check(is_dev)
 async def logs(ctx, *, search:str=None):
     with open('files/logs.txt', 'r') as log:
@@ -1795,7 +1607,7 @@ async def logs(ctx, *, search:str=None):
         count += 1
     await ctx.send(f'**Requested by:** `{ctx.author.name}`\n```css\n{x.get_string()[:1900]}```')
 
-@bot.command(aliases=['eval'],hidden=True)
+#@bot.command(aliases=['eval'],hidden=True)
 @commands.check(is_dev)
 #@commands.is_owner()
 async def evaluate(ctx, *, expression):
@@ -1817,7 +1629,7 @@ async def evaluate(ctx, *, expression):
             await ctx.send(
                 f"```py\n{''.join(traceback.format_exception(etype=type(ex), value=ex, tb=ex.__traceback__))}\n```")'''
 
-@bot.command(aliases=['exec'],hidden=True)
+#@bot.command(aliases=['exec'],hidden=True)
 @commands.check(is_dev)
 #@commands.is_owner()
 async def execute(ctx, *, expression):
@@ -1827,7 +1639,7 @@ async def execute(ctx, *, expression):
     except Exception as e:
         await ctx.reply(f'Command:```py\n{expression}```\nOutput:```\n{e}```')
 
-@bot.command(hidden=True)
+#@bot.command(hidden=True)
 @commands.check(is_dev)
 async def add(ctx, person:discord.Member, bal:int, *args):
     toadd = bot.accounts.get(f'{person.id}')
@@ -1841,10 +1653,10 @@ async def add(ctx, person:discord.Member, bal:int, *args):
     bot.accounts[f'{person.id}'] = toadd
     await update_accounts()
 
-    await update_logs(f'{ctx.author}-!-add-!-[{person.id}; {await commait(bal)}]-!-{await current_time()}')
-    await ctx.send(f'{ctx.author.mention} added `{await commait(bal)}` coins to {person.name}.')
+    await update_logs(f'{ctx.author}-!-add-!-[{person.id}; {commait(bal)}]-!-{await current_time()}')
+    await ctx.send(f'{ctx.author.mention} added `{commait(bal)}` coins to {person.name}.')
 
-@bot.command(hidden=True)
+#@bot.command(hidden=True)
 @commands.check(is_staff)
 async def clear(ctx, member:discord.Member):
     userid = str(member.id)
@@ -1858,7 +1670,7 @@ async def clear(ctx, member:discord.Member):
     await update_logs(f'{ctx.author}-!-clear-!-[{member.id}]-!-{datetime.datetime.today().replace(microsecond=0)}')
     await ctx.send(f'{ctx.author.mention} Cleared data of `{member.name}#{member.discriminator}` successfully!')
 
-@bot.command(hidden=True)
+#@bot.command(hidden=True)
 @commands.is_owner()
 async def release(ctx, title:str, fake:int=0):
     with open('files/updates.json', 'r') as upd:
@@ -1888,7 +1700,7 @@ async def release(ctx, title:str, fake:int=0):
     else:
         await ctx.send(embed=embed)
 
-@bot.command(hidden=True)
+#@bot.command(hidden=True)
 @commands.check(is_staff)
 async def stockinfo(ctx):
     with open(f'stocks/{await get_todays_stock()}', 'r') as f:
@@ -1904,7 +1716,7 @@ async def stockinfo(ctx):
 
     await ctx.send(embed=embed)
 
-@bot.command(usage="", brief="Misc")
+#@bot.command(usage="", brief="Misc")
 @commands.check(general)
 async def uptime(ctx):
     """
@@ -1922,12 +1734,12 @@ async def refresh():
     bot.phrases = data["phrases"]
     bot.shopc = data["shop"]["category"]
     bot.items = data["items"]
-    bot.status = data["status"]
+    bot._status = data["status"]
     bot.cooldown = data["cooldown"]
 
     #await cache_allitems()
 
-@bot.command(hidden=True)
+#@bot.command(hidden=True)
 @commands.check(is_dev)
 async def resetdb(ctx):
     with open('files/accounts.json', 'w') as f:
@@ -1952,33 +1764,7 @@ async def resetdb(ctx):
         f.write("{}")
     await ctx.message.add_reaction(economysuccess)
 
-@bot.command(aliases=['bal'], usage="[user]", brief="Bank")
-@commands.check(general)
-async def balance(ctx, member:discord.Member = None):
-    """
-    Shows the coins in wallet, bank and stocks owned by the user
-    """
-    if member is None:
-        userid = ctx.author.id
-    else:
-        userid = member.id
-    person = bot.accounts.get(str(userid))
-    bank_type = person['bank_type']
-    wallet = person['wallet']
-    bank = person['bank']
-    stocks_num = bot.stocks.get(str(userid), 0)
-    embed = discord.Embed(title=f'__{bank_details[bank_type]["name"]}__', colour=embedcolor)
-    embed.add_field(name=f'**<:wallet:836814969290358845> Wallet**', value=f'> `{await commait(wallet)}`', inline=False)
-    embed.add_field(name=f'**🏦 Bank**', value=f'> `{await commait(bank)}`', inline=False)
-    embed.add_field(name=f'**<:stocks:839162083324198942> Stocks**', value=f'> `{await commait(stocks_num)}`', inline=False)
-    fetched = bot.get_user(userid)
-    embed.timestamp = datetime.datetime.utcnow()
-    embed.set_footer(text='Economy Bot', icon_url=bot.pfp)
-    embed.set_author(name=fetched.name, icon_url=fetched.display_avatar.url)
-
-    await ctx.send(embed=embed)
-
-@bot.command(aliases=['dep'], usage="<coins>", brief="Bank")
+#@bot.command(aliases=['dep'], usage="<coins>", brief="Bank")
 @commands.check(general)
 async def deposit(ctx, amount:str):
     """
@@ -2008,9 +1794,9 @@ async def deposit(ctx, amount:str):
     bot.accounts[f'{ctx.author.id}'] = person
 
     await update_accounts()
-    await ctx.send(f'{ctx.author.mention} Successfully deposited `{await commait(amount)}` coins.')
+    await ctx.send(f'{ctx.author.mention} Successfully deposited `{commait(amount)}` coins.')
 
-@bot.command(aliases=['with'], usage="<coins>", brief="Bank")
+#@bot.command(aliases=['with'], usage="<coins>", brief="Bank")
 @commands.check(general)
 async def withdraw(ctx, amount: str = None):
     """
@@ -2043,9 +1829,9 @@ async def withdraw(ctx, amount: str = None):
     bot.accounts[f'{ctx.author.id}'] = person
 
     await update_accounts()
-    await ctx.send(f'{ctx.author.mention} Successfully withdrew `{await commait(amount)}` coins.')
+    await ctx.send(f'{ctx.author.mention} Successfully withdrew `{commait(amount)}` coins.')
 
-@bot.command(usage="[user]", brief="Bank")
+#@bot.command(usage="[user]", brief="Bank")
 @commands.check(general)
 async def bank(ctx, member:discord.Member = None):
     """
@@ -2067,8 +1853,8 @@ async def bank(ctx, member:discord.Member = None):
     embed.add_field(name='Bank Tier', value=f'{bank_details[btype]["tier"]}')
     embed.add_field(name='\u200b', value='\u200b')
     embed.add_field(name='Daily Interest', value=f'{bank_details[btype]["rate"]}%')
-    embed.add_field(name='Current Balance', value=f'`{await commait(person["bank"])}`')
-    embed.add_field(name='Average Balance', value=f'`{await commait(person2["avg"])}`')
+    embed.add_field(name='Current Balance', value=f'`{commait(person["bank"])}`')
+    embed.add_field(name='Average Balance', value=f'`{commait(person2["avg"])}`')
     embed.add_field(name='Note:', value='To claim interest, use `e.daily`.\n'
                                         'Your average balance in last 24 hours will be taken in account for that.')
     fetched = bot.get_user(userid)
@@ -2081,7 +1867,7 @@ async def bank(ctx, member:discord.Member = None):
     view.msg = msg
 
 class Bank(discord.ui.View):
-    def __init__(self, ctx: Context):
+    def __init__(self, ctx: CustomCtx):
         super().__init__()
         self.ctx = ctx
         self.msg = None
@@ -2110,7 +1896,7 @@ class Bank(discord.ui.View):
         await self.msg.edit(view=self)
 
 class BankTiers(discord.ui.Select):
-    def __init__(self, ctx: Context, msg):
+    def __init__(self, ctx: CustomCtx, msg):
         options = [
             discord.SelectOption(label='Tier I', emoji='🏦', description="Common Finance Bank Ltd."),
             discord.SelectOption(label='Tier II', emoji='🏦', description="National Bank Pvt. Ltd."),
@@ -2158,7 +1944,7 @@ class BankTiers(discord.ui.Select):
         await interaction.response.edit_message(embed=embed, view=UpgradeBank(ctx, tier, self.msg))
 
 class UpgradeBank(discord.ui.View):
-    def __init__(self, ctx: Context, tier: int, msg):
+    def __init__(self, ctx: CustomCtx, tier: int, msg):
         super().__init__()
         self.ctx = ctx
         self.tier = tier
@@ -2201,7 +1987,7 @@ def is_premium(userid):
         return True
     return False
 
-@bot.command(usage="", brief="Fun")
+#@bot.command(usage="", brief="Fun")
 @commands.check(general)
 async def daily(ctx):
     """
@@ -2236,10 +2022,10 @@ async def daily(ctx):
     await update_avg()
     await update_accounts()
     await add_timeout(ctx.author.id, 'daily')
-    embed = discord.Embed(title=f'{economysuccess} Claimed Successfully!', description=f'Daily interest payout of `{await commait(int(avgbal * multiplier))}` coins credited successfully!', color=success_embed)
+    embed = discord.Embed(title=f'{economysuccess} Claimed Successfully!', description=f'Daily interest payout of `{commait(int(avgbal * multiplier))}` coins credited successfully!', color=success_embed)
     await ctx.send(embed=embed)
 
-@bot.command(usage="<user> <coins>", brief="Bank")
+#@bot.command(usage="<user> <coins>", brief="Bank")
 @commands.check(general)
 async def give(ctx, member:discord.Member, amount:int):
     """
@@ -2283,14 +2069,14 @@ async def give(ctx, member:discord.Member, amount:int):
     await update_accounts()
 
     embed = discord.Embed(title=f'{economysuccess} Success!', color=embedcolor,
-                          description=f'You gave `{await commait(amount)}` coin(s) to {member.mention}. What an act of generosity!')
+                          description=f'You gave `{commait(amount)}` coin(s) to {member.mention}. What an act of generosity!')
     fetched = bot.get_user(ctx.author.id)
     embed.timestamp = datetime.datetime.utcnow()
     embed.set_footer(text='Economy Bot', icon_url=bot.pfp)
 
     await ctx.send(embed=embed)
 
-@bot.command(aliases=['property'], usage="[user]", brief="Estates")
+#@bot.command(aliases=['property'], usage="[user]", brief="Estates")
 @commands.check(general)
 async def estates(ctx, member:discord.Member=None):
     """
@@ -2313,8 +2099,8 @@ async def estates(ctx, member:discord.Member=None):
         extra = ''
     embed = discord.Embed(description='\u200b', colour=embedcolor)
     embed.add_field(name='Current Level', value=f'{level}{extra}')
-    embed.add_field(name='Revenue Earned', value=f'`{await commait(revenue)}` coins')
-    embed.add_field(name='Maintainance Cost', value=f'`{await commait(maint)}` coins')
+    embed.add_field(name='Revenue Earned', value=f'`{commait(revenue)}` coins')
+    embed.add_field(name='Maintainance Cost', value=f'`{commait(maint)}` coins')
     if level < 30:
         embed.add_field(name='Next Task', value=f'```css\n[{estates_tasks[level]}]\nUse e.upgrade to Upgrade!\n```', inline=False)
     embed.add_field(inline=False, name='Note:', value='```diff\nThe revenue is earned in per hour\n+ Use e.revenue to claim revenue\n- Use e.maintain to do maintainance\n```')
@@ -2330,7 +2116,7 @@ async def estates(ctx, member:discord.Member=None):
     view.msg = msg
 
 class Estates(discord.ui.View):
-    def __init__(self, ctx: Context):
+    def __init__(self, ctx: CustomCtx):
         super().__init__()
         self.ctx = ctx
         self.msg = None
@@ -2371,10 +2157,10 @@ class Estates(discord.ui.View):
         else:
             embed.add_field(name='Level Change', value=f'``{level} => Maxed Out!`')
         embed.add_field(name='Revenue Boost',
-                        value=f'`{await commait(rev_now)} + {await commait(rev_after - rev_now)}` coins')
+                        value=f'`{commait(rev_now)} + {commait(rev_after - rev_now)}` coins')
         embed.add_field(name='Maintainance Increase',
-                        value=f'`{await commait(main_now)} + {await commait(main_after - main_now)}` coins')
-        embed.add_field(name='Upgrade Cost', value=f'`{await commait(cost)}` coins')
+                        value=f'`{commait(main_now)} + {commait(main_after - main_now)}` coins')
+        embed.add_field(name='Upgrade Cost', value=f'`{commait(cost)}` coins')
         embed.add_field(name='Confirm?', value=f'Click {economysuccess} to confirm or {economyerror} to cancel',
                         inline=False)
         embed.add_field(name='\u200b', value='Here is the look after upgrade:', inline=False)
@@ -2408,7 +2194,7 @@ class Estates(discord.ui.View):
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
 class EstatesUpgrade(discord.ui.View):
-    def __init__(self, ctx: Context, msg: discord.Message, cost: int, level: int):
+    def __init__(self, ctx: CustomCtx, msg: discord.Message, cost: int, level: int):
         super().__init__()
         self.ctx, self.msg = ctx, msg
         self.cost, self.level = cost, level
@@ -2456,14 +2242,14 @@ class EstatesUpgrade(discord.ui.View):
         embed = discord.Embed(title=f'{economyerror} Cancelled!', color=error_embed)
         await interaction.response.edit_message(embed=embed, view=None)
 
-@bot.command(hidden=True)
+#@bot.command(hidden=True)
 @commands.check(is_dev)
 async def disregard(ctx, member:discord.Member):
     if member.id in disregarded: disregarded.remove(member.id)
     else: disregarded.append(member.id)
     await ctx.message.add_reaction(economysuccess)
 
-@bot.command(usage="", brief="Estates")
+#@bot.command(usage="", brief="Estates")
 @commands.check(general)
 async def revenue(ctx, via=False):
     """
@@ -2504,11 +2290,11 @@ async def revenue(ctx, via=False):
     x.field_names = ["    Name", "       ", "      ", "Amount  "]
     x.align["    Name"] = "l"
     x.align["Amount  "] = "r"
-    x.add_row(["Fixed Revenue", "", "", f'{await commait((fixed_rev))}.00/-'])
-    x.add_row(["Late Maintenance", "", "", f'{await commait(low_rev)}.00/-'])
-    x.add_row(["Late Fine", "", "", f'{await commait(fine)}.00/-'])
+    x.add_row(["Fixed Revenue", "", "", f'{commait((fixed_rev))}.00/-'])
+    x.add_row(["Late Maintenance", "", "", f'{commait(low_rev)}.00/-'])
+    x.add_row(["Late Fine", "", "", f'{commait(fine)}.00/-'])
     x.add_row(["", "", "", f''])
-    x.add_row(["[Grand Total]", "", "", f'{await commait(totalpay)}.00/-'])
+    x.add_row(["[Grand Total]", "", "", f'{commait(totalpay)}.00/-'])
 
     embed = discord.Embed(title=f'{economysuccess} Revenue Claimed!',
                           description=f'`{totalpay}.00` coins added to bank successfully!\n\nHere is the revenue split:\n```css\n{x}```',
@@ -2532,7 +2318,7 @@ async def revenue(ctx, via=False):
     if via: return embed
     await ctx.send(embed=embed)
 
-@bot.command(usage="", brief="Estates")
+#@bot.command(usage="", brief="Estates")
 @commands.check(general)
 async def maintain(ctx, via=False):
     """
@@ -2561,12 +2347,12 @@ async def maintain(ctx, via=False):
     x.field_names = ["    Name", "       ", "      ", "Amount  "]
     x.align["    Name"] = "l"
     x.align["Amount  "] = "r"
-    x.add_row(["Cleaning", "", "", f'{await commait(int(cost*0.1))}.00/-'])
-    x.add_row(["Staff Salary", "", "", f'{await commait(int(cost*0.4))}.00/-'])
-    x.add_row(["Meals", "", "", f'{await commait(int(cost*0.3))}.00/-'])
-    x.add_row(["Repair Work", "", "", f'{await commait(int(cost*0.2))}.00/-'])
+    x.add_row(["Cleaning", "", "", f'{commait(int(cost*0.1))}.00/-'])
+    x.add_row(["Staff Salary", "", "", f'{commait(int(cost*0.4))}.00/-'])
+    x.add_row(["Meals", "", "", f'{commait(int(cost*0.3))}.00/-'])
+    x.add_row(["Repair Work", "", "", f'{commait(int(cost*0.2))}.00/-'])
     x.add_row(["", "", "", f''])
-    x.add_row(["[Grand Total]", "", "", f'{await commait(cost_d)}.00/-'])
+    x.add_row(["[Grand Total]", "", "", f'{commait(cost_d)}.00/-'])
 
     if bank_bal < cost_d:
         embed = discord.Embed(title=f'{economyerror} Oops..',
@@ -2594,7 +2380,7 @@ async def maintain(ctx, via=False):
     if via: return embed
     await ctx.send(embed=embed)
 
-@bot.command(usage="", brief="Misc")
+#@bot.command(usage="", brief="Misc")
 @commands.check(general)
 async def alerts(ctx):
     """
@@ -2615,7 +2401,7 @@ async def alerts(ctx):
     view.msg = msg
 
 class Alerts(discord.ui.View):
-    def __init__(self, ctx: Context):
+    def __init__(self, ctx: CustomCtx):
         super().__init__()
         self.ctx = ctx
         self.msg = None
@@ -2644,7 +2430,7 @@ class Alerts(discord.ui.View):
         await interaction.response.send_message(embed=embed, ephemeral=True)
         await alerts_state(ctx.author.id, 'off')
 
-@bot.command(usage="<user> <amount> [reason]", brief="Bank")
+#@bot.command(usage="<user> <amount> [reason]", brief="Bank")
 @commands.check(general)
 async def transfer(ctx, togive:discord.Member, amount, *, reason = None):
     """
@@ -2702,7 +2488,7 @@ async def transfer(ctx, togive:discord.Member, amount, *, reason = None):
 
     await ctx.send(embed=embed)
 
-@bot.command(aliases=['transactions', 'statements', 'trans'], usage="", brief="Bank")
+#@bot.command(aliases=['transactions', 'statements', 'trans'], usage="", brief="Bank")
 @commands.check(general)
 async def statement(ctx, *args):
     """
@@ -2781,7 +2567,7 @@ async def statement(ctx, *args):
 
         for index, row in enumerate(i):
             if index == 3:
-                val = await commait(row)
+                val = commait(row)
             else:
                 val = str(row)
             x = locs[index] - int(font.getsize(val)[0] / 2)
@@ -2802,7 +2588,7 @@ async def statement(ctx, *args):
 
         for index, row in enumerate(i):
             if index == 3:
-                val = await commait(row)
+                val = commait(row)
             else:
                 val = str(row)
             x = locs[index] - int(font.getsize(val)[0]/2)
@@ -2815,7 +2601,7 @@ async def statement(ctx, *args):
     image_bytes.seek(0)
     await ctx.send(file=discord.File(image_bytes, filename="statement.png"))
 
-@bot.command(aliases=['pf', 'level', 'p', 'rank'], usage="[user]", brief="Fun")
+#@bot.command(aliases=['pf', 'level', 'p', 'rank'], usage="[user]", brief="Fun")
 @commands.check(general)
 async def profile(ctx, member:discord.Member = None):
     """
@@ -2925,7 +2711,7 @@ async def profile(ctx, member:discord.Member = None):
     newdraw.text((530, 210), f'Global Rank', font=font, fill='#000000')
     newdraw.text((120, 250), f'#{server_r}', font=font_rank, fill='#000000')
     newdraw.text((530, 250), f'{global_r}', font=font_rank, fill='#000000')
-    newdraw.text((50, 355), f"Net Worth:  {await commait(networth)} coins", font=gadugi_b, fill='#000000')
+    newdraw.text((50, 355), f"Net Worth:  {commait(networth)} coins", font=gadugi_b, fill='#000000')
     newdraw.text((50, 395), f"Join Date: {bot.accounts.get(str(member.id), {'joined': '-'})['joined']}", font=gadugi_b,
                  fill='#000000')
 
@@ -2962,11 +2748,11 @@ async def profile(ctx, member:discord.Member = None):
     draw.text((530, 210), f'Global Rank', font=font)
     draw.text((120, 250), f'#{server_r}', (255, 243, 0), font=font_rank)
     draw.text((530, 250), f'{global_r}', (255, 243, 0), font=font_rank)
-    draw.text((50, 355), f"Net Worth:  {await commait(networth)} coins", font=gadugi_b)
+    draw.text((50, 355), f"Net Worth:  {commait(networth)} coins", font=gadugi_b)
     draw.text((50, 395), f"Join Date: {bot.accounts.get(str(member.id), {'joined': '-'})['joined']}", font=gadugi_b)
 
-    twidth, theight = draw.textsize(f"{await commait(newxp)}/{await commait(max_xp)}", fonts)
-    draw.text((468 - (twidth / 2), 121 - (theight / 2)), f"{await commait(newxp)}/{await commait(max_xp)}",
+    twidth, theight = draw.textsize(f"{commait(newxp)}/{commait(max_xp)}", fonts)
+    draw.text((468 - (twidth / 2), 121 - (theight / 2)), f"{commait(newxp)}/{commait(max_xp)}",
               (255, 255, 255), font=fonts, stroke_width=1, stroke_fill=(0, 0, 0))
 
     achi = bot.awards.get("achievements", {})
@@ -3026,7 +2812,7 @@ async def profile(ctx, member:discord.Member = None):
 
     await ctx.send(file=discord.File(image_bytes, filename="profile.png"))
 
-@bot.command(usage="", brief="Stocks")
+#@bot.command(usage="", brief="Stocks")
 @commands.check(general)
 async def stocks(ctx):
     """
@@ -3084,8 +2870,8 @@ async def stocks(ctx):
     secs = int((len(stock_data) - config["line"]) * round(86400 / len(stock_data), 4) + time.time())
     holdings = bot.stocks.get(str(ctx.author.id), 0)
     embed = discord.Embed(title='Today\'s Stock', description=f'```\n{x}```', color=embedcolor)
-    embed.add_field(name='Your Holdings', value=f'`{await commait(holdings)}` stocks')
-    embed.add_field(name='Current Value', value=f'`{await commait(int(holdings*float(details[3])))}` coins')
+    embed.add_field(name='Your Holdings', value=f'`{commait(holdings)}` stocks')
+    embed.add_field(name='Current Value', value=f'`{commait(int(holdings*float(details[3])))}` coins')
     embed.add_field(name='Time Left', value=f'<t:{secs}:f> (<t:{secs}:R>)')
 
     embed.set_image(url="attachment://graph.png")
@@ -3094,7 +2880,7 @@ async def stocks(ctx):
     view.msg = msg
 
 class StocksBuySell(discord.ui.View):
-    def __init__(self, ctx: Context):
+    def __init__(self, ctx: CustomCtx):
         super().__init__()
         self.ctx = ctx
         self.msg = None
@@ -3135,7 +2921,7 @@ class StocksBuySell(discord.ui.View):
             child.disabled = True
         await self.msg.edit(view=self)
 
-@bot.command(usage="<amount>", brief="Stocks")
+#@bot.command(usage="<amount>", brief="Stocks")
 @commands.check(general)
 async def buystocks(ctx, amount, via=False):
     """
@@ -3167,10 +2953,10 @@ async def buystocks(ctx, amount, via=False):
     bulk = int(amount * stock_price)
     if bulk > dperson['bank']:
         embed = discord.Embed(title='Oops..',
-                              description=f'You don\'t have enough bank balance to buy `{await commait(amount)}` stocks.',
+                              description=f'You don\'t have enough bank balance to buy `{commait(amount)}` stocks.',
                               color=error_embed)
         embed.set_footer(
-            text=f'Your Balance: {await commait(dperson["bank"])} coins\nStock Price: {await commait(bulk)} coins\nDifference: {await commait(bulk - dperson["bank"])} coins')
+            text=f'Your Balance: {commait(dperson["bank"])} coins\nStock Price: {commait(bulk)} coins\nDifference: {commait(bulk - dperson["bank"])} coins')
         if via: return embed
         return await ctx.send(embed=embed)
 
@@ -3183,8 +2969,8 @@ async def buystocks(ctx, amount, via=False):
     await create_statement(ctx.author, bot.user, bulk, f"Bought {amount} stock(s)", "Debit")
 
     embed = discord.Embed(title=f'{economysuccess} Success!',
-                          description=f'You bought `{await commait(amount)}` stocks at price of `{stock_price}`.\n'
-                                      f'\nCoins Spent: `{await commait(bulk)}` coins', color=success_embed)
+                          description=f'You bought `{commait(amount)}` stocks at price of `{stock_price}`.\n'
+                                      f'\nCoins Spent: `{commait(bulk)}` coins', color=success_embed)
     fetched = bot.get_user(ctx.author.id)
     embed.timestamp = datetime.datetime.utcnow()
     embed.set_footer(text='Economy Bot', icon_url=bot.pfp)
@@ -3203,7 +2989,7 @@ async def buystocks(ctx, amount, via=False):
     bot.awards["stocks"] = sto
     await update_awards()
 
-@bot.command(usage="", brief="Stocks")
+#@bot.command(usage="", brief="Stocks")
 @commands.check(general)
 async def sellstocks(ctx, amount, via=False):
     """
@@ -3243,8 +3029,8 @@ async def sellstocks(ctx, amount, via=False):
     await create_statement(ctx.author, bot.user, bulk, f"Sold {amount} stock(s)", "Credit")
 
     embed = discord.Embed(title=f'{economysuccess} Success!',
-                          description=f'You sold `{await commait(amount)}` stock(s) at price of `{stock_price}`.\n'
-                                      f'\nCoins Earned: `{await commait(bulk)}` coins', color=success_embed)
+                          description=f'You sold `{commait(amount)}` stock(s) at price of `{stock_price}`.\n'
+                                      f'\nCoins Earned: `{commait(bulk)}` coins', color=success_embed)
     fetched = bot.get_user(ctx.author.id)
     embed.timestamp = datetime.datetime.utcnow()
     embed.set_footer(text='Economy Bot', icon_url=bot.pfp)
@@ -3329,7 +3115,7 @@ class CommandDropdown(discord.ui.Select):
         embed.set_footer(text='Bot developed by: AwesomeSam#7985', icon_url=bot.pfp)
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
-@bot.command(usage="[command | category]", brief="Misc")
+#@bot.command(usage="[command | category]", brief="Misc")
 @commands.check(general)
 async def help(ctx, specify:str=None):
     """
@@ -3374,7 +3160,7 @@ async def help(ctx, specify:str=None):
         embed = discord.Embed(description=f'{economyerror} No help found or command doesn\'t exist!', color=error_embed)
         await ctx.send(embed=embed)
 
-@bot.command(aliases=['add_chl'], usage="<#channel>", brief="Admin")
+#@bot.command(aliases=['add_chl'], usage="<#channel>", brief="Admin")
 @commands.check(general)
 async def set_chl(ctx, channel:discord.TextChannel):
     """
@@ -3396,7 +3182,7 @@ async def set_chl(ctx, channel:discord.TextChannel):
     embed = discord.Embed(description=f'{economysuccess} {channel.mention} added to list of registered channels successfully!', color=success_embed)
     await ctx.send(embed=embed)
 
-@bot.command(aliases=['rem_chl', 'remove_chl', 'delete_chl'], usage="<#channel>", brief="Admin")
+#@bot.command(aliases=['rem_chl', 'remove_chl', 'delete_chl'], usage="<#channel>", brief="Admin")
 @commands.check(general)
 async def del_chl(ctx, channel:discord.TextChannel):
     """
@@ -3416,7 +3202,7 @@ async def del_chl(ctx, channel:discord.TextChannel):
     embed = discord.Embed(description=f'{economysuccess} {channel.mention} removed from list of registered channels successfully!', color=success_embed)
     await ctx.send(embed=embed)
 
-@bot.command(aliases=['show_chl'], usage="<#channel>", brief="Admin")
+#@bot.command(aliases=['show_chl'], usage="<#channel>", brief="Admin")
 @commands.check(general)
 async def list_chl(ctx):
     """
@@ -3433,7 +3219,7 @@ async def list_chl(ctx):
     embed.set_footer(text='Add a channel using e.set_chl <name>\nRemove a channel using e.del_chl <name>')
     await ctx.send(embed=embed)
 
-@bot.command(usage="<#channel>", brief="Admin")
+#@bot.command(usage="<#channel>", brief="Admin")
 @commands.check(general)
 async def reset_chl(ctx):
     """
@@ -3450,7 +3236,7 @@ async def reset_chl(ctx):
     embed.set_footer(text='Add a channel using e.set_chl <name>\nRemove a channel using e.del_chl <name>')
     await ctx.send(embed=embed)
 
-@bot.command(usage="<user>", brief="Fun")
+#@bot.command(usage="<user>", brief="Fun")
 @commands.check(general)
 async def rob(ctx, member:discord.Member):
     """
@@ -3478,7 +3264,7 @@ async def rob(ctx, member:discord.Member):
             if walleta <= 0:
                 return await ctx.reply("Atleast rob someone who doesn't have an empty wallet bro")
             prize = random.randint(int(walleta / 5), int(walleta / 2))
-            desc = random.choice(bot.phrases['selfrob_success']).format(prize=f'`{await commait(prize)}`')
+            desc = random.choice(bot.phrases['selfrob_success']).format(prize=f'`{commait(prize)}`')
         else:
             walletm = bot.accounts[str(member.id)]['wallet']
             if walletm == 0:
@@ -3490,11 +3276,11 @@ async def rob(ctx, member:discord.Member):
             bot.accounts[str(member.id)]['wallet'] = walletm
             bot.accounts[str(ctx.author.id)]['wallet'] = walleta
             await update_accounts()
-            desc = random.choice(bot.phrases['rob_success']).format(prize=f'`{await commait(prize)}`', whom=member.mention)
+            desc = random.choice(bot.phrases['rob_success']).format(prize=f'`{commait(prize)}`', whom=member.mention)
             if str(member.id) in bot.alertsinfo:
                 if bot.alertsinfo[str(member.id)]['state'] == 'on':
                     embed = discord.Embed(title=f'{economyerror} You were robbed!',
-                                          description=f'You were robbed of `{await commait(prize)}` coins by `{ctx.author.name}#????` in `{ctx.guild.name}`!', color=error_embed)
+                                          description=f'You were robbed of `{commait(prize)}` coins by `{ctx.author.name}#????` in `{ctx.guild.name}`!', color=error_embed)
                     await member.send(embed=embed)
             if lock != 0:
                 if lock == 25: user.remove('Silver Lock')
@@ -3509,7 +3295,7 @@ async def rob(ctx, member:discord.Member):
         if member == ctx.author:
             walleta = bot.accounts[str(ctx.author.id)]['wallet']
             prize = random.randint(int(walleta / 5), int(walleta / 2))
-            desc = random.choice(bot.phrases['selfrob_failed']).format(prize=f'`{await commait(prize)}`')
+            desc = random.choice(bot.phrases['selfrob_failed']).format(prize=f'`{commait(prize)}`')
             walleta -= prize
             bot.accounts[str(ctx.author.id)]['wallet'] = walleta
             await update_accounts()
@@ -3520,11 +3306,11 @@ async def rob(ctx, member:discord.Member):
             walleta -= prize
             bot.accounts[str(ctx.author.id)]['wallet'] = walleta
             await update_accounts()
-            desc = random.choice(bot.phrases['rob_failed']).format(prize=f'`{await commait(prize)}`', whom=member.mention)
+            desc = random.choice(bot.phrases['rob_failed']).format(prize=f'`{commait(prize)}`', whom=member.mention)
         embed = discord.Embed(title=f'{economyerror} Robbery Failed!', description=desc, color=error_embed)
     await ctx.send(embed=embed)
 
-@bot.command(usage="", brief="Fun")
+#@bot.command(usage="", brief="Fun")
 @commands.check(general)
 async def find(ctx):
     """
@@ -3547,7 +3333,7 @@ async def find(ctx):
     await update_accounts()
     await ctx.send(embed=embed)
 
-@bot.command(usage="[page]", brief="Market", aliases=["store"])
+#@bot.command(usage="[page]", brief="Market", aliases=["store"])
 @commands.check(general)
 async def shop(ctx, page:int=1):
     """
@@ -3562,7 +3348,7 @@ async def shop(ctx, page:int=1):
     storeimg = await createstore((page)*8,(page+1)*8)
     await uploader.upload_file(ctx.channel, storeimg, "store.png")
 
-@bot.command(aliases=['inv'], usage="[user]", brief="Market")
+#@bot.command(aliases=['inv'], usage="[user]", brief="Market")
 @commands.check(general)
 async def inventory(ctx, member:discord.Member = None):
     """
@@ -3572,7 +3358,7 @@ async def inventory(ctx, member:discord.Member = None):
     inv = await inventory_image(member.id)
     await uploader.upload_file(ctx.channel, inv, "inventory.png")
 
-@bot.command(aliases=['purchase'], usage="<item> [quantity]", brief="Market")
+#@bot.command(aliases=['purchase'], usage="<item> [quantity]", brief="Market")
 @commands.check(general)
 async def buy(ctx, *, item):
     """
@@ -3652,7 +3438,7 @@ async def buy(ctx, *, item):
     await update_inv()
     await ctx.send(embed=embed)
 
-@bot.command(usage="", brief="Misc")
+#@bot.command(usage="", brief="Misc")
 @commands.check(general)
 async def server(ctx):
     """
@@ -3663,7 +3449,7 @@ async def server(ctx):
     embed.set_author(icon_url=bot.pfp, name=f'{bot.user.name}')
     await ctx.send(embed=embed)
 
-@bot.command(usage="", brief="Misc")
+#@bot.command(usage="", brief="Misc")
 @commands.check(general)
 async def invite(ctx):
     """
@@ -3682,7 +3468,7 @@ async def invite(ctx):
     embed.set_author(icon_url=bot.pfp, name=f'{bot.user.name}')
     await ctx.send(embed=embed)
 
-@bot.command(usage="<item>", brief="Market")
+#@bot.command(usage="<item>", brief="Market")
 @commands.check(general)
 async def use(ctx, *, item:str):
     """
@@ -3762,7 +3548,7 @@ async def use(ctx, *, item:str):
     bot.inventory[str(ctx.author.id)] = userinv
     await update_inv()
 
-@bot.command(usage="", brief="Misc")
+#@bot.command(usage="", brief="Misc")
 @commands.check(general)
 async def ping(ctx):
     """
@@ -3772,7 +3558,7 @@ async def ping(ctx):
     ping = "{:.2f}".format(bot.latency*1000)
     await msg.edit(content=f'Pong! `{ping} ms`')
 
-@bot.command(aliases=["item"], pass_context=True, usage="<item-name>", brief="Market")
+#@bot.command(aliases=["item"], pass_CustomCtx=True, usage="<item-name>", brief="Market")
 @commands.check(general)
 async def iteminfo(ctx, *, name:str, via:bool=False):
     """
@@ -3802,16 +3588,16 @@ async def iteminfo(ctx, *, name:str, via:bool=False):
     embed.add_field(name="Description", value=item["desc"], inline=False)
     embed.add_field(name="Rarity", value=mychest.capitalize())
     if item["value"][0] == item["value"][1]:
-        embed.add_field(name="Est. Value", value=f"`{await commait(item['value'][0])}` coins", inline=False)
+        embed.add_field(name="Est. Value", value=f"`{commait(item['value'][0])}` coins", inline=False)
     else:
-        embed.add_field(name="Est. Value", value=f"`{await commait(item['value'][0])} - {await commait(item['value'][1])}` coins", inline=False)
+        embed.add_field(name="Est. Value", value=f"`{commait(item['value'][0])} - {commait(item['value'][1])}` coins", inline=False)
     embed.set_thumbnail(url=items_imgs[item["name"]])
     if not via:
         await ctx.send(embed=embed)
     else:
         return {"embed":embed}
 
-@bot.command(aliases=['itemsinv'], usage="[user]", brief="Market")
+#@bot.command(aliases=['itemsinv'], usage="[user]", brief="Market")
 @commands.check(general)
 async def items(ctx, user:discord.User = None):
     """
@@ -3939,7 +3725,7 @@ class UselessButton(discord.ui.Button):
         await interaction.response.defer()
 
 class ItemsInventory(discord.ui.View):
-    def __init__(self, ctx: Context, page: int, rarity: list, max_pages: int, user: discord.Member, owned: int):
+    def __init__(self, ctx: CustomCtx, page: int, rarity: list, max_pages: int, user: discord.Member, owned: int):
         super().__init__()
         if rarity is None: rarity = []
         self.user = user
@@ -4097,7 +3883,7 @@ class InventoryFilters(discord.ui.Select):
 
         await view.filter(interaction, rarities, filters)
 
-@bot.command(pass_context=True, usage="<item> [quantity]", brief="Market")
+#@bot.command(pass_CustomCtx=True, usage="<item> [quantity]", brief="Market")
 @commands.check(general)
 async def sell(ctx, *, item, via=False):
     """
@@ -4142,7 +3928,7 @@ async def sell(ctx, *, item, via=False):
     bot.inventory[userid] = userinv
     value = random.randint(item_main["value"][0], item_main["value"][1])*qty
     embed = discord.Embed(title=f'{economysuccess} Success!',
-                          description=f'You sold `{qty}` {item_main["name"]} for {await commait(value)} coins!',
+                          description=f'You sold `{qty}` {item_main["name"]} for {commait(value)} coins!',
                           color=embedcolor)
     datauser = bot.accounts[userid]
     datauser["wallet"] += value
@@ -4171,12 +3957,12 @@ class BetButtons(discord.ui.Button):
         view.stop()
         bot.waitings[view.ctx.author.id] = [view.ctx.author, view.person]
         await interaction.response.edit_message(content=f"{view.ctx.author.mention} vs {view.person.mention}\n" \
-           f"Bet Amount: `{await commait(int(self.label))}`\n" \
+           f"Bet Amount: `{commait(int(self.label))}`\n" \
            f"Click 'Accept' to start. Waiting on: {' '.join([x.mention for x in bot.waitings[view.ctx.author.id]])}",
                                                 view=ConfirmTTT(view.ctx.author, view.person, int(self.label), self.ctx))
 
 class InteractiveTTT(discord.ui.View):
-    def __init__(self, ctx: Context, person: discord.Member):
+    def __init__(self, ctx: CustomCtx, person: discord.Member):
         super().__init__()
         self.ctx = ctx
         self.person = person
@@ -4209,7 +3995,7 @@ class InteractiveTTT(discord.ui.View):
         await interaction.response.edit_message(content="LOL the man declined!", view=self)
 
 class Games(discord.ui.View):
-    def __init__(self, ctx: Context):
+    def __init__(self, ctx: CustomCtx):
         super().__init__()
         self.ctx = ctx
         self.msg = None
@@ -4254,7 +4040,7 @@ class Games(discord.ui.View):
             i.disabled = True
         await self.msg.edit(view=self)
 
-@bot.command(usage="", brief="Games")
+#@bot.command(usage="", brief="Games")
 @commands.check(general)
 async def games(ctx):
     """
@@ -4265,7 +4051,7 @@ async def games(ctx):
                          view=view)
     view.msg = msg
 
-@bot.command(aliases=["ms", "mine"], pass_context=True, usage="", brief="Games")
+#@bot.command(aliases=["ms", "mine"], pass_CustomCtx=True, usage="", brief="Games")
 @commands.check(general)
 async def minesweeper(ctx):
     """
@@ -4408,7 +4194,7 @@ class Minesweeper(discord.ui.View):
         except: pass
         bot.accounts[str(self.player.id)]["wallet"] += self.net
         await update_accounts()
-        cont = f"**The game ended**\nNet Profit: `{await commait(self.net)}`"
+        cont = f"**The game ended**\nNet Profit: `{commait(self.net)}`"
         for i in self.children:
             i.disabled = True
         self.stop()
@@ -4464,7 +4250,7 @@ class MinesweeperButton(discord.ui.Button['Minesweeper']):
                 pass
             bot.accounts[str(view.player.id)]["wallet"] += view.net
             await update_accounts()
-            cont = f"**The game ended**\nNet Profit: `{await commait(view.net)}`"
+            cont = f"**The game ended**\nNet Profit: `{commait(view.net)}`"
             view.stop()
         else:
             cont = f"Total Moves: `{view.moves}`    Correct: `{view.correct}`    Incorrect: `{view.wrong}`\n" \
@@ -4633,11 +4419,11 @@ class ConfirmTTT(discord.ui.View):
                                                         view=view)
             else:
                 cont = f"{self.p1.mention} vs {self.p2.mention}\n" \
-                       f"Bet Amount: `{await commait(bet)}`\n" \
+                       f"Bet Amount: `{commait(bet)}`\n" \
                        f"Click 'Accept' to start. Waiting on: {' '.join([x.mention for x in bot.waitings[self.user.id]])}"
                 await interaction.response.edit_message(content=cont)
 
-@bot.command(aliases=["ttt"], usage="<user> <bet-amount>", brief="Games")
+#@bot.command(aliases=["ttt"], usage="<user> <bet-amount>", brief="Games")
 @commands.check(general)
 async def tictactoe(ctx, user:discord.Member, bet:int=100):
     """
@@ -4651,7 +4437,7 @@ async def tictactoe(ctx, user:discord.Member, bet:int=100):
     bot.waitings[ctx.author.id] = [ctx.author, user]
 
     cont = f"{ctx.author.mention} vs {user.mention}\n" \
-           f"Bet Amount: `{await commait(bet)}`\n" \
+           f"Bet Amount: `{commait(bet)}`\n" \
            f"Click 'Accept' to start. Waiting on: {' '.join([x.mention for x in bot.waitings[ctx.author.id]])}"
     view = ConfirmTTT(ctx.author, user, bet, ctx)
     pre = await ctx.send(cont, view=view)
@@ -4698,7 +4484,7 @@ class HeadTails(discord.ui.View):
             i.disabled = True
         await self.msg.edit(view=self)
 
-@bot.command(aliases=["bet"], usage="[bet]", brief="Games")
+#@bot.command(aliases=["bet"], usage="[bet]", brief="Games")
 @commands.check(general)
 async def flip(ctx, bet:int=None):
     """
@@ -4764,7 +4550,7 @@ class RollDice(discord.ui.View):
         await self.msg.edit(embed=embed)
         await update_accounts()
 
-@bot.command(usage="[bet]", brief="Games")
+#@bot.command(usage="[bet]", brief="Games")
 @commands.check(general)
 async def roll(ctx, bet:int=None):
     """
@@ -4788,7 +4574,7 @@ async def roll(ctx, bet:int=None):
     msg = await ctx.send(embed=embed, view=view)
     view.msg = msg
     
-@bot.command(usage="[user]", brief="Market")
+#@bot.command(usage="[user]", brief="Market")
 @commands.check(general)
 async def trade(ctx, user: discord.Member= None):
     """
@@ -4825,7 +4611,7 @@ async def trade(ctx, user: discord.Member= None):
     view.msg = msg
 
 class Trade(discord.ui.View):
-    def __init__(self, ctx: Context, user: discord.Member):
+    def __init__(self, ctx: CustomCtx, user: discord.Member):
         super().__init__(timeout=300)
         self.ctx = ctx
         self.user = user
@@ -5148,7 +4934,7 @@ class PreviousPage(discord.ui.Button):
         await view.new_opts(interaction.user, "add")
         await interaction.response.edit_message(view=view)
 
-@bot.command(usage="[bet]", brief="Games")
+#@bot.command(usage="[bet]", brief="Games")
 @commands.check(general)
 async def hangman(ctx, bet: int=100):
     """
@@ -5251,13 +5037,6 @@ async def hangman(ctx, bet: int=100):
     await msg.edit_(embed=embed)
 
 bot.connected_ = False
-@bot.event
-async def on_connect():
-    if not bot.connected_:
-        print("Entering on_connect()")
-        await uploader.recreate()
-        bot.connected_ = True
-        await create_stuff()
 
 categories = []
 for i in bot.commands:
@@ -5272,5 +5051,11 @@ for i in bot.commands:
     categories.append(i.brief)
 categories.sort()
 
+#@bot.event
+async def on_ready():
+    bot.load_extension('cogs.bank')
+    await create_stuff()
+
+bot.load_extension('cogs.bank')
 bot.token = "ODMyMDgzNzE3NDE3MDc0Njg5.YHeoWQ._O5uoMS_I7abKdI_YzVb9BuEHzs"
 bot.run(bot.token)

@@ -1,0 +1,7 @@
+py-cord
+aiohttp
+matplotlib
+Pillow
+prettytable
+pymongo
+pymongo[srv]
