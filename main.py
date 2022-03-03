@@ -1,7 +1,7 @@
 import time
 t1 = time.time()
 import datetime, csv, threading, functools, asyncio, discord, operator, math
-import json, random, os, traceback, difflib, discord_files, aiohttp, copy
+import json, random, os, traceback, difflib, aiohttp, copy
 from discord.ext import commands, tasks
 from prettytable import PrettyTable
 import matplotlib.pyplot as plt
@@ -17,11 +17,9 @@ print(f"Imports Complete in {float('{:.2f}'.format(time.time()-t1))} secs")
 tnew = time.time()
 
 bot = EconomyBot()
-uploader = discord_files.ConcurrentUploader(bot)
+bot.load_extension('cogs.bank')
+uploader = None
 bot.launch_time = datetime.datetime.utcnow()
-bot.dev = 0
-bot.loop.set_debug(True)
-bot.loop.slow_callback_duration = 0.3
 print(f'Bot Initialized in {float("{:.2f}".format(time.time()-tnew))} secs')
 tnew = time.time()
 
@@ -928,7 +926,7 @@ async def achievement(ctx, userid, field):
     await update_awards()
     await update_accounts()
 
-@bot.event
+#@bot.event
 async def on_message(message):
     if message.author.bot:
         return
@@ -5042,7 +5040,7 @@ async def hangman(ctx, bet: int=100):
 
 bot.connected_ = False
 
-categories = []
+'''categories = []
 for i in bot.commands:
     if i.hidden: continue
     for j in i.aliases:
@@ -5053,7 +5051,7 @@ for i in bot.commands:
     if i.hidden: continue
     if i.brief in categories: continue
     categories.append(i.brief)
-categories.sort()
+categories.sort()'''
 
 bot.token = "ODMyMDgzNzE3NDE3MDc0Njg5.YHeoWQ._O5uoMS_I7abKdI_YzVb9BuEHzs"
 bot.run(bot.token)

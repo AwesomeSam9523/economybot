@@ -143,3 +143,116 @@ error_embed = 16290332
 success_embed = 2293571
 economysuccess = '<a:EconomySuccess:843499891522797568>'
 economyerror = '<a:EconomyError:843499981695746098>'
+phrases = {
+  "selfrob_success": [
+      "You tried robbing yourself and got {prize} coins. But surprisingly {prize} coins were missing from your wallet too!",
+      "You robbed yourself of {prize} coins. WHat did ya achieve by this?",
+      "You fought yourself and stole {prize} coins from your own wallet. Tiring day!",
+      "You thought of robbing yourself. Even got hands on {prize} coins! But they were missing from your wallet. Mystery..?",
+      "Your wallet was missing {prize} coins, know why? Because you robbed yourself of it!"
+  ],
+  "selfrob_failed": [
+      "You bonked your head to rob yourself, but you fainted right after it. Hospital cost {prize*2} coins",
+      "You punched your own face because you thought of robbing yourself. Medication cost {prize} coins",
+      "You tried stealing money from your own wallet, but dropped the coins in drain. Lost {prize} coins!",
+      "You gave yourself poison to rob, but ended up being in hospital. Spent {prize*5} coins for treatment"
+  ],
+  "rob_success": [
+      "You robbed {whom} and got {prize} coins. Shhh!",
+      "You sneaked quietly from behind and robbed {whom} of {prize} coins",
+      "You DDOSed {whom}'s just to get {prize} coins. Quite big crime for it!",
+      "{whom} was robbed of {prize} coins. Don't know who did it",
+      "You robbed {whom} by punching him for mere {prize} coins. Got them, though."
+  ],
+  "rob_failed": [
+      "You tried robbing {whom}, but he was alert and you got caught. Lost {prize} coins.",
+      "You punched {whom} to rob, but he was stronger. You lost {prize} coins in medication",
+      "You sneaked in your {whom}'s house, but he caught you. Payed {prize} fine to cops to get off",
+      "You missed the pick-pocket to {whom} and got caught. Payed {prize} to police to escape",
+      "You tried to rob {whom} but he caught and complained about you. Payed {prize} as a fine"
+  ],
+  "find_success": [
+      "Yoo I found {c} coins in my sofa!",
+      "I wonder who left {c} coins on the bus seat?",
+      "Did anyone see me picking up {c} coins from footpath?",
+      "Damn, imagine leaving {c} coins in the trash!",
+      "Did my cat pooped out {c} coins? Must have eaten in dinner..",
+      "Sheesh I found {c} coins in my coat pockets!",
+      "Is sock a place to keep {c} coins? Nevermind I ll just take it",
+      "Yeah! {c} coins on top of refrigerator ain't a joke"
+  ],
+  "find_failed": [
+      "Well I went to find coins, but lost {c} instead",
+      "What a bad day, lost {c} coins due to greed",
+      "I shouldn't be greedy, lost {c} coins to a thief. oof",
+      "Well I searched the drain for coins, but lost {c} of my own!",
+      "Noo! Lost {c} coins in search of more",
+      "Did I just lose {c} coins? Oh yes, I did.",
+      "I don't know how I ended up losing {c} coins today"
+  ],
+  "find_neutral": [
+      "Well I expected something this time",
+      "0? R.I.P. my expectations",
+      "Comeon I found nothing again!?",
+      "How come I searched and searched but found absolutely nothing?",
+      "And here I went to find coins, but came back empty handed"
+  ],
+  "shop_noitem": [
+      "Maybe you should wear spectacles?",
+      "Did you even read the name properly?",
+      "Time to send you back to 1st grade to learn how to read",
+      "Why didn't you cross-check the item name before bothering me?",
+      "Bro, just go and re-check the name!"
+  ],
+  "less_bal": [
+      "Aww my poor soul, you don't have coins lmao",
+      "Oh No! Not enough money? Go beg from our mum haha",
+      "Imagine not having enough money but still trying lmfao",
+      "Ew you poor, go and do something worthwhile!",
+      "Bro, atleast check with your wallet before bothering me",
+      "Why you bother me when you don't have enough coins?"
+  ],
+  "negative": [
+      "Ah, so the counting is 0, -1, -2... Don't mind but you should learn basic stuff first",
+      "No man, we count from 0 in positive direction",
+      "Negative? Are you drunk or what lmao",
+      "Wow. I am amazed how 1st graders are playing with me, don't even know counting!",
+      "Time to send you back to 1st grade so you learn counting lol",
+      "Dude, have you ever tried to mess but failed? Yes, now!",
+      "Lmfao, its 0, 1, 2, 3... Go and learn it first"
+  ],
+  "zero": [
+      "0? Did I ask your math test marks?",
+      "No man, 0 isn't the way to mess with me",
+      "Lmao 0. I accept positive number only, take it or leave it",
+      "Do I look your mum? Because I dont want to know your marks",
+      "You should go and take up a course for common sense.. wait is there even any??",
+      "Atleast enter a positive number bruh",
+      "Did Aryabhatta invent `0` for this purpose?"
+  ],
+  "inv_noitem": [
+      "Do you even own this??",
+      "Damn, imagine trying to use thin air",
+      "Well, what now?",
+      "Dude why do you bother me with such useless things?",
+      "Imagine trying to use what you don't own lmao"
+  ],
+  "cooldown": [
+      "Oi why in so much hurry? Come again after `{timeleft}`",
+      "I guess your mom is calling you, come after `{timeleft}`",
+      "Oh no, let me rest. I will look into it after `{timeleft}`",
+      "Please not now. Wait for `{timeleft}`",
+      "Yeah sure, but after `{timeleft}`, please!",
+      "I will be happy if you will retry after `{timeleft}`",
+      "All I would say is- wait `{timeleft}` for it. Thanks!"
+  ],
+  "inter": [
+      "Smh are you `{usertag}`? No. So stop clicking buttons!",
+      "Bruh man this isn't for you",
+      "Dude, why are you poking nose in things which ain't yours.",
+      "Hey hey, shoo. This isn't for you",
+      "Hi `{usertag}`! No, as it was for him only..",
+      "Idk man why you touching things with aren't yours",
+      "Ok ok, I know its interesting but ||THIS IS NOT FOR YOU!!||"
+  ]
+}

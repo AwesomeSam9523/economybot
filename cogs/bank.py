@@ -2,15 +2,17 @@ import discord
 import asyncio
 from utils import *
 import datetime
+from discord.commands import slash_command, errors
 
 bot: EconomyBot = None
 
 class Bank(discord.cog.Cog):
-    def __init__(self):
+    def __init__(self, bot_):
+        self.bot = bot_
         print('Bank Loaded.')
         super().__init__()
 
-    @discord.slash_command()
+    @slash_command()
     async def balance(
         self,
         ctx: CustomCtx,
@@ -36,18 +38,76 @@ class Bank(discord.cog.Cog):
 
         await ctx.respond(embed=embed)
     
-    @balance.error
-    async def handleErrors(self, ctx: CustomCtx, error: InternalError):
-        embed = discord.Embed()
-        if isinstance(error, AccountNotFound):
+    @slash_command()
+    async def deposit(
+        self,
+        ctx: CustomCtx,
+        amount: discord.Option(str, description='Amount to deposit to from your wallet to bank.')
+    ):
+        '''
+        Move coins from your wallet to your bank.
+        '''
+        await ctx.defer()
+        person = await ctx.getAccount(ctx.author.id)
+        wallet = person.wallet
+
+        if amount == 'all':
+            amount = wallet
+        elif amount == 'half':
+            amount = int(wallet/2)
+        else:
+            amount = int(amount)
+        if amount < 0:
+            raise NegativeMoney(ctx.author)
+        if amount == 0:
+            raise ZeroMoney(ctx.author)
+
+        await person.depositAction(amount)
+        await ctx.respond(f'{ctx.author.mention} Successfully deposited `{commait(amount)}` coins.')
+    
+    @slash_command()
+    async def withdraw(
+        self,
+        ctx: CustomCtx,
+        amount: discord.Option(str, description='Amount to withdraw to from your bank to wallet.')
+    ):
+        '''
+        Move coins from your bank to your wallet.
+        '''
+        await ctx.defer()
+        person = await ctx.getAccount(ctx.author.id)
+        bank = person.bank
+
+        if amount == 'all':
+            amount = bank
+        elif amount == 'half':
+            amount = int(bank/2)
+        else:
+            amount = int(amount)
+        if amount < 0:
+            raise NegativeMoney(ctx.author)
+        if amount == 0:
+            raise ZeroMoney(ctx.author)
+
+        await person.withdrawAction(amount)
+        await ctx.respond(f'{ctx.author.mention} Successfully withdrawn `{commait(amount)}` coins.')
+
+    async def on_command_error(self, ctx: CustomCtx, error):
+        embed = discord.Embed(color=error_embed)
+        if isinstance(error, errors.ApplicationCommandInvokeError):
+            error = getattr(error, 'original', error)
+
+        try:
             embed.title = error.name
             embed.description = str(error)
-            embed.color = error_embed
-        
-        await ctx.send(embed=embed)
+        except:
+            embed.description = 'Unknown Error.'
+            print(error)
+
+        await ctx.respond(embed=embed)
 
 
 def setup(bot_):
     global bot
     bot = bot_
-    bot.add_cog(Bank())
+    bot.add_cog(Bank(bot_))

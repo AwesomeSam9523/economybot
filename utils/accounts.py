@@ -12,7 +12,7 @@ class UserAccount():
         '''
         Return `discord.User` or `None`.
         '''
-        return self.bot.get_user(self.document['id'])
+        return self.bot.get_user(self.document['userid'])
     
     @property
     def userid(self):
@@ -64,12 +64,13 @@ class UserAccount():
             return_document=pymongo.ReturnDocument.AFTER
         )
     
-    async def _ensure_coins(self, coins: int):
-        _coins = await self.bot.db.users.find_one({
-            { 'userid': self.userid }
-        })
-        _coins = _coins.get('coins', 0)
-        return coins >= _coins, _coins
+    def _ensure_coins(self, coins: int, type: int = 1):
+        if type == 0:
+            _coins = self.wallet
+        else:
+            _coins = self.bank
+        
+        return _coins >= coins, _coins
     
     async def addCoins(self, coins: int, type: int = 1, returnType: int = None):
         '''
@@ -97,12 +98,12 @@ class UserAccount():
         returnType = returnType or type
 
         if safe:
-            _safe, _coins = await self._ensure_coins(coins)
+            _safe, _coins = self._ensure_coins(coins, type)
             if not _safe:
                 if silent:
                     coins = _coins
                 else:
-                    raise NotEnoghCoins
+                    raise NotEnoughCoins(self.user)
     
         coins *= -1
         if type == 0:
@@ -126,3 +127,41 @@ class UserAccount():
         }
 
         await self._set_coins(data)
+    
+    async def depositAction(self, x: int, safe=True, silent=False):
+        '''
+        Transfers `x` coins from wallet to bank.
+        '''
+        if safe:
+            _safe, _coins = self._ensure_coins(x, 0)
+            if not _safe:
+                if silent:
+                    x = _coins
+                else:
+                    raise NotEnoughCoins(self.user)
+        
+        data = {
+            'wallet': x*-1,
+            'bank': x
+        }
+
+        await self._modify_coins(data)
+    
+    async def withdrawAction(self, x: int, safe=True, silent=False):
+        '''
+        Transfers `x` coins from bank to wallet.
+        '''
+        if safe:
+            _safe, _coins = self._ensure_coins(x, 1)
+            if not _safe:
+                if silent:
+                    x = _coins
+                else:
+                    raise NotEnoughCoins(self.user)
+        
+        data = {
+            'wallet': x,
+            'bank': x*-1
+        }
+
+        await self._modify_coins(data)

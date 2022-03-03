@@ -9,26 +9,28 @@ import os
 
 class CustomCtx(discord.ApplicationContext):
     
-    async def userAccount(self, id: int, upsert=True):
-        document = await self.bot.db.users.find_one({ 'userid': self.author.id })
+    async def _getuserAccount(self, id: int, upsert):
+        document = await self.bot.db.users.find_one({ 'userid': id })
         if document is None:
             if upsert:
-                document = await self.bot.db.users.insert_one({
+                await self.bot.db.users.insert_one({
                     'userid': self.author.id,
                     'bank_type': 1,
                     'wallet': 500,
                     'bank': 0,
                     'joined': int(time.time())
                 })
-                print(document)
+                document = await self.bot.db.users.find_one({ 'userid': id })
             else:
                 raise AccountNotFound(self.bot.get_user(id))
         
         return UserAccount(self.bot, document)
     
-    async def getAccount(self, userid=None, upsert=False):
+    async def getAccount(self, userid=None, upsert=None):
         userid = userid or self.author.id
-        return await self.userAccount(userid, upsert)
+        if upsert is None:
+            upsert = userid == self.author.id
+        return await self._getuserAccount(userid, upsert)
 
 class EconomyBot(discord.Bot):
     def __init__(self):
@@ -60,6 +62,13 @@ class EconomyBot(discord.Bot):
         self.random_status = True
         self.maint = False
         self.cooldown = {}
+        with open('files/bot_data.json', 'r') as c:
+            data = json.load(c)
+            self.phrases = data["phrases"]
+            self.shopc = data["shop"]["category"]
+            self.items = data["items"]
+            self._status = data["status"]
+            self.cooldown = data["cooldown"]
         client = AsyncIOMotorClient(os.environ['MONGO'])
         self.db = client.economy
     
@@ -67,5 +76,5 @@ class EconomyBot(discord.Bot):
         return await super().get_application_context(interaction, cls=cls or CustomCtx)
     
     async def on_ready(self):
-        self.load_extension('cogs.bank')
+        print(self.pending_application_commands)
         print('Ready!')
