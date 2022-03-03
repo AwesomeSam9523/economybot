@@ -5,6 +5,7 @@ from utils.errors import *
 from .consts import *
 from .accounts import *
 import time
+import os
 
 class CustomCtx(discord.ApplicationContext):
     
@@ -21,7 +22,7 @@ class CustomCtx(discord.ApplicationContext):
                 })
                 print(document)
             else:
-                raise AccountNotFound
+                raise AccountNotFound(self.bot.get_user(id))
         
         return UserAccount(self.bot, document)
     
@@ -59,18 +60,12 @@ class EconomyBot(discord.Bot):
         self.random_status = True
         self.maint = False
         self.cooldown = {}
-        client = AsyncIOMotorClient(
-            ""
-        )
+        client = AsyncIOMotorClient(os.environ['MONGO'])
         self.db = client.economy
     
     async def get_application_context(self, interaction: discord.Interaction, cls=None) -> discord.ApplicationContext:
         return await super().get_application_context(interaction, cls=cls or CustomCtx)
     
-    async def one_ready(self):
-        await self.wait_until_ready()
+    async def on_ready(self):
+        self.load_extension('cogs.bank')
         print('Ready!')
-        client = AsyncIOMotorClient(
-            "mongodb+srv://AwesomeSam:enginlife.7084@cluster0.kthop.mongodb.net/economy?retryWrites=true&w=majority"
-        )
-        self.db = client.economy

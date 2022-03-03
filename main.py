@@ -9,6 +9,10 @@ from PIL import Image, ImageDraw, ImageFont, ImageEnhance, ImageFilter, ImageSeq
 from io import BytesIO
 from concurrent.futures import ThreadPoolExecutor
 from utils import *
+from dotenv import load_dotenv
+
+load_dotenv()
+
 print(f"Imports Complete in {float('{:.2f}'.format(time.time()-t1))} secs")
 tnew = time.time()
 
@@ -5051,11 +5055,5 @@ for i in bot.commands:
     categories.append(i.brief)
 categories.sort()
 
-#@bot.event
-async def on_ready():
-    bot.load_extension('cogs.bank')
-    await create_stuff()
-
-bot.load_extension('cogs.bank')
 bot.token = "ODMyMDgzNzE3NDE3MDc0Njg5.YHeoWQ._O5uoMS_I7abKdI_YzVb9BuEHzs"
 bot.run(bot.token)
