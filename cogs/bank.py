@@ -35,8 +35,9 @@ class Bank(discord.cog.Cog):
         embed.timestamp = datetime.datetime.utcnow()
         embed.set_footer(text='Economy Bot', icon_url=bot.pfp)
         embed.set_author(name=user.name, icon_url=user.display_avatar.url)
-
-        await ctx.respond(embed=embed)
+        uiView = ButtonsView(ctx)
+        msg = await ctx.respond(embed=embed, view=uiView)
+        uiView.msg = msg
     
     @slash_command()
     async def deposit(
