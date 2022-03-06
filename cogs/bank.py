@@ -1,6 +1,7 @@
 import discord
 import asyncio
 from utils import *
+from ui import *
 import datetime
 from discord.commands import slash_command, errors
 
@@ -24,20 +25,11 @@ class Bank(discord.cog.Cog):
         await ctx.defer()
         user = member or ctx.author
         account = await ctx.getAccount(user.id)
-        bank_type = account.bank_type
-        wallet = account.wallet
-        bank = account.bank
-        stocks_num = 0
-        embed = discord.Embed(title=f'__{bank_details[bank_type]["name"]}__', colour=embedcolor)
-        embed.add_field(name=f'**<:wallet:836814969290358845> Wallet**', value=f'> `{commait(wallet)}`', inline=False)
-        embed.add_field(name=f'**🏦 Bank**', value=f'> `{commait(bank)}`', inline=False)
-        embed.add_field(name=f'**<:stocks:839162083324198942> Stocks**', value=f'> `{commait(stocks_num)}`', inline=False)
-        embed.timestamp = datetime.datetime.utcnow()
-        embed.set_footer(text='Economy Bot', icon_url=bot.pfp)
-        embed.set_author(name=user.name, icon_url=user.display_avatar.url)
-        uiView = ButtonsView(ctx)
+        embed = balance.getEmbed(account)
+        uiView = balance.ButtonsView(account, ctx)
         msg = await ctx.respond(embed=embed, view=uiView)
         uiView.msg = msg
+        uiView.raiseError = self.on_command_error
     
     @slash_command()
     async def deposit(
@@ -102,8 +94,12 @@ class Bank(discord.cog.Cog):
             embed.title = error.name
             embed.description = str(error)
         except:
-            embed.description = 'Unknown Error.'
             print(error)
+            if isinstance(error, ValueError):
+                embed.title = 'Incorrect Amount'
+                embed.description = 'Coins should be `all` / `half` or numbers only.'
+            else:
+                embed.title = 'Unknown Error'
 
         await ctx.respond(embed=embed)
 
