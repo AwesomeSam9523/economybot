@@ -1,6 +1,6 @@
 from discord import ui
 import discord
-from utils import economybot
+from core import *
 from utils.functions import commait
 
 class ModalManager():
@@ -32,7 +32,7 @@ class DepositModal(ui.Modal):
             await followup(f'You just tried to mess with me but failed :(', ephemeral=True)
 
 class ButtonsView(ui.View):
-    def __init__(self, ctx: economybot.CustomCtx):
+    def __init__(self, ctx):
         self.msg: discord.Message = None
         self.ctx = ctx
         super().__init__()

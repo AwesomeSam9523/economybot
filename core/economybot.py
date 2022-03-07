@@ -1,11 +1,12 @@
 from motor.motor_asyncio import *
 import pymongo
 import discord
-from utils.errors import *
-from .consts import *
-from .accounts import *
+from utils import *
+from .errors import *
+from .database import Database
 import time
 import os
+allItems
 
 class CustomCtx(discord.ApplicationContext):
     
@@ -69,8 +70,7 @@ class EconomyBot(discord.Bot):
             self.items = data["items"]
             self._status = data["status"]
             self.cooldown = data["cooldown"]
-        client = AsyncIOMotorClient(os.environ['MONGO'])
-        self.db = client.economy
+        self.database = Database()
     
     async def get_application_context(self, interaction: discord.Interaction, cls=None) -> discord.ApplicationContext:
         return await super().get_application_context(interaction, cls=cls or CustomCtx)

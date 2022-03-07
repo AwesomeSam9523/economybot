@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 from PIL import Image, ImageDraw, ImageFont, ImageEnhance, ImageFilter, ImageSequence, ImageColor
 from io import BytesIO
 from concurrent.futures import ThreadPoolExecutor
+from core import *
 from utils import *
 from dotenv import load_dotenv
 

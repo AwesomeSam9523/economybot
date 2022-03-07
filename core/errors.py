@@ -1,6 +1,6 @@
 import random
 import discord
-from .consts import phrases
+from utils.consts import phrases
 
 class InternalError(Exception):
     def __init__(self, name: str, type: str, **kwargs):
@@ -45,6 +45,11 @@ class InternalError(Exception):
         
         return mention + self.getRandomMessage()
 
+class CoreError(Exception):
+
+    def __init__(self):
+        pass
+
 class NotEnoughCoins(InternalError):
     def __init__(self, user) -> None:
         super().__init__(
@@ -76,3 +81,9 @@ class ZeroMoney(InternalError):
             'zero',
             user = user
         )
+
+class CollectionNotFound(CoreError):
+    pass
+
+class DocumentNotInCache(CoreError):
+    pass
