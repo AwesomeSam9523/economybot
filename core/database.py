@@ -3,6 +3,8 @@ import pymongo
 import os
 from motor.motor_asyncio import *
 from .errors import *
+import logging
+log = logging.getLogger(__name__)
 
 class DbCollection:
 
@@ -10,44 +12,55 @@ class DbCollection:
         self._cached_documents: Dict[str, dict] = {}
         self._collection = collection
 
-    async def findOne(self, data: dict, cache=False, sync=True) -> dict:
+    async def findOne(self, data: dict, sync=False) -> dict:
         '''
-        Returns back `pymongo` Document matching the `data`.
+        Returns back `Document` matching the `data`.
         If `cache` is `True`, it just returns back the cached document.
         If `sync` is `True`, it syncs the cached document with the one from server.
         '''
-        if cache:
-            try:
-                _id = data.get('userid')
-                return self._cached_documents[_id]
-            except KeyError:
-                raise DocumentNotInCache
-        
-        doc = await self._collection.find_one(data)
-        if doc is not None:
-            _id = doc['userid']
-            if sync:
-                self._cached_documents[_id] = doc
+        _id = data.get('userid')
+        log.info(f'Lookup for {data} with sync {sync}')
 
-        return doc
+        doc = self._cached_documents.get(_id)
+        log.info(f'Document with filter {data} in internal cache: {doc}')
+
+        if sync or doc is None:
+            _doc = await self._collection.find_one(data)
+            log.info(f'Updated cache for {_id}: {self._cached_documents.get(_id)} => {_doc}')
+            self._cached_documents[_id] = _doc
+        
+        logging.info(f'Returning {self._cached_documents.get(_id)} for {data}')
+        return self._cached_documents.get(_id)
     
     async def findOneAndUpdate(self, filter: dict, data: dict, sync=True) -> dict:
         '''
         Finds a document matching `data` and updates it. 
         If `sync` is `True`, it syncs the cached document with the one from server.
         '''
+        log.info(f'Updating {filter} to {data} with sync {sync}.')
         doc = await self._collection.find_one_and_update(
             filter,
             data,
             return_document=pymongo.ReturnDocument.AFTER
         )
+        log.info(f'Atlas returned us {doc}')
         if doc is not None:
             _id = doc['userid']
             if sync:
+                log.info(f'Synced {doc} to internal cache.')
                 self._cached_documents[_id] = doc
-
+        
+        log.info(f'Returning {doc} with filter: {filter} and data: {data}')
         return doc
-
+    
+    async def insertOne(self, data: dict, sync=True) -> dict:
+        '''
+        Inserts a `document` and returns back the inserted document.
+        If `sync` is `True`, it adds the document to insernal cache. 
+        '''
+        log.info(f'Inserting {data} with sync as {sync}.')
+        await self._collection.insert_one(data)
+        return await self.findOne(data, sync=sync)
 
 class Database:
 

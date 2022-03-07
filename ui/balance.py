@@ -5,12 +5,38 @@ from core import *
 from utils import *
 import datetime
 
-class ModalManager():
-    def __init__():
-        pass
 
-    async def createDepositModal():
-        return DepositModal()
+class WithdrawModal(ui.Modal):
+    def __init__(self, view) -> None:
+        super().__init__('Withdraw Coins')
+        self.view = view
+        self.add_item(ui.InputText(
+            style=discord.InputTextStyle.short,
+            label='Enter amount of coins to withdraw:',
+            placeholder='Enter \'all\' / \'half\' / exact amount in numbers',
+            required=True
+        ))
+    
+    async def callback(self, interaction: discord.Interaction):
+        view: ButtonsView = self.view
+        value = self.children[0].value.lower()
+
+        coins = view.account.bank
+        if value == 'all':
+            value = coins
+        elif value == 'half':
+            value = int(coins/2)
+        else:
+            value = int(value)
+
+        try:
+            await view.processAction('withdraw', value)
+        except Exception as e:
+            view.ctx.interaction_respond = interaction.response.send_message
+            asyncio.create_task(view.raiseError(view.ctx, e))
+        else:
+            value = commait(value)
+            await interaction.response.send_message(f'Successfully withdrawn `{value}` coins.', ephemeral=True)
 
 
 class DepositModal(ui.Modal):
@@ -39,14 +65,11 @@ class DepositModal(ui.Modal):
         try:
             await view.processAction('deposit', value)
         except Exception as e:
+            view.ctx.interaction_respond = interaction.response.send_message
             asyncio.create_task(view.raiseError(view.ctx, e))
         else:
             value = commait(value)
             await interaction.response.send_message(f'Successfully deposited `{value}` coins.', ephemeral=True)
-        finally:
-            if interaction.response.is_done():
-                return
-            await interaction.response.send_message()
 
 class ButtonsView(ui.View):
     def __init__(self, account: UserAccount, ctx: CustomCtx):
@@ -69,12 +92,18 @@ class ButtonsView(ui.View):
             await self.account.depositAction(coins)
             await self.msg.edit(embed=getEmbed(self.account))
         else:
-            pass
+            await self.account.withdrawAction(coins)
+            await self.msg.edit(embed=getEmbed(self.account))
 
 
     @discord.ui.button(label='Deposit', style=discord.ButtonStyle.green)
     async def deposit_via_ui(self, button, interaction: discord.Interaction):
         modal = DepositModal(self)
+        await interaction.response.send_modal(modal)
+    
+    @discord.ui.button(label='Withdraw', style=discord.ButtonStyle.blurple)
+    async def withdraw_via_ui(self, button, interaction: discord.Interaction):
+        modal = WithdrawModal(self)
         await interaction.response.send_modal(modal)
 
 def getEmbed(account: UserAccount):

@@ -1,37 +1,9 @@
-from motor.motor_asyncio import *
-import pymongo
+from typing import Union
 import discord
 from utils import *
 from .errors import *
 from .database import Database
 import time
-import os
-allItems
-
-class CustomCtx(discord.ApplicationContext):
-    
-    async def _getuserAccount(self, id: int, upsert):
-        document = await self.bot.db.users.find_one({ 'userid': id })
-        if document is None:
-            if upsert:
-                await self.bot.db.users.insert_one({
-                    'userid': self.author.id,
-                    'bank_type': 1,
-                    'wallet': 500,
-                    'bank': 0,
-                    'joined': int(time.time())
-                })
-                document = await self.bot.db.users.find_one({ 'userid': id })
-            else:
-                raise AccountNotFound(self.bot.get_user(id))
-        
-        return UserAccount(self.bot, document)
-    
-    async def getAccount(self, userid=None, upsert=None):
-        userid = userid or self.author.id
-        if upsert is None:
-            upsert = userid == self.author.id
-        return await self._getuserAccount(userid, upsert)
 
 class EconomyBot(discord.Bot):
     def __init__(self):
@@ -78,3 +50,40 @@ class EconomyBot(discord.Bot):
     async def on_ready(self):
         print(self.pending_application_commands)
         print('Ready!')
+
+
+class CustomCtx(discord.ApplicationContext):
+
+    def __init__(self, bot, interaction):
+        self._interaction_respond = None
+        super().__init__(bot, interaction)
+
+    @property
+    def interaction_respond(self):
+        return self._interaction_respond
+    
+    @interaction_respond.setter
+    def interaction_respond(self, new_respond):
+        self._interaction_respond = new_respond
+    
+    async def _getuserAccount(self, id: int, upsert: bool):
+        document = await self.bot.database['users'].findOne({ 'userid': id })
+        
+        if document is None and upsert:
+            document = await self.bot.database['users'].insertOne({
+                'userid': self.author.id,
+                'bank_type': 1,
+                'wallet': 500,
+                'bank': 0,
+                'joined': int(time.time())
+            })
+        elif document is None:
+            raise AccountNotFound(self.bot.get_user(id))
+
+        return UserAccount(self.bot, document)
+    
+    async def getAccount(self, userid: int = None, upsert: Union[bool, None] = None):
+        userid = userid or self.author.id
+        if upsert is None:
+            upsert = userid == self.author.id
+        return await self._getuserAccount(userid, upsert)

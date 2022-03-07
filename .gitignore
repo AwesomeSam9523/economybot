@@ -3,3 +3,4 @@
 /emojis/
 __pycache__/
 .env
+bot.log

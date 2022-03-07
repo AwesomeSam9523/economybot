@@ -30,7 +30,7 @@ class Bank(discord.cog.Cog):
         uiView = balance.ButtonsView(account, ctx)
         msg = await ctx.respond(embed=embed, view=uiView)
         uiView.msg = msg
-        uiView.raiseError = self.on_command_error
+        uiView.raiseError = self.cog_command_error
     
     @slash_command()
     async def deposit(
@@ -86,7 +86,7 @@ class Bank(discord.cog.Cog):
         await person.withdrawAction(amount)
         await ctx.respond(f'{ctx.author.mention} Successfully withdrawn `{commait(amount)}` coins.')
 
-    async def on_command_error(self, ctx: CustomCtx, error):
+    async def cog_command_error(self, ctx: CustomCtx, error):
         embed = discord.Embed(color=error_embed)
         if isinstance(error, errors.ApplicationCommandInvokeError):
             error = getattr(error, 'original', error)
@@ -95,14 +95,17 @@ class Bank(discord.cog.Cog):
             embed.title = error.name
             embed.description = str(error)
         except:
-            print(error)
+            printError(error)
             if isinstance(error, ValueError):
                 embed.title = 'Incorrect Amount'
                 embed.description = 'Coins should be `all` / `half` or numbers only.'
             else:
                 embed.title = 'Unknown Error'
 
-        await ctx.respond(embed=embed)
+        if ctx.interaction_respond is None:
+            await ctx.respond(embed=embed, ephemeral=True)
+        else:
+            await ctx.interaction_respond(embed=embed, ephemeral=True)
 
 
 def setup(bot_):

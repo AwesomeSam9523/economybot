@@ -51,14 +51,13 @@ class UserAccount():
         return self.wallet + self.bank
     
     async def _modify_coins(self, data: dict):
-        self.document = await self.bot.db.users.find_one_and_update(
+        self.document = await self.bot.database['users'].findOneAndUpdate(
             { 'userid': self.userid },
-            { '$inc': data },
-            return_document=pymongo.ReturnDocument.AFTER
+            { '$inc': data }
         )
     
     async def _set_coins(self, data: dict):
-        self.document = await self.bot.db.users.find_one_and_update(
+        self.document = await self.bot.database['users'].findOneAndUpdate(
             { 'userid': self.userid },
             { '$set': data },
             return_document=pymongo.ReturnDocument.AFTER

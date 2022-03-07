@@ -11,6 +11,13 @@ from concurrent.futures import ThreadPoolExecutor
 from core import *
 from utils import *
 from dotenv import load_dotenv
+import logging
+logging.basicConfig(
+    filename='bot.log',
+    filemode='w',
+    level=logging.INFO,
+    format='%(created)f: [%(funcName)s @ %(filename)s:%(lineno)d] %(levelname)s -> %(message)s'
+)
 
 load_dotenv()
 
