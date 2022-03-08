@@ -50,6 +50,13 @@ class UserAccount():
         '''
         return self.wallet + self.bank
     
+    @property
+    def average_balance(self) -> int:
+        '''
+        Returns the average balance for the user. If the account is < 30 secs, returns `0`.
+        '''
+        return self.document.get('average', 0)
+    
     async def _modify_coins(self, data: dict):
         self.document = await self.bot.database['users'].findOneAndUpdate(
             { 'userid': self.userid },

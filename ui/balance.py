@@ -20,7 +20,7 @@ class WithdrawModal(ui.Modal):
     async def callback(self, interaction: discord.Interaction):
         view: ButtonsView = self.view
         value = self.children[0].value.lower()
-
+        await view.updateAccount()
         coins = view.account.bank
         if value == 'all':
             value = coins
@@ -53,7 +53,7 @@ class DepositModal(ui.Modal):
     async def callback(self, interaction: discord.Interaction):
         view: ButtonsView = self.view
         value = self.children[0].value.lower()
-
+        await view.updateAccount()
         coins = view.account.wallet
         if value == 'all':
             value = coins
@@ -78,7 +78,18 @@ class ButtonsView(ui.View):
         self.ctx = ctx
         super().__init__()
 
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        if interaction.user != self.ctx.author:
+            await interaction.response.send_message(
+                random.choice(self.ctx.bot.phrases['inter']).format(usertag=str(self.ctx.author)),
+                ephemeral=True
+            )
+            return False
+        return True
     
+    async def updateAccount(self):
+        self.account = await self.ctx.getAccount(self.ctx.author.id)
+
     async def on_timeout(self) -> None:
         for i in self.children:
             i.disabled = True
@@ -94,7 +105,6 @@ class ButtonsView(ui.View):
         else:
             await self.account.withdrawAction(coins)
             await self.msg.edit(embed=getEmbed(self.account))
-
 
     @discord.ui.button(label='Deposit', style=discord.ButtonStyle.green)
     async def deposit_via_ui(self, button, interaction: discord.Interaction):

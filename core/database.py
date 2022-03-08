@@ -11,6 +11,19 @@ class DbCollection:
     def __init__(self, collection) -> None:
         self._cached_documents: Dict[str, dict] = {}
         self._collection = collection
+    
+    @property
+    def collection(self):
+        '''
+        Returns back collection for low-level use. This should rarely be used.
+        '''
+        return self._collection
+    
+    async def find(self, data: dict) -> list:
+        log.info(f'Looking up for {data}.')
+        _results = await self.collection.find(data).to_list(length=None)
+        log.info(f'Mongo returned us with {len(_results)} results against {data}.')
+        return _results
 
     async def findOne(self, data: dict, sync=False) -> dict:
         '''
@@ -25,9 +38,9 @@ class DbCollection:
         log.info(f'Document with filter {data} in internal cache: {doc}')
 
         if sync or doc is None:
-            _doc = await self._collection.find_one(data)
+            _doc = await self.collection.find_one(data)
             log.info(f'Updated cache for {_id}: {self._cached_documents.get(_id)} => {_doc}')
-            self._cached_documents[_id] = _doc
+            self._cached_documents.setdefault(_id, {}).update(_doc)
         
         logging.info(f'Returning {self._cached_documents.get(_id)} for {data}')
         return self._cached_documents.get(_id)
@@ -38,7 +51,7 @@ class DbCollection:
         If `sync` is `True`, it syncs the cached document with the one from server.
         '''
         log.info(f'Updating {filter} to {data} with sync {sync}.')
-        doc = await self._collection.find_one_and_update(
+        doc = await self.collection.find_one_and_update(
             filter,
             data,
             return_document=pymongo.ReturnDocument.AFTER
@@ -48,7 +61,7 @@ class DbCollection:
             _id = doc['userid']
             if sync:
                 log.info(f'Synced {doc} to internal cache.')
-                self._cached_documents[_id] = doc
+                self._cached_documents.setdefault(_id, {}).update(doc)
         
         log.info(f'Returning {doc} with filter: {filter} and data: {data}')
         return doc
@@ -59,7 +72,7 @@ class DbCollection:
         If `sync` is `True`, it adds the document to insernal cache. 
         '''
         log.info(f'Inserting {data} with sync as {sync}.')
-        await self._collection.insert_one(data)
+        await self.collection.insert_one(data)
         return await self.findOne(data, sync=sync)
 
 class Database:

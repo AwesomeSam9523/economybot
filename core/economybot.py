@@ -57,9 +57,19 @@ class CustomCtx(discord.ApplicationContext):
     def __init__(self, bot, interaction):
         self._interaction_respond = None
         super().__init__(bot, interaction)
+    
+    @property
+    def respond(self):
+        if self.interaction_respond is None:
+            return super().respond
+        else:
+            return self.interaction_respond
 
     @property
     def interaction_respond(self):
+        '''
+        Returns ~`discord.Interaction` instead of `Context.respond` to handle modals.
+        '''
         return self._interaction_respond
     
     @interaction_respond.setter
